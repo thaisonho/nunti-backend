@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Collaboration Governance Baseline | 0/2 | Planned | - |
+| 1. Collaboration Governance Baseline | 1/2 | In Progress|  |
 | 2. Identity and Device Access | 0/TBD | Not started | - |
 | 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
 | 4. Reliable 1:1 Messaging Core | 0/TBD | Not started | - |

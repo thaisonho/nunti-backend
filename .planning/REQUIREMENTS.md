@@ -33,9 +33,9 @@
 
 ### Collaboration and Governance
 
-- [ ] **GIT-01**: Team uses Git Flow branching model for feature, release, and hotfix workflows.
-- [ ] **GIT-02**: Merges to integration branches require at least one peer pull request approval.
-- [ ] **GIT-03**: Commits follow Conventional Commits format for consistent change history.
+- [x] **GIT-01**: Team uses Git Flow branching model for feature, release, and hotfix workflows.
+- [x] **GIT-02**: Merges to integration branches require at least one peer pull request approval.
+- [x] **GIT-03**: Commits follow Conventional Commits format for consistent change history.
 
 ## v2 Requirements
 
@@ -80,9 +80,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRP-02 | Phase 5 | Pending |
 | GRP-03 | Phase 5 | Pending |
 | GRP-04 | Phase 5 | Pending |
-| GIT-01 | Phase 1 | Pending |
-| GIT-02 | Phase 1 | Pending |
-| GIT-03 | Phase 1 | Pending |
+| GIT-01 | Phase 1 | Complete |
+| GIT-02 | Phase 1 | Complete |
+| GIT-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 17 total
