@@ -66,28 +66,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| KEYS-01 | TBD | Pending |
-| KEYS-02 | TBD | Pending |
-| KEYS-03 | TBD | Pending |
-| KEYS-04 | TBD | Pending |
-| MSG-01 | TBD | Pending |
-| MSG-02 | TBD | Pending |
-| MSG-03 | TBD | Pending |
-| GRP-01 | TBD | Pending |
-| GRP-02 | TBD | Pending |
-| GRP-03 | TBD | Pending |
-| GRP-04 | TBD | Pending |
-| GIT-01 | TBD | Pending |
-| GIT-02 | TBD | Pending |
-| GIT-03 | TBD | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| KEYS-01 | Phase 3 | Pending |
+| KEYS-02 | Phase 3 | Pending |
+| KEYS-03 | Phase 3 | Pending |
+| KEYS-04 | Phase 3 | Pending |
+| MSG-01 | Phase 4 | Pending |
+| MSG-02 | Phase 4 | Pending |
+| MSG-03 | Phase 4 | Pending |
+| GRP-01 | Phase 5 | Pending |
+| GRP-02 | Phase 5 | Pending |
+| GRP-03 | Phase 5 | Pending |
+| GRP-04 | Phase 5 | Pending |
+| GIT-01 | Phase 1 | Pending |
+| GIT-02 | Phase 1 | Pending |
+| GIT-03 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17
+- Mapped to phases: 17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
