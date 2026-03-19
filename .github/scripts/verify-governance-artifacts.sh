@@ -32,7 +32,7 @@ done
 echo "Checking linkages..."
 
 # Verify PR template references branch types from CONTRIBUTING.md
-if ! grep -q "feature/|release/|hotfix/" ".github/pull_request_template.md"; then
+if ! grep -Eq "feature/|release/|hotfix/" ".github/pull_request_template.md"; then
   echo "❌ Linkage failed: .github/pull_request_template.md does not reference branch types 'feature/|release/|hotfix/'"
   MISSING=1
 else
