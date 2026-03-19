@@ -40,6 +40,20 @@ export async function upsertDevice(params: UpsertParams): Promise<DeviceRecord> 
   return record;
 }
 
+function toDeviceRecord(item: Record<string, unknown>): DeviceRecord {
+  return {
+    userId: item.userId as string,
+    deviceId: item.deviceId as string,
+    status: item.status as DeviceStatus,
+    registeredAt: item.registeredAt as string,
+    lastSeenAt: item.lastSeenAt as string,
+    ...(item.deviceLabel !== undefined && { deviceLabel: item.deviceLabel as string }),
+    ...(item.platform !== undefined && { platform: item.platform as string }),
+    ...(item.appVersion !== undefined && { appVersion: item.appVersion as string }),
+    ...(item.revokedAt !== undefined && { revokedAt: item.revokedAt as string }),
+  };
+}
+
 export async function getDevice(userId: string, deviceId: string): Promise<DeviceRecord | null> {
   const result = await ddbDocClient.send(new GetCommand({
     TableName,
@@ -49,7 +63,7 @@ export async function getDevice(userId: string, deviceId: string): Promise<Devic
     }
   }));
 
-  return result.Item ? (result.Item as DeviceRecord) : null;
+  return result.Item ? toDeviceRecord(result.Item) : null;
 }
 
 export async function listDevicesByUser(userId: string): Promise<DeviceRecord[]> {
@@ -61,7 +75,7 @@ export async function listDevicesByUser(userId: string): Promise<DeviceRecord[]>
     }
   }));
 
-  return (result.Items || []) as DeviceRecord[];
+  return (result.Items || []).map((item: Record<string, unknown>) => toDeviceRecord(item));
 }
 
 export async function updateDeviceStatus(userId: string, deviceId: string, status: DeviceStatus): Promise<DeviceRecord> {
@@ -89,5 +103,8 @@ export async function updateDeviceStatus(userId: string, deviceId: string, statu
     ReturnValues: "ALL_NEW"
   }));
 
-  return result.Attributes as DeviceRecord;
+  if (!result.Attributes) {
+    throw new Error(`Device not found after update: ${deviceId}`);
+  }
+  return toDeviceRecord(result.Attributes as Record<string, unknown>);
 }
