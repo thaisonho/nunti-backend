@@ -42,7 +42,11 @@ Plans:
   1. User can sign up and sign in with email and password via Cognito.
   2. Requests with invalid JWT claims are rejected on protected routes, while valid tokens are accepted.
   3. User can register multiple devices and revoke a device so it is no longer authorized.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md - Establish Wave 0 runtime/test scaffold and implement Cognito auth plus centralized JWT rejection contract.
+- [ ] 02-02-PLAN.md - Implement trusted-device register/list/revoke lifecycle and protected-route participation enforcement.
 
 ### Phase 3: Signal Key Lifecycle and Bootstrap
 **Goal**: Clients can publish and retrieve Signal bootstrap key material with safe one-time semantics.
