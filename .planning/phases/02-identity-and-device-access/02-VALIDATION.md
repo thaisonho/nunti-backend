@@ -1,9 +1,9 @@
 ---
 phase: 2
 slug: identity-and-device-access
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: verified
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-19
 ---
 
@@ -38,9 +38,9 @@ created: 2026-03-19
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 2-01-01 | 01 | 0 | AUTH-01 | integration + unit | `npm run test:auth -- tests/integration/auth-signin-signup.test.ts` | ❌ W0 | ⬜ pending |
-| 2-01-02 | 01 | 0 | AUTH-02 | integration + unit | `npm run test:auth -- tests/unit/auth-guard.test.ts tests/integration/protected-route-auth.test.ts` | ❌ W0 | ⬜ pending |
-| 2-01-03 | 01 | 0 | AUTH-03 | integration + unit | `npm run test:auth -- tests/unit/device-service.test.ts tests/integration/devices-flow.test.ts` | ❌ W0 | ⬜ pending |
+| 2-01-01 | 01 | 0 | AUTH-01 | integration + unit | `npm run test:auth -- tests/integration/auth-signin-signup.test.ts` | ✅ existing | ✅ green |
+| 2-01-02 | 01 | 0 | AUTH-02 | integration + unit | `npm run test:auth -- tests/unit/auth-guard.test.ts tests/integration/protected-route-auth.test.ts` | ✅ existing | ✅ green |
+| 2-01-03 | 01 | 0 | AUTH-03 | integration + unit | `npm run test:auth -- tests/unit/device-service.test.ts tests/integration/devices-flow.test.ts` | ✅ existing | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,13 +48,13 @@ created: 2026-03-19
 
 ## Wave 0 Requirements
 
-- [ ] `tests/unit/auth-guard.test.ts` — claim and token error-path matrix for AUTH-02
-- [ ] `tests/unit/auth-error-mapper.test.ts` — stable machine code + status mapping
-- [ ] `tests/unit/device-service.test.ts` — register/revoke state transitions for AUTH-03
-- [ ] `tests/integration/protected-route-auth.test.ts` — valid vs invalid JWT behavior on protected route
-- [ ] `tests/integration/devices-flow.test.ts` — multi-device register/list/revoke behavior
-- [ ] `vitest.config.ts` — test setup and path aliases
-- [ ] `npm install -D vitest @types/aws-lambda` — framework install and types
+- [x] `tests/unit/auth-guard.test.ts` — claim and token error-path matrix for AUTH-02
+- [x] `tests/unit/auth-error-mapper.test.ts` — stable machine code + status mapping
+- [x] `tests/unit/device-service.test.ts` — register/revoke state transitions for AUTH-03
+- [x] `tests/integration/protected-route-auth.test.ts` — valid vs invalid JWT behavior on protected route
+- [x] `tests/integration/devices-flow.test.ts` — multi-device register/list/revoke behavior
+- [x] `vitest.config.ts` — test setup and path aliases
+- [x] `npm install -D vitest @types/aws-lambda` — framework install and types
 
 ---
 
@@ -68,11 +68,11 @@ created: 2026-03-19
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** verified
