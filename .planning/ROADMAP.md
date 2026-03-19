@@ -28,7 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Contributors can create and complete feature, release, and hotfix work using the Git Flow branch model.
   2. Pull requests targeting integration branches cannot be merged without at least one peer approval.
   3. New commits follow Conventional Commits format and produce a consistently classifiable history.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md - Implement enforceable governance controls via Conventional Commit checks and ruleset-as-code.
+- [ ] 01-02-PLAN.md - Codify Git Flow contributor workflow, PR template gates, and governance verification matrix.
 
 ### Phase 2: Identity and Device Access
 **Goal**: Users can securely authenticate and control which of their devices are allowed to participate.
@@ -79,7 +83,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Collaboration Governance Baseline | 0/TBD | Not started | - |
+| 1. Collaboration Governance Baseline | 0/2 | Planned | - |
 | 2. Identity and Device Access | 0/TBD | Not started | - |
 | 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
 | 4. Reliable 1:1 Messaging Core | 0/TBD | Not started | - |
