@@ -12,11 +12,10 @@ Enable users to exchange and synchronize messages and related metadata reliably 
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Provide secure user identity and authentication integration using AWS Cognito for client access control. *(Validated in Phase 2: identity-and-device-access)*
 
 ### Active
 
-- [ ] Provide secure user identity and authentication integration using AWS Cognito for client access control.
 - [ ] Support Signal-style key lifecycle and session establishment flows for multi-device E2EE messaging.
 - [ ] Deliver real-time messaging transport through AWS API Gateway WebSocket and Lambda orchestration.
 - [ ] Persist required encrypted payload metadata and protocol state safely in AWS DynamoDB.
@@ -29,6 +28,8 @@ Enable users to exchange and synchronize messages and related metadata reliably 
 - Manual unmanaged code changes without review — excluded to preserve team traceability and quality.
 
 ## Context
+
+**Current State:** Phase 2 complete — identity and device access endpoints implemented and tested properly.
 
 This is a school project with no hard deadline, but quality and correctness are prioritized. Security posture target is strong academic-grade: protocol correctness, key lifecycle discipline, auditable architecture choices, and practical abuse resistance where feasible. Infrastructure setup preference is manual AWS setup first, with potential IaC adoption later. Success for early milestone is security architecture validation, alongside demonstrable E2EE backend workflows.
 
@@ -50,4 +51,4 @@ This is a school project with no hard deadline, but quality and correctness are 
 | Use Git Flow + PR review + Conventional Commits | Team needs auditable, structured, low-chaos collaboration | — Pending |
 
 ---
-*Last updated: 2026-03-19 after project initialization questioning*
+*Last updated: 2026-03-19 after Phase 2 completion*
