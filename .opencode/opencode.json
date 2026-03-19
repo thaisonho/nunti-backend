@@ -1,0 +1,10 @@
+{
+  "permission": {
+    "read": {
+      "/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/*": "allow"
+    },
+    "external_directory": {
+      "/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/*": "allow"
+    }
+  }
+}
