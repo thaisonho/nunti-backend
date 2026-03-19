@@ -7,9 +7,9 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can sign up and sign in with email and password via Cognito.
-- [ ] **AUTH-02**: Backend validates JWT claims (issuer, audience, token_use, expiry) on protected routes.
-- [ ] **AUTH-03**: User can register multiple devices and revoke a device.
+- [x] **AUTH-01**: User can sign up and sign in with email and password via Cognito.
+- [x] **AUTH-02**: Backend validates JWT claims (issuer, audience, token_use, expiry) on protected routes.
+- [x] **AUTH-03**: User can register multiple devices and revoke a device.
 
 ### Key Management
 
@@ -66,9 +66,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
+| AUTH-03 | Phase 2 | Complete |
 | KEYS-01 | Phase 3 | Pending |
 | KEYS-02 | Phase 3 | Pending |
 | KEYS-03 | Phase 3 | Pending |

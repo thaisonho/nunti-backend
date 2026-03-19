@@ -12,8 +12,8 @@ This roadmap delivers the backend in dependency order from team governance and s
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Collaboration Governance Baseline** - Team collaboration workflow is enforceable and auditable.
-- [ ] **Phase 2: Identity and Device Access** - Users authenticate through Cognito and manage trusted devices.
+- [x] **Phase 1: Collaboration Governance Baseline** - Team collaboration workflow is enforceable and auditable.
+- [x] **Phase 2: Identity and Device Access** - Users authenticate through Cognito and manage trusted devices.
 - [ ] **Phase 3: Signal Key Lifecycle and Bootstrap** - Devices exchange bootstrap key material safely for async session starts.
 - [ ] **Phase 4: Reliable 1:1 Messaging Core** - Encrypted direct messaging works with delivery reliability and reconnect recovery.
 - [ ] **Phase 5: Groups, Fanout, and Attachments** - Group delivery, multi-device fanout, and encrypted attachment envelopes are operational.
@@ -31,8 +31,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md - Implement enforceable governance controls via Conventional Commit checks and ruleset-as-code.
-- [ ] 01-02-PLAN.md - Codify Git Flow contributor workflow, PR template gates, and governance verification matrix.
+- [x] 01-01-PLAN.md - Implement enforceable governance controls via Conventional Commit checks and ruleset-as-code.
+- [x] 01-02-PLAN.md - Codify Git Flow contributor workflow, PR template gates, and governance verification matrix.
 
 ### Phase 2: Identity and Device Access
 **Goal**: Users can securely authenticate and control which of their devices are allowed to participate.
@@ -42,7 +42,11 @@ Plans:
   1. User can sign up and sign in with email and password via Cognito.
   2. Requests with invalid JWT claims are rejected on protected routes, while valid tokens are accepted.
   3. User can register multiple devices and revoke a device so it is no longer authorized.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [x] 02-01-PLAN.md - Establish Wave 0 runtime/test scaffold and implement Cognito auth plus centralized JWT rejection contract.
+- [x] 02-02-PLAN.md - Implement trusted-device register/list/revoke lifecycle and protected-route participation enforcement.
 
 ### Phase 3: Signal Key Lifecycle and Bootstrap
 **Goal**: Clients can publish and retrieve Signal bootstrap key material with safe one-time semantics.
@@ -83,8 +87,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Collaboration Governance Baseline | 1/2 | In Progress|  |
-| 2. Identity and Device Access | 0/TBD | Not started | - |
+| 1. Collaboration Governance Baseline | 2/2 | Complete | 2026-03-19 |
+| 2. Identity and Device Access | 2/2 | Complete | 2026-03-19 |
 | 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
 | 4. Reliable 1:1 Messaging Core | 0/TBD | Not started | - |
 | 5. Groups, Fanout, and Attachments | 0/TBD | Not started | - |
