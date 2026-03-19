@@ -35,7 +35,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const device = await DeviceService.registerDevice({
       userId: user.sub,
       deviceId: validationResult.data.deviceId,
-      deviceLabel: validationResult.data.deviceId,
+      deviceLabel: validationResult.data.deviceLabel,
       platform: validationResult.data.platform,
       appVersion: validationResult.data.appVersion
     });

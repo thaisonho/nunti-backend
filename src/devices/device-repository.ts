@@ -1,6 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DeviceRecord, DeviceStatus } from "./device-model.js";
+import { getConfig } from "../app/config.js";
 
 const client = new DynamoDBClient({});
 export const ddbDocClient = DynamoDBDocumentClient.from(client);
@@ -13,7 +14,9 @@ interface UpsertParams {
   appVersion?: string;
 }
 
-const TableName = process.env.DEVICES_TABLE_NAME || "nunti-devices";
+function getTableName(): string {
+  return getConfig().devicesTableName;
+}
 
 export async function upsertDevice(params: UpsertParams): Promise<DeviceRecord> {
   const now = new Date().toISOString();
@@ -29,7 +32,7 @@ export async function upsertDevice(params: UpsertParams): Promise<DeviceRecord> 
   };
 
   await ddbDocClient.send(new PutCommand({
-    TableName,
+    TableName: getTableName(),
     Item: {
       pk: `USER#${params.userId}`,
       sk: `DEVICE#${params.deviceId}`,
@@ -56,7 +59,7 @@ function toDeviceRecord(item: Record<string, unknown>): DeviceRecord {
 
 export async function getDevice(userId: string, deviceId: string): Promise<DeviceRecord | null> {
   const result = await ddbDocClient.send(new GetCommand({
-    TableName,
+    TableName: getTableName(),
     Key: {
       pk: `USER#${userId}`,
       sk: `DEVICE#${deviceId}`
@@ -68,7 +71,7 @@ export async function getDevice(userId: string, deviceId: string): Promise<Devic
 
 export async function listDevicesByUser(userId: string): Promise<DeviceRecord[]> {
   const result = await ddbDocClient.send(new QueryCommand({
-    TableName,
+    TableName: getTableName(),
     KeyConditionExpression: "pk = :pk",
     ExpressionAttributeValues: {
       ":pk": `USER#${userId}`
@@ -92,7 +95,7 @@ export async function updateDeviceStatus(userId: string, deviceId: string, statu
   }
 
   const result = await ddbDocClient.send(new UpdateCommand({
-    TableName,
+    TableName: getTableName(),
     Key: {
       pk: `USER#${userId}`,
       sk: `DEVICE#${deviceId}`

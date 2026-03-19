@@ -1,6 +1,8 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
+const root = process.cwd();
+
 export default defineConfig({
   test: {
     globals: true,
@@ -15,11 +17,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@app": path.resolve(__dirname, "src/app"),
-      "@auth": path.resolve(__dirname, "src/auth"),
-      "@devices": path.resolve(__dirname, "src/devices"),
-      "@handlers": path.resolve(__dirname, "src/handlers"),
-      "@shared": path.resolve(__dirname, "src/shared"),
+      "@app": path.resolve(root, "src/app"),
+      "@auth": path.resolve(root, "src/auth"),
+      "@devices": path.resolve(root, "src/devices"),
+      "@handlers": path.resolve(root, "src/handlers"),
+      "@shared": path.resolve(root, "src/shared"),
     },
   },
 });

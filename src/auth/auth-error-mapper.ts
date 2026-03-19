@@ -21,8 +21,7 @@ export function isExpiredTokenError(error: unknown): boolean {
     const message = error.message.toLowerCase();
     return (
       message.includes("expired") ||
-      message.includes("token expired") ||
-      message.includes("exp")
+      message.includes("jwt expired")
     );
   }
   return false;
