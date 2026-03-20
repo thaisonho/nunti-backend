@@ -1,6 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
-import { DeviceRecord, DeviceStatus, IdentityKeyRecord, SignedPreKeyRecord } from "./device-model.js";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DeviceRecord, DeviceStatus, IdentityKeyRecord, SignedPreKeyRecord, OneTimePreKeyRecord } from "./device-model.js";
+import { AppError } from "../app/errors.js";
 import { getConfig } from "../app/config.js";
 
 const client = new DynamoDBClient({});
@@ -25,6 +26,22 @@ function getTableName(): string {
   return getConfig().devicesTableName;
 }
 
+function devicePk(userId: string): string {
+  return `USER#${userId}`;
+}
+
+function deviceSk(deviceId: string): string {
+  return `DEVICE#${deviceId}`;
+}
+
+function oneTimePreKeyPrefix(deviceId: string): string {
+  return `${deviceSk(deviceId)}#OPK#`;
+}
+
+function oneTimePreKeySk(deviceId: string, keyId: string): string {
+  return `${oneTimePreKeyPrefix(deviceId)}${keyId}`;
+}
+
 export async function upsertDevice(params: UpsertParams): Promise<DeviceRecord> {
   const now = new Date().toISOString();
   const record: DeviceRecord = {
@@ -41,8 +58,8 @@ export async function upsertDevice(params: UpsertParams): Promise<DeviceRecord> 
   await ddbDocClient.send(new PutCommand({
     TableName: getTableName(),
     Item: {
-      pk: `USER#${params.userId}`,
-      sk: `DEVICE#${params.deviceId}`,
+      pk: devicePk(params.userId),
+      sk: deviceSk(params.deviceId),
       ...record
     }
   }));
@@ -71,8 +88,8 @@ export async function getDevice(userId: string, deviceId: string): Promise<Devic
   const result = await ddbDocClient.send(new GetCommand({
     TableName: getTableName(),
     Key: {
-      pk: `USER#${userId}`,
-      sk: `DEVICE#${deviceId}`
+      pk: devicePk(userId),
+      sk: deviceSk(deviceId)
     }
   }));
 
@@ -83,8 +100,12 @@ export async function listDevicesByUser(userId: string): Promise<DeviceRecord[]>
   const result = await ddbDocClient.send(new QueryCommand({
     TableName: getTableName(),
     KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    FilterExpression: "attribute_exists(#status)",
+    ExpressionAttributeNames: {
+      "#status": "status",
+    },
     ExpressionAttributeValues: {
-      ":pk": `USER#${userId}`,
+      ":pk": devicePk(userId),
       ":sk": "DEVICE#"
     }
   }));
@@ -108,8 +129,8 @@ export async function updateDeviceStatus(userId: string, deviceId: string, statu
   const result = await ddbDocClient.send(new UpdateCommand({
     TableName: getTableName(),
     Key: {
-      pk: `USER#${userId}`,
-      sk: `DEVICE#${deviceId}`
+      pk: devicePk(userId),
+      sk: deviceSk(deviceId)
     },
     UpdateExpression: updateExpr,
     ExpressionAttributeNames: exprNames,
@@ -128,8 +149,8 @@ export async function updateDeviceKeys(params: UpdateDeviceKeysParams): Promise<
   const result = await ddbDocClient.send(new UpdateCommand({
     TableName: getTableName(),
     Key: {
-      pk: `USER#${params.userId}`,
-      sk: `DEVICE#${params.deviceId}`
+      pk: devicePk(params.userId),
+      sk: deviceSk(params.deviceId)
     },
     ConditionExpression: "attribute_exists(pk) AND attribute_exists(sk)",
     UpdateExpression: "SET identityKey = :identityKey, signedPreKey = :signedPreKey, keyStateUpdatedAt = :updatedAt, lastSeenAt = :updatedAt",
@@ -146,4 +167,82 @@ export async function updateDeviceKeys(params: UpdateDeviceKeysParams): Promise<
   }
 
   return toDeviceRecord(result.Attributes as Record<string, unknown>);
+}
+
+export async function replaceOneTimePreKeys(userId: string, deviceId: string, preKeys: OneTimePreKeyRecord[]): Promise<void> {
+  const existing = await ddbDocClient.send(new QueryCommand({
+    TableName: getTableName(),
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+    ExpressionAttributeValues: {
+      ":pk": devicePk(userId),
+      ":prefix": oneTimePreKeyPrefix(deviceId),
+    },
+  }));
+
+  for (const item of existing.Items ?? []) {
+    await ddbDocClient.send(new DeleteCommand({
+      TableName: getTableName(),
+      Key: {
+        pk: item.pk,
+        sk: item.sk,
+      },
+    }));
+  }
+
+  for (const preKey of preKeys) {
+    await ddbDocClient.send(new PutCommand({
+      TableName: getTableName(),
+      Item: {
+        pk: devicePk(userId),
+        sk: oneTimePreKeySk(deviceId, preKey.keyId),
+        userId,
+        deviceId,
+        ...preKey,
+      },
+      ConditionExpression: "attribute_not_exists(pk) AND attribute_not_exists(sk)",
+    }));
+  }
+}
+
+export async function consumeOneTimePreKey(userId: string, deviceId: string): Promise<OneTimePreKeyRecord> {
+  const queryResult = await ddbDocClient.send(new QueryCommand({
+    TableName: getTableName(),
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+    ExpressionAttributeValues: {
+      ":pk": devicePk(userId),
+      ":prefix": oneTimePreKeyPrefix(deviceId),
+    },
+    Limit: 25,
+  }));
+
+  const candidates = queryResult.Items ?? [];
+  if (candidates.length === 0) {
+    throw new AppError("CONFLICT", "No one-time prekeys available", 409);
+  }
+
+  for (const item of candidates) {
+    try {
+      await ddbDocClient.send(new DeleteCommand({
+        TableName: getTableName(),
+        Key: {
+          pk: item.pk,
+          sk: item.sk,
+        },
+        ConditionExpression: "attribute_exists(pk) AND attribute_exists(sk)",
+      }));
+
+      return {
+        keyId: item.keyId as string,
+        algorithm: item.algorithm as string,
+        publicKey: item.publicKey as string,
+      };
+    } catch (error) {
+      if ((error as { name?: string }).name === "ConditionalCheckFailedException") {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new AppError("CONFLICT", "No one-time prekeys available", 409);
 }
