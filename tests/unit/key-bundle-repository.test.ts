@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../src/app/errors.js';
 import * as DeviceRepository from '../../src/devices/device-repository.js';
+import { resetConfig } from '../../src/app/config.js';
 
 describe('key bundle repository', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    process.env.COGNITO_USER_POOL_ID = 'pool';
+    process.env.COGNITO_APP_CLIENT_ID = 'client';
+    process.env.DEVICES_TABLE_NAME = 'devices-table';
+    resetConfig();
   });
 
   it('consumes exactly one one-time prekey and retries when first delete loses contention', async () => {
-    const sendSpy = vi.spyOn(DeviceRepository.ddbDocClient, 'send') as unknown as ReturnType<typeof vi.fn>;
+    const sendSpy = vi.spyOn(DeviceRepository.ddbDocClient, 'send');
 
     sendSpy
       .mockResolvedValueOnce({
@@ -27,7 +32,7 @@ describe('key bundle repository', () => {
   });
 
   it('throws conflict when no one-time prekeys remain', async () => {
-    const sendSpy = vi.spyOn(DeviceRepository.ddbDocClient, 'send') as unknown as ReturnType<typeof vi.fn>;
+    const sendSpy = vi.spyOn(DeviceRepository.ddbDocClient, 'send');
     sendSpy.mockResolvedValueOnce({ Items: [] });
 
     await expect(DeviceRepository.consumeOneTimePreKey('user-1', 'dev-target')).rejects.toMatchObject<AppError>({

@@ -16,6 +16,12 @@ export interface SignedPreKeyRecord {
   signature: string;
 }
 
+export interface OneTimePreKeyRecord {
+  keyId: string;
+  algorithm: string;
+  publicKey: string;
+}
+
 export interface DeviceRecord {
   userId: string;
   deviceId: string;
