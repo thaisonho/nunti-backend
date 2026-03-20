@@ -3,6 +3,19 @@ export enum DeviceStatus {
   REVOKED = 'revoked',
 }
 
+export interface IdentityKeyRecord {
+  keyId: string;
+  algorithm: string;
+  publicKey: string;
+}
+
+export interface SignedPreKeyRecord {
+  keyId: string;
+  algorithm: string;
+  publicKey: string;
+  signature: string;
+}
+
 export interface DeviceRecord {
   userId: string;
   deviceId: string;
@@ -13,4 +26,7 @@ export interface DeviceRecord {
   platform?: string;
   appVersion?: string;
   revokedAt?: string;
+  keyStateUpdatedAt?: string;
+  identityKey?: IdentityKeyRecord;
+  signedPreKey?: SignedPreKeyRecord;
 }

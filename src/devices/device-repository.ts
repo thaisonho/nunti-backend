@@ -1,6 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
-import { DeviceRecord, DeviceStatus } from "./device-model.js";
+import { DeviceRecord, DeviceStatus, IdentityKeyRecord, SignedPreKeyRecord } from "./device-model.js";
 import { getConfig } from "../app/config.js";
 
 const client = new DynamoDBClient({});
@@ -12,6 +12,13 @@ interface UpsertParams {
   deviceLabel?: string;
   platform?: string;
   appVersion?: string;
+}
+
+interface UpdateDeviceKeysParams {
+  userId: string;
+  deviceId: string;
+  identityKey: IdentityKeyRecord;
+  signedPreKey: SignedPreKeyRecord;
 }
 
 function getTableName(): string {
@@ -54,6 +61,9 @@ function toDeviceRecord(item: Record<string, unknown>): DeviceRecord {
     ...(item.platform !== undefined && { platform: item.platform as string }),
     ...(item.appVersion !== undefined && { appVersion: item.appVersion as string }),
     ...(item.revokedAt !== undefined && { revokedAt: item.revokedAt as string }),
+    ...(item.keyStateUpdatedAt !== undefined && { keyStateUpdatedAt: item.keyStateUpdatedAt as string }),
+    ...(item.identityKey !== undefined && { identityKey: item.identityKey as IdentityKeyRecord }),
+    ...(item.signedPreKey !== undefined && { signedPreKey: item.signedPreKey as SignedPreKeyRecord }),
   };
 }
 
@@ -72,9 +82,10 @@ export async function getDevice(userId: string, deviceId: string): Promise<Devic
 export async function listDevicesByUser(userId: string): Promise<DeviceRecord[]> {
   const result = await ddbDocClient.send(new QueryCommand({
     TableName: getTableName(),
-    KeyConditionExpression: "pk = :pk",
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
     ExpressionAttributeValues: {
-      ":pk": `USER#${userId}`
+      ":pk": `USER#${userId}`,
+      ":sk": "DEVICE#"
     }
   }));
 
@@ -109,5 +120,30 @@ export async function updateDeviceStatus(userId: string, deviceId: string, statu
   if (!result.Attributes) {
     throw new Error(`Device not found after update: ${deviceId}`);
   }
+  return toDeviceRecord(result.Attributes as Record<string, unknown>);
+}
+
+export async function updateDeviceKeys(params: UpdateDeviceKeysParams): Promise<DeviceRecord> {
+  const now = new Date().toISOString();
+  const result = await ddbDocClient.send(new UpdateCommand({
+    TableName: getTableName(),
+    Key: {
+      pk: `USER#${params.userId}`,
+      sk: `DEVICE#${params.deviceId}`
+    },
+    ConditionExpression: "attribute_exists(pk) AND attribute_exists(sk)",
+    UpdateExpression: "SET identityKey = :identityKey, signedPreKey = :signedPreKey, keyStateUpdatedAt = :updatedAt, lastSeenAt = :updatedAt",
+    ExpressionAttributeValues: {
+      ":identityKey": params.identityKey,
+      ":signedPreKey": params.signedPreKey,
+      ":updatedAt": now,
+    },
+    ReturnValues: "ALL_NEW"
+  }));
+
+  if (!result.Attributes) {
+    throw new Error(`Device not found after key update: ${params.deviceId}`);
+  }
+
   return toDeviceRecord(result.Attributes as Record<string, unknown>);
 }
