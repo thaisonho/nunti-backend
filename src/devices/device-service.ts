@@ -2,7 +2,6 @@ import { DeviceRecord, DeviceStatus, IdentityKeyRecord, SignedPreKeyRecord, OneT
 import * as DeviceRepository from "./device-repository.js";
 import { AppError } from "../app/errors.js";
 import { isDeviceTrusted } from "./device-policy.js";
-import { publishTrustChange } from "../realtime/trust-change-publisher.js";
 
 export interface RegisterDevicePayload {
   userId: string;
@@ -37,13 +36,7 @@ export interface BootstrapBundle {
 }
 
 export async function registerDevice(payload: RegisterDevicePayload): Promise<DeviceRecord> {
-  const device = await DeviceRepository.upsertDevice(payload);
-  await publishTrustChange(payload.userId, {
-    changeType: "device-registered",
-    deviceId: payload.deviceId,
-    timestamp: new Date().toISOString(),
-  });
-  return device;
+  return DeviceRepository.upsertDevice(payload);
 }
 
 export async function listDevices(userId: string): Promise<DeviceRecord[]> {
@@ -60,13 +53,7 @@ export async function revokeDevice(userId: string, deviceId: string): Promise<De
     return device;
   }
 
-  const updated = await DeviceRepository.updateDeviceStatus(userId, deviceId, DeviceStatus.REVOKED);
-  await publishTrustChange(userId, {
-    changeType: "device-revoked",
-    deviceId,
-    timestamp: new Date().toISOString(),
-  });
-  return updated;
+  return DeviceRepository.updateDeviceStatus(userId, deviceId, DeviceStatus.REVOKED);
 }
 
 export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promise<DeviceRecord> {
@@ -90,12 +77,6 @@ export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promis
   if (payload.oneTimePreKeys) {
     await DeviceRepository.replaceOneTimePreKeys(payload.actorUserId, payload.targetDeviceId, payload.oneTimePreKeys);
   }
-
-  await publishTrustChange(payload.actorUserId, {
-    changeType: "keys-updated",
-    deviceId: payload.targetDeviceId,
-    timestamp: new Date().toISOString(),
-  });
 
   return updated;
 }

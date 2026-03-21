@@ -7,23 +7,14 @@ vi.mock('../../src/realtime/connection-registry.js');
 const sendSpy = vi.fn();
 
 vi.mock('@aws-sdk/client-apigatewaymanagementapi', () => ({
-  ApiGatewayManagementApiClient: class {
-    send = sendSpy;
-  },
-  PostToConnectionCommand: class {
-    input: unknown;
-
-    constructor(input: unknown) {
-      this.input = input;
-    }
-  },
+  ApiGatewayManagementApiClient: vi.fn(() => ({ send: sendSpy })),
+  PostToConnectionCommand: vi.fn((input: unknown) => ({ input })),
 }));
 
 describe('trust-change publisher', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sendSpy.mockReset();
-    process.env.WEBSOCKET_MANAGEMENT_ENDPOINT = 'https://ws.example.test';
   });
 
   it('fans out minimal trust-change payload to same-account active connections', async () => {
