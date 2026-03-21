@@ -57,10 +57,7 @@ Plans:
   2. Initiating client can fetch a one-time prekey bundle that is consumed atomically and not re-issued.
   3. Client can obtain session bootstrap metadata required for asynchronous session initiation.
   4. Trust-change events are emitted to affected clients when key or device trust state changes.
-**Plans**: 1 plan
-
-Plans:
-- [ ] 03-PLAN.md - Extend device key state, atomic prekey bootstrap, and minimal trust-change fanout.
+**Plans**: TBD
 
 ### Phase 4: Reliable 1:1 Messaging Core
 **Goal**: Users can exchange encrypted direct messages in real time with durable retry-safe delivery behavior.
