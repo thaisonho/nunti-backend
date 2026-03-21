@@ -68,10 +68,6 @@ describe('GET /v1/users/{userId}/devices/{deviceId}/bootstrap', () => {
   });
 
   it('returns 403 when caller user does not match path user', async () => {
-    vi.mocked(DeviceService.getBootstrapBundle).mockRejectedValue(
-      new AppError('AUTH_FORBIDDEN', 'Device not found or not owned by caller', 403),
-    );
-
     const response = await bootstrapHandler(createEvent('user-2'));
 
     expect(response.statusCode).toBe(403);

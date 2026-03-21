@@ -18,7 +18,6 @@ const signedPreKeySchema = keyPayloadSchema.extend({
 const uploadSchema = z.object({
   identityKey: keyPayloadSchema,
   signedPreKey: signedPreKeySchema,
-  oneTimePreKeys: z.array(keyPayloadSchema).optional(),
 });
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -57,7 +56,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       targetDeviceId,
       identityKey: validationResult.data.identityKey,
       signedPreKey: validationResult.data.signedPreKey,
-      oneTimePreKeys: validationResult.data.oneTimePreKeys,
     });
 
     return successResponse(updated, 200);
