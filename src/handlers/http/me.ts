@@ -10,14 +10,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
 
     const deviceId = event.headers['X-Device-Id'] || event.headers['x-device-id'];
-    
-    if (deviceId) {
-      const devices = await DeviceService.listDevices(user.sub);
-      const activeDevice = devices.find(d => d.deviceId === deviceId);
-      
-      if (!activeDevice || !isDeviceTrusted(activeDevice)) {
-        throw new AuthError('AUTH_FORBIDDEN', 403);
-      }
+
+    if (!deviceId) {
+      return rawErrorResponse(400, 'VALIDATION_ERROR', 'Missing X-Device-Id header');
+    }
+
+    const devices = await DeviceService.listDevices(user.sub);
+    const activeDevice = devices.find(d => d.deviceId === deviceId);
+
+    if (!activeDevice || !isDeviceTrusted(activeDevice)) {
+      throw new AuthError('AUTH_FORBIDDEN', 403);
     }
 
     return successResponse({

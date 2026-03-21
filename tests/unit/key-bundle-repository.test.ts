@@ -33,7 +33,9 @@ describe('key bundle repository', () => {
 
   it('throws conflict when no one-time prekeys remain', async () => {
     const sendSpy = vi.spyOn(DeviceRepository.ddbDocClient, 'send');
-    sendSpy.mockResolvedValueOnce({ Items: [] });
+    sendSpy
+      .mockResolvedValueOnce({ Items: [] })
+      .mockResolvedValueOnce({ Items: [] });
 
     await expect(DeviceRepository.consumeOneTimePreKey('user-1', 'dev-target')).rejects.toMatchObject<AppError>({
       code: 'CONFLICT',

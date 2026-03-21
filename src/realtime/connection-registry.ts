@@ -15,6 +15,19 @@ function connectionsPk(userId: string): string {
   return `CONNECTIONS#${userId}`;
 }
 
+function parseConnectionId(item: Record<string, unknown>): string | null {
+  if (typeof item.connectionId === 'string' && item.connectionId.length > 0) {
+    return item.connectionId;
+  }
+
+  if (typeof item.sk === 'string' && item.sk.startsWith('CONNECTION#')) {
+    const derived = item.sk.slice('CONNECTION#'.length);
+    return derived.length > 0 ? derived : null;
+  }
+
+  return null;
+}
+
 export async function listActiveConnections(userId: string): Promise<ActiveConnection[]> {
   const result = await ddbDocClient.send(new QueryCommand({
     TableName: getTableName(),
@@ -25,10 +38,19 @@ export async function listActiveConnections(userId: string): Promise<ActiveConne
     },
   }));
 
-  return (result.Items ?? []).map((item) => ({
-    userId,
-    connectionId: String(item.connectionId),
-  }));
+  return (result.Items ?? [])
+    .map((item) => {
+      const connectionId = parseConnectionId(item as Record<string, unknown>);
+      if (!connectionId) {
+        return null;
+      }
+
+      return {
+        userId,
+        connectionId,
+      };
+    })
+    .filter((item): item is ActiveConnection => item !== null);
 }
 
 export async function removeConnection(userId: string, connectionId: string): Promise<void> {

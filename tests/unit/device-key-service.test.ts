@@ -159,4 +159,65 @@ describe('device key upload service', () => {
       }),
     ).rejects.toThrow(AppError);
   });
+
+  it('rejects when target device is revoked', async () => {
+    vi.mocked(DeviceRepository.getDevice)
+      .mockResolvedValueOnce(trustedActor)
+      .mockResolvedValueOnce({
+        ...trustedTarget,
+        status: DeviceStatus.REVOKED,
+        revokedAt: now,
+      });
+
+    await expect(
+      DeviceService.uploadDeviceKeys({
+        actorUserId: 'user-1',
+        actorDeviceId: 'dev-actor',
+        targetDeviceId: 'dev-target',
+        identityKey: {
+          keyId: 'ik-1',
+          algorithm: 'X25519',
+          publicKey: 'base64-public-identity',
+        },
+        signedPreKey: {
+          keyId: 'spk-1',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-public-signed-prekey',
+          signature: 'base64-signature',
+        },
+      }),
+    ).rejects.toThrow(AppError);
+  });
+
+  it('rejects duplicate one-time prekey keyIds', async () => {
+    vi.mocked(DeviceRepository.getDevice)
+      .mockResolvedValueOnce(trustedActor)
+      .mockResolvedValueOnce(trustedTarget);
+
+    await expect(
+      DeviceService.uploadDeviceKeys({
+        actorUserId: 'user-1',
+        actorDeviceId: 'dev-actor',
+        targetDeviceId: 'dev-target',
+        identityKey: {
+          keyId: 'ik-1',
+          algorithm: 'X25519',
+          publicKey: 'base64-public-identity',
+        },
+        signedPreKey: {
+          keyId: 'spk-1',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-public-signed-prekey',
+          signature: 'base64-signature',
+        },
+        oneTimePreKeys: [
+          { keyId: 'opk-1', algorithm: 'X25519', publicKey: 'pk-a' },
+          { keyId: 'opk-1', algorithm: 'X25519', publicKey: 'pk-b' },
+        ],
+      }),
+    ).rejects.toMatchObject<AppError>({
+      code: 'VALIDATION_ERROR',
+      statusCode: 400,
+    });
+  });
 });
