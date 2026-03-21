@@ -35,6 +35,10 @@ function deviceSk(deviceId: string): string {
 }
 
 function oneTimePreKeyPrefix(deviceId: string): string {
+  return `OPK#DEVICE#${deviceId}#`;
+}
+
+function legacyOneTimePreKeyPrefix(deviceId: string): string {
   return `${deviceSk(deviceId)}#OPK#`;
 }
 
@@ -100,10 +104,6 @@ export async function listDevicesByUser(userId: string): Promise<DeviceRecord[]>
   const result = await ddbDocClient.send(new QueryCommand({
     TableName: getTableName(),
     KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
-    FilterExpression: "attribute_exists(#status)",
-    ExpressionAttributeNames: {
-      "#status": "status",
-    },
     ExpressionAttributeValues: {
       ":pk": devicePk(userId),
       ":sk": "DEVICE#"
@@ -170,52 +170,72 @@ export async function updateDeviceKeys(params: UpdateDeviceKeysParams): Promise<
 }
 
 export async function replaceOneTimePreKeys(userId: string, deviceId: string, preKeys: OneTimePreKeyRecord[]): Promise<void> {
-  const existing = await ddbDocClient.send(new QueryCommand({
-    TableName: getTableName(),
-    KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
-    ExpressionAttributeValues: {
-      ":pk": devicePk(userId),
-      ":prefix": oneTimePreKeyPrefix(deviceId),
-    },
-  }));
+  const prefixes = [oneTimePreKeyPrefix(deviceId), legacyOneTimePreKeyPrefix(deviceId)];
 
-  for (const item of existing.Items ?? []) {
-    await ddbDocClient.send(new DeleteCommand({
+  for (const prefix of prefixes) {
+    const existing = await ddbDocClient.send(new QueryCommand({
       TableName: getTableName(),
-      Key: {
-        pk: item.pk,
-        sk: item.sk,
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+      ExpressionAttributeValues: {
+        ":pk": devicePk(userId),
+        ":prefix": prefix,
       },
     }));
+
+    for (const item of existing.Items ?? []) {
+      await ddbDocClient.send(new DeleteCommand({
+        TableName: getTableName(),
+        Key: {
+          pk: item.pk,
+          sk: item.sk,
+        },
+      }));
+    }
   }
 
   for (const preKey of preKeys) {
-    await ddbDocClient.send(new PutCommand({
-      TableName: getTableName(),
-      Item: {
-        pk: devicePk(userId),
-        sk: oneTimePreKeySk(deviceId, preKey.keyId),
-        userId,
-        deviceId,
-        ...preKey,
-      },
-      ConditionExpression: "attribute_not_exists(pk) AND attribute_not_exists(sk)",
-    }));
+    try {
+      await ddbDocClient.send(new PutCommand({
+        TableName: getTableName(),
+        Item: {
+          pk: devicePk(userId),
+          sk: oneTimePreKeySk(deviceId, preKey.keyId),
+          userId,
+          deviceId,
+          ...preKey,
+        },
+        ConditionExpression: "attribute_not_exists(pk) AND attribute_not_exists(sk)",
+      }));
+    } catch (error) {
+      if ((error as { name?: string }).name === "ConditionalCheckFailedException") {
+        throw new AppError("CONFLICT", "Duplicate one-time prekey keyId in replacement payload", 409);
+      }
+      throw error;
+    }
   }
 }
 
 export async function consumeOneTimePreKey(userId: string, deviceId: string): Promise<OneTimePreKeyRecord> {
-  const queryResult = await ddbDocClient.send(new QueryCommand({
-    TableName: getTableName(),
-    KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
-    ExpressionAttributeValues: {
-      ":pk": devicePk(userId),
-      ":prefix": oneTimePreKeyPrefix(deviceId),
-    },
-    Limit: 25,
-  }));
+  const prefixes = [oneTimePreKeyPrefix(deviceId), legacyOneTimePreKeyPrefix(deviceId)];
+  let candidates: Record<string, unknown>[] = [];
 
-  const candidates = queryResult.Items ?? [];
+  for (const prefix of prefixes) {
+    const queryResult = await ddbDocClient.send(new QueryCommand({
+      TableName: getTableName(),
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+      ExpressionAttributeValues: {
+        ":pk": devicePk(userId),
+        ":prefix": prefix,
+      },
+      Limit: 25,
+    }));
+
+    candidates = queryResult.Items ?? [];
+    if (candidates.length > 0) {
+      break;
+    }
+  }
+
   if (candidates.length === 0) {
     throw new AppError("CONFLICT", "No one-time prekeys available", 409);
   }

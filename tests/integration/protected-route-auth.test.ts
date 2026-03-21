@@ -56,6 +56,17 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
     expect(body.error.code).toBe('AUTH_TOKEN_MISSING_OR_MALFORMED');
   });
 
+  it('returns 400 VALIDATION_ERROR when X-Device-Id is missing with valid auth', async () => {
+    vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+
+    const event = createEvent({ Authorization: 'Bearer valid-token' });
+    const response = await meHandler(event);
+
+    expect(response.statusCode).toBe(400);
+    const body = JSON.parse(response.body);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('rejects revoked device with 403 AUTH_FORBIDDEN', async () => {
     vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
     // Simulate revoked device returned by device service or policy helper inside meHandler
