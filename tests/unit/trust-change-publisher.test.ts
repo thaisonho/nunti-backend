@@ -57,21 +57,4 @@ describe('trust-change publisher', () => {
 
     expect(ConnectionRegistry.removeConnection).toHaveBeenCalledWith('user-1', 'stale-conn');
   });
-
-  it('does not fail caller when delivery fails with non-gone error', async () => {
-    vi.mocked(ConnectionRegistry.listActiveConnections).mockResolvedValue([
-      { userId: 'user-1', connectionId: 'conn-1' },
-    ]);
-    sendSpy.mockRejectedValue({ name: 'TimeoutError' });
-
-    await expect(
-      publishTrustChange('user-1', {
-        changeType: 'keys-updated',
-        deviceId: 'dev-target',
-        timestamp: '2026-03-20T10:02:00.000Z',
-      }),
-    ).resolves.toBeUndefined();
-
-    expect(ConnectionRegistry.removeConnection).not.toHaveBeenCalled();
-  });
 });

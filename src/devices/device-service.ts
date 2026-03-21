@@ -80,17 +80,6 @@ export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promis
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
   }
 
-  if (!isDeviceTrusted(targetDevice)) {
-    throw new AppError("AUTH_FORBIDDEN", "Target device is not trusted", 403);
-  }
-
-  if (payload.oneTimePreKeys) {
-    const uniqueKeyIds = new Set(payload.oneTimePreKeys.map((preKey) => preKey.keyId));
-    if (uniqueKeyIds.size !== payload.oneTimePreKeys.length) {
-      throw new AppError("VALIDATION_ERROR", "Duplicate one-time prekey keyId values are not allowed", 400);
-    }
-  }
-
   const updated = await DeviceRepository.updateDeviceKeys({
     userId: payload.actorUserId,
     deviceId: payload.targetDeviceId,
@@ -124,10 +113,6 @@ export async function getBootstrapBundle(payload: GetBootstrapBundlePayload): Pr
   const targetDevice = await DeviceRepository.getDevice(payload.targetUserId, payload.targetDeviceId);
   if (!targetDevice) {
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
-  }
-
-  if (!isDeviceTrusted(targetDevice)) {
-    throw new AppError("AUTH_FORBIDDEN", "Target device is not trusted", 403);
   }
 
   if (!targetDevice.identityKey || !targetDevice.signedPreKey) {

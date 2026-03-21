@@ -42,11 +42,7 @@ export async function publishTrustChange(userId: string, event: TrustChangeEvent
         return;
       }
 
-      console.warn('trust-change delivery failed', {
-        userId,
-        connectionId: connection.connectionId,
-        errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+      throw error;
     }
   }));
 }
