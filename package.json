@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:auth": "vitest run tests/unit/auth- tests/unit/device- tests/integration/auth- tests/integration/protected- tests/integration/devices-",
+    "test:auth": "vitest run tests/unit/auth-*.test.ts tests/unit/device-*.test.ts tests/integration/auth-*.test.ts tests/integration/protected-*.test.ts tests/integration/devices-*.test.ts",
     "test:watch": "vitest"
   },
   "repository": {
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/thaisonho/nunti-backend#readme",
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.1013.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.1012.0",
     "@aws-sdk/client-dynamodb": "^3.1012.0",
     "@aws-sdk/lib-dynamodb": "^3.1012.0",
