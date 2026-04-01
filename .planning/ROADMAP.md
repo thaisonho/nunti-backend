@@ -70,7 +70,12 @@ Plans:
   1. User can send and receive 1:1 encrypted messages through the WebSocket relay.
   2. Delivery acknowledgement and idempotent retry behavior prevent duplicate message side effects.
   3. User who reconnects receives queued encrypted messages that were missed while offline.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md - Establish authenticated WebSocket connections and live direct-message relay plumbing.
+- [ ] 04-02-PLAN.md - Add retry-safe message persistence and sender-facing delivery-state transitions.
+- [ ] 04-03-PLAN.md - Implement reconnect replay, backlog drain, and replay-complete signaling.
 
 ### Phase 5: Groups, Fanout, and Attachments
 **Goal**: Encrypted messaging scales to groups and multiple devices, including attachment envelope transport.
@@ -93,5 +98,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Collaboration Governance Baseline | 2/2 | Complete | 2026-03-19 |
 | 2. Identity and Device Access | 2/2 | Complete | 2026-03-19 |
 | 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
-| 4. Reliable 1:1 Messaging Core | 0/TBD | Not started | - |
+| 4. Reliable 1:1 Messaging Core | 0/3 | Not started | - |
 | 5. Groups, Fanout, and Attachments | 0/TBD | Not started | - |
