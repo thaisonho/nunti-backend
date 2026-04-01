@@ -9,6 +9,7 @@ describe('key bundle repository', () => {
     process.env.COGNITO_USER_POOL_ID = 'pool';
     process.env.COGNITO_APP_CLIENT_ID = 'client';
     process.env.DEVICES_TABLE_NAME = 'devices-table';
+    process.env.MESSAGES_TABLE_NAME = 'messages-table';
     resetConfig();
   });
 

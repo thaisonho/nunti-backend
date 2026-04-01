@@ -8,6 +8,7 @@ export interface AppConfig {
   readonly cognitoAppClientId: string;
   readonly cognitoRegion: string;
   readonly devicesTableName: string;
+  readonly messagesTableName: string;
   readonly stage: string;
 }
 
@@ -29,6 +30,7 @@ export function getConfig(): AppConfig {
     cognitoAppClientId: required("COGNITO_APP_CLIENT_ID"),
     cognitoRegion: process.env.COGNITO_REGION ?? process.env.AWS_REGION ?? "ap-southeast-1",
     devicesTableName: required("DEVICES_TABLE_NAME"),
+    messagesTableName: required("MESSAGES_TABLE_NAME"),
     stage: process.env.STAGE ?? "dev",
   };
 
