@@ -40,7 +40,7 @@ describe('messages-dedup (idempotent retry)', () => {
     vi.mocked(MessageRelayPublisher.publishDeliveryStatus).mockResolvedValue();
   });
 
-  it('first send creates message and attempts relay', async () => {
+  it('first send returns accepted while attempting relay', async () => {
     vi.mocked(MessageRepository.createMessage).mockResolvedValue(null);
     vi.mocked(MessageRelayPublisher.relayDirectMessage).mockResolvedValue('delivered');
 
@@ -54,7 +54,7 @@ describe('messages-dedup (idempotent retry)', () => {
     const result = await sendMessage(senderContext, request);
 
     expect(result.messageId).toBe('dedup-msg-001');
-    expect(result.status).toBe('delivered');
+    expect(result.status).toBe('accepted');
     expect(MessageRepository.createMessage).toHaveBeenCalledOnce();
     expect(MessageRelayPublisher.relayDirectMessage).toHaveBeenCalledOnce();
   });

@@ -68,6 +68,8 @@ export async function createMessage(record: MessageRecord): Promise<MessageRecor
       messageId: record.messageId,
       senderUserId: record.senderUserId,
       senderDeviceId: record.senderDeviceId,
+      recipientUserId: record.recipientUserId,
+      recipientDeviceId: record.recipientDeviceId,
       ciphertext: record.ciphertext,
       deliveryState: record.deliveryState,
       serverTimestamp: record.serverTimestamp,
@@ -87,6 +89,7 @@ export async function getMessage(messageId: string): Promise<MessageRecord | nul
       pk: messagePk(messageId),
       sk: messagePk(messageId),
     },
+    ConsistentRead: true,
   }));
 
   if (!result.Item) {
@@ -159,15 +162,37 @@ export async function listQueuedMessages(
 }
 
 function toMessageRecord(item: Record<string, unknown>): MessageRecord {
+  const pk = item.pk as string | undefined;
+  const sk = item.sk as string | undefined;
+
+  let recipientUserId = item.recipientUserId as string | undefined;
+  let recipientDeviceId = item.recipientDeviceId as string | undefined;
+
+  if ((!recipientUserId || !recipientDeviceId) && pk && pk.startsWith('INBOX#')) {
+    const parts = pk.split('#');
+    if (parts.length >= 3) {
+      recipientUserId = recipientUserId ?? parts[1];
+      recipientDeviceId = recipientDeviceId ?? parts[2];
+    }
+  }
+
+  let serverTimestamp = item.serverTimestamp as string | undefined;
+  if (!serverTimestamp && sk) {
+    const [timestampPart] = sk.split('#');
+    if (timestampPart) {
+      serverTimestamp = timestampPart;
+    }
+  }
+
   return {
     messageId: item.messageId as string,
     senderUserId: item.senderUserId as string,
     senderDeviceId: item.senderDeviceId as string,
-    recipientUserId: item.recipientUserId as string,
-    recipientDeviceId: item.recipientDeviceId as string,
+    recipientUserId: recipientUserId as string,
+    recipientDeviceId: recipientDeviceId as string,
     ciphertext: item.ciphertext as string,
     deliveryState: item.deliveryState as DeliveryState,
-    serverTimestamp: item.serverTimestamp as string,
-    updatedAt: (item.updatedAt as string) ?? (item.serverTimestamp as string),
+    serverTimestamp: serverTimestamp as string,
+    updatedAt: (item.updatedAt as string) ?? (serverTimestamp as string),
   };
 }

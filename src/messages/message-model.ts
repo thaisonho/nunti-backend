@@ -19,8 +19,7 @@ export type DeliveryState =
   | 'accepted'
   | 'delivered'
   | 'accepted-queued'
-  | 'failed'
-  | 'replay-complete';
+  | 'failed';
 
 /** Client-sent direct-message relay request. */
 export interface DirectMessageRequest {

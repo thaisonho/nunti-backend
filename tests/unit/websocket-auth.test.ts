@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/auth/auth-guard.js');
+vi.mock('../../src/devices/device-service.js');
 
 import { requireAuth } from '../../src/auth/auth-guard.js';
+import * as DeviceService from '../../src/devices/device-service.js';
 import { extractWebSocketContext } from '../../src/auth/websocket-auth.js';
+import { DeviceStatus } from '../../src/devices/device-model.js';
 
 describe('websocket-auth', () => {
   beforeEach(() => {
@@ -15,6 +18,15 @@ describe('websocket-auth', () => {
       sub: 'user-123',
       tokenUse: 'access',
     });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      {
+        userId: 'user-123',
+        deviceId: 'device-456',
+        status: DeviceStatus.TRUSTED,
+        registeredAt: '2026-04-01T00:00:00.000Z',
+        lastSeenAt: '2026-04-01T00:00:00.000Z',
+      },
+    ] as any);
 
     const event = {
       requestContext: { connectionId: 'conn-abc' },
@@ -40,6 +52,15 @@ describe('websocket-auth', () => {
       sub: 'user-789',
       tokenUse: 'access',
     });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      {
+        userId: 'user-789',
+        deviceId: 'device-012',
+        status: DeviceStatus.TRUSTED,
+        registeredAt: '2026-04-01T00:00:00.000Z',
+        lastSeenAt: '2026-04-01T00:00:00.000Z',
+      },
+    ] as any);
 
     const event = {
       requestContext: { connectionId: 'conn-def' },
@@ -62,6 +83,15 @@ describe('websocket-auth', () => {
       sub: 'user-1',
       tokenUse: 'access',
     });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      {
+        userId: 'user-1',
+        deviceId: 'dev-1',
+        status: DeviceStatus.TRUSTED,
+        registeredAt: '2026-04-01T00:00:00.000Z',
+        lastSeenAt: '2026-04-01T00:00:00.000Z',
+      },
+    ] as any);
 
     const event = {
       requestContext: { connectionId: 'conn-1' },
@@ -111,5 +141,46 @@ describe('websocket-auth', () => {
     vi.mocked(requireAuth).mockRejectedValue(new Error('Authentication failed'));
 
     await expect(extractWebSocketContext(event as any)).rejects.toThrow();
+  });
+
+  it('throws when device is not found for the authenticated user', async () => {
+    vi.mocked(requireAuth).mockResolvedValue({
+      sub: 'user-123',
+      tokenUse: 'access',
+    });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([] as any);
+
+    const event = {
+      requestContext: { connectionId: 'conn-abc' },
+      queryStringParameters: { token: 'valid-jwt-token', deviceId: 'missing-device' },
+      headers: null,
+    };
+
+    await expect(extractWebSocketContext(event as any)).rejects.toThrow('Authentication failed');
+  });
+
+  it('throws when device is revoked', async () => {
+    vi.mocked(requireAuth).mockResolvedValue({
+      sub: 'user-123',
+      tokenUse: 'access',
+    });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      {
+        userId: 'user-123',
+        deviceId: 'device-456',
+        status: DeviceStatus.REVOKED,
+        registeredAt: '2026-04-01T00:00:00.000Z',
+        lastSeenAt: '2026-04-01T00:00:00.000Z',
+        revokedAt: '2026-04-02T00:00:00.000Z',
+      },
+    ] as any);
+
+    const event = {
+      requestContext: { connectionId: 'conn-abc' },
+      queryStringParameters: { token: 'valid-jwt-token', deviceId: 'device-456' },
+      headers: null,
+    };
+
+    await expect(extractWebSocketContext(event as any)).rejects.toThrow('Authentication failed');
   });
 });

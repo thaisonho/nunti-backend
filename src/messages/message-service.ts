@@ -5,10 +5,10 @@
  * (recipient lookup), and message relay publisher (live delivery).
  *
  * Delivery outcomes:
- *   accepted  → stored + relay attempted (initial state)
- *   delivered → relay succeeded to at least one recipient device connection
- *   accepted-queued → recipient device has no active connections
- *   failed    → retention policy expired for queued message
+ *   accepted  → immediate send-result after persistence + relay attempt
+ *   delivered → async delivery-status after relay succeeds
+ *   accepted-queued → async delivery-status when recipient is offline
+ *   failed    → async delivery-status when retention policy expires
  *
  * Idempotency:
  *   A retry with the same messageId returns the prior outcome without
@@ -103,7 +103,7 @@ export async function sendMessage(
 
   return {
     messageId: request.messageId,
-    status: deliveryOutcome,
+    status: 'accepted',
     serverTimestamp,
   };
 }

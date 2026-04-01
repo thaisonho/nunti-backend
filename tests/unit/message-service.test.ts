@@ -55,7 +55,7 @@ describe('message-service', () => {
       const result = await sendMessage(senderContext, baseRequest);
 
       expect(result.messageId).toBe('msg-001');
-      expect(result.status).toBe('delivered');
+      expect(result.status).toBe('accepted');
       expect(result.serverTimestamp).toBeDefined();
 
       expect(MessageRepository.createMessage).toHaveBeenCalledOnce();
@@ -86,7 +86,7 @@ describe('message-service', () => {
 
       const result = await sendMessage(senderContext, baseRequest);
 
-      expect(result.status).toBe('accepted-queued');
+      expect(result.status).toBe('accepted');
       expect(MessageRepository.updateDeliveryState).toHaveBeenCalledOnce();
     });
 

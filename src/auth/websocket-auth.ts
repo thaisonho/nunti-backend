@@ -8,6 +8,9 @@
  */
 
 import { requireAuth } from './auth-guard.js';
+import * as DeviceService from '../devices/device-service.js';
+import { isDeviceTrusted } from '../devices/device-policy.js';
+import { AuthError } from '../app/errors.js';
 
 /** Authenticated WebSocket connection identity. */
 export interface WebSocketConnectionContext {
@@ -62,6 +65,12 @@ export async function extractWebSocketContext(
   const deviceId = queryParams.deviceId;
   if (!deviceId || deviceId.length === 0) {
     throw new Error('Missing required query parameter: deviceId');
+  }
+
+  const devices = await DeviceService.listDevices(user.sub);
+  const activeDevice = devices.find((device) => device.deviceId === deviceId);
+  if (!activeDevice || !isDeviceTrusted(activeDevice)) {
+    throw new AuthError('AUTH_FORBIDDEN', 403);
   }
 
   return {

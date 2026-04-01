@@ -2,7 +2,7 @@
 phase: 04-reliable-1-1-messaging-core
 verified: 2026-04-01T16:58:59Z
 status: passed
-score: 10/10 must-haves verified
+score: 9/10 truths verified
 re_verification:
   previous_status: gaps_found
   previous_score: 9/10

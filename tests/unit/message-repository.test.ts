@@ -19,6 +19,7 @@ import { ddbDocClient } from '../../src/devices/device-repository.js';
 import {
   createMessage,
   getMessage,
+  listQueuedMessages,
   updateDeliveryState,
 } from '../../src/messages/message-repository.js';
 import type { MessageRecord } from '../../src/messages/message-model.js';
@@ -74,6 +75,9 @@ describe('message-repository', () => {
       expect(result).toBeDefined();
       expect(result!.messageId).toBe('msg-001');
       expect(result!.deliveryState).toBe('delivered');
+
+      const getCall = vi.mocked(ddbDocClient.send).mock.calls[1][0];
+      expect((getCall as any).input.ConsistentRead).toBe(true);
     });
 
     it('creates both MSG and INBOX records for a new message', async () => {
@@ -85,6 +89,8 @@ describe('message-repository', () => {
       expect(ddbDocClient.send).toHaveBeenCalledTimes(2);
       const inboxCall = vi.mocked(ddbDocClient.send).mock.calls[1][0];
       expect((inboxCall as any).input.Item.pk).toContain('INBOX#');
+      expect((inboxCall as any).input.Item.recipientUserId).toBe('recipient-user');
+      expect((inboxCall as any).input.Item.recipientDeviceId).toBe('recipient-device');
     });
 
     it('skips INBOX creation when message is a duplicate', async () => {
@@ -134,6 +140,55 @@ describe('message-repository', () => {
       await updateDeliveryState(baseRecord, 'delivered');
 
       expect(ddbDocClient.send).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('listQueuedMessages', () => {
+    it('hydrates queued inbox records with required recipient fields in oldest-first order', async () => {
+      vi.mocked(ddbDocClient.send).mockResolvedValue({
+        Items: [
+          {
+            pk: 'INBOX#recipient-user#recipient-device',
+            sk: '2026-04-01T10:00:00.000Z#msg-001',
+            messageId: 'msg-001',
+            senderUserId: 'sender-user',
+            senderDeviceId: 'sender-device',
+            ciphertext: 'encrypted-payload-1',
+            deliveryState: 'accepted-queued',
+          },
+          {
+            pk: 'INBOX#recipient-user#recipient-device',
+            sk: '2026-04-01T10:00:05.000Z#msg-002',
+            messageId: 'msg-002',
+            senderUserId: 'sender-user',
+            senderDeviceId: 'sender-device',
+            ciphertext: 'encrypted-payload-2',
+            deliveryState: 'accepted-queued',
+            recipientUserId: 'recipient-user',
+            recipientDeviceId: 'recipient-device',
+            serverTimestamp: '2026-04-01T10:00:05.000Z',
+          },
+        ],
+      } as any);
+
+      const queued = await listQueuedMessages('recipient-user', 'recipient-device');
+
+      expect(queued).toHaveLength(2);
+      expect(queued[0]).toMatchObject({
+        messageId: 'msg-001',
+        recipientUserId: 'recipient-user',
+        recipientDeviceId: 'recipient-device',
+        serverTimestamp: '2026-04-01T10:00:00.000Z',
+      });
+      expect(queued[1]).toMatchObject({
+        messageId: 'msg-002',
+        recipientUserId: 'recipient-user',
+        recipientDeviceId: 'recipient-device',
+        serverTimestamp: '2026-04-01T10:00:05.000Z',
+      });
+
+      const queryCall = vi.mocked(ddbDocClient.send).mock.calls[0][0];
+      expect((queryCall as any).input.ScanIndexForward).toBe(true);
     });
   });
 });
