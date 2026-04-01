@@ -156,6 +156,12 @@ export async function replayBacklog(context: WebSocketConnectionContext): Promis
 
   // Replay sequentially to maintain exact server order and predictability
   for (const record of queuedMessages) {
+    const expired = await checkRetentionPolicy(record);
+
+    if (expired) {
+      continue;
+    }
+
     const relayEvent: DirectMessageEvent = {
       eventType: 'direct-message',
       messageId: record.messageId,

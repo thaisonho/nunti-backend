@@ -13,11 +13,11 @@ Enable users to exchange and synchronize messages and related metadata reliably 
 ### Validated
 
 - [x] Provide secure user identity and authentication integration using AWS Cognito for client access control. *(Validated in Phase 2: identity-and-device-access)*
+- [x] Deliver real-time messaging transport through AWS API Gateway WebSocket and Lambda orchestration. *(Validated in Phase 4: reliable-1-1-messaging-core)*
 
 ### Active
 
 - [ ] Support Signal-style key lifecycle and session establishment flows for multi-device E2EE messaging.
-- [ ] Deliver real-time messaging transport through AWS API Gateway WebSocket and Lambda orchestration.
 - [ ] Persist required encrypted payload metadata and protocol state safely in AWS DynamoDB.
 - [ ] Support v1 capabilities: 1:1 text messaging, group messaging, attachments, and device key management.
 - [ ] Establish strong git governance for team collaboration with Git Flow, pull request review, and Conventional Commits.
@@ -29,7 +29,7 @@ Enable users to exchange and synchronize messages and related metadata reliably 
 
 ## Context
 
-**Current State:** Phase 2 complete — identity and device access endpoints implemented and tested properly.
+**Current State:** Phase 4 complete — reliable 1:1 messaging transport, retry safety, and reconnect replay are implemented and tested properly.
 
 This is a school project with no hard deadline, but quality and correctness are prioritized. Security posture target is strong academic-grade: protocol correctness, key lifecycle discipline, auditable architecture choices, and practical abuse resistance where feasible. Infrastructure setup preference is manual AWS setup first, with potential IaC adoption later. Success for early milestone is security architecture validation, alongside demonstrable E2EE backend workflows.
 
@@ -43,7 +43,7 @@ This is a school project with no hard deadline, but quality and correctness are 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
-|----------|-----------|---------|
+| --- | --- | --- |
 | Use AWS API Gateway WebSocket for realtime backend communication | Managed WebSocket infrastructure integrates cleanly with Lambda event model | — Pending |
 | Use AWS Lambda for core backend logic | Serverless reduces ops overhead and fits event-driven messaging pipelines | — Pending |
 | Use AWS DynamoDB for protocol and messaging state | Scalable key-value/document model suits session/prekey/message metadata patterns | — Pending |
@@ -51,4 +51,4 @@ This is a school project with no hard deadline, but quality and correctness are 
 | Use Git Flow + PR review + Conventional Commits | Team needs auditable, structured, low-chaos collaboration | — Pending |
 
 ---
-*Last updated: 2026-03-19 after Phase 2 completion*
+Last updated: 2026-04-01 after Phase 4 completion

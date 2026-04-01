@@ -23,17 +23,26 @@ vi.mock('../../src/app/config.js', () => ({
 
 import * as MessageRepository from '../../src/messages/message-repository.js';
 import * as MessageRelayPublisher from '../../src/realtime/message-relay-publisher.js';
-import { checkRetentionPolicy } from '../../src/messages/message-service.js';
+import { checkRetentionPolicy, replayBacklog } from '../../src/messages/message-service.js';
+import type { WebSocketConnectionContext } from '../../src/auth/websocket-auth.js';
 import type { MessageRecord } from '../../src/messages/message-model.js';
 
 describe('messages-failure (retention policy)', () => {
+  const context: WebSocketConnectionContext = {
+    userId: 'recipient-user',
+    deviceId: 'recipient-device',
+    connectionId: 'conn-1',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(MessageRepository.updateDeliveryState).mockResolvedValue();
     vi.mocked(MessageRelayPublisher.publishDeliveryStatus).mockResolvedValue();
+    vi.mocked(MessageRelayPublisher.publishReplayComplete).mockResolvedValue();
+    vi.mocked(MessageRelayPublisher.relayDirectMessage).mockResolvedValue('delivered');
   });
 
-  it('transitions expired queued message to terminal failed state', async () => {
+  it('fails expired queued messages through replayBacklog without relaying them', async () => {
     const expiredRecord: MessageRecord = {
       messageId: 'msg-expired-001',
       senderUserId: 'sender-user',
@@ -46,32 +55,24 @@ describe('messages-failure (retention policy)', () => {
       updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
     };
 
-    const result = await checkRetentionPolicy(expiredRecord);
+    vi.mocked(MessageRepository.listQueuedMessages).mockResolvedValue([expiredRecord]);
 
-    expect(result).toBe(true);
+    await replayBacklog(context);
+
     expect(MessageRepository.updateDeliveryState).toHaveBeenCalledWith(expiredRecord, 'failed');
-  });
-
-  it('notifies sender when queued message expires', async () => {
-    const expiredRecord: MessageRecord = {
-      messageId: 'msg-expired-002',
-      senderUserId: 'sender-user',
-      senderDeviceId: 'sender-device',
-      recipientUserId: 'recipient-user',
-      recipientDeviceId: 'recipient-device',
-      ciphertext: 'payload',
-      deliveryState: 'accepted-queued',
-      serverTimestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-
-    await checkRetentionPolicy(expiredRecord);
 
     expect(MessageRelayPublisher.publishDeliveryStatus).toHaveBeenCalledWith(
       'sender-user',
       'sender-device',
-      'msg-expired-002',
+      'msg-expired-001',
       'failed',
+    );
+
+    expect(MessageRelayPublisher.relayDirectMessage).not.toHaveBeenCalled();
+    expect(MessageRelayPublisher.publishReplayComplete).toHaveBeenCalledWith(
+      'recipient-user',
+      'recipient-device',
+      0,
     );
   });
 
