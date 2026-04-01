@@ -21,7 +21,7 @@
 ### Messaging Core
 
 - [x] **MSG-01**: User can send and receive 1:1 encrypted messages through WebSocket relay.
-- [ ] **MSG-02**: Backend supports delivery acknowledgement and idempotent retry behavior.
+- [x] **MSG-02**: Backend supports delivery acknowledgement and idempotent retry behavior.
 - [ ] **MSG-03**: User receives queued encrypted messages after reconnect.
 
 ### Groups and Devices
@@ -74,7 +74,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | KEYS-03 | Phase 3 | Pending |
 | KEYS-04 | Phase 3 | Pending |
 | MSG-01 | Phase 4 | Complete |
-| MSG-02 | Phase 4 | Pending |
+| MSG-02 | Phase 4 | Complete |
 | MSG-03 | Phase 4 | Pending |
 | GRP-01 | Phase 5 | Pending |
 | GRP-02 | Phase 5 | Pending |
