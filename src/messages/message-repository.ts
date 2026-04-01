@@ -30,21 +30,36 @@ function inboxSk(serverTimestamp: string, messageId: string): string {
 }
 
 /**
- * Create a new message record and its inbox entry.
- * First-pass: no conditional write (idempotency added in Wave 2).
+ * Create a new message record and its inbox entry (idempotent).
+ *
+ * Uses a conditional write on the MSG record so that a retry with
+ * the same messageId returns the stored outcome instead of creating
+ * duplicates. If the messageId already exists, returns the existing
+ * record and skips INBOX creation.
+ *
+ * @returns null for a new message, or the existing MessageRecord on duplicate
  */
-export async function createMessage(record: MessageRecord): Promise<void> {
-  // Store the canonical message record
-  await ddbDocClient.send(new PutCommand({
-    TableName: getTableName(),
-    Item: {
-      pk: messagePk(record.messageId),
-      sk: messagePk(record.messageId),
-      ...record,
-    },
-  }));
+export async function createMessage(record: MessageRecord): Promise<MessageRecord | null> {
+  try {
+    // Store the canonical message record with conditional write
+    await ddbDocClient.send(new PutCommand({
+      TableName: getTableName(),
+      Item: {
+        pk: messagePk(record.messageId),
+        sk: messagePk(record.messageId),
+        ...record,
+      },
+      ConditionExpression: 'attribute_not_exists(pk) AND attribute_not_exists(sk)',
+    }));
+  } catch (error) {
+    if ((error as { name?: string }).name === 'ConditionalCheckFailedException') {
+      // Duplicate messageId — return the existing record
+      return getMessage(record.messageId);
+    }
+    throw error;
+  }
 
-  // Store the inbox entry for recipient device queries
+  // Store the inbox entry for recipient device queries (only for new messages)
   await ddbDocClient.send(new PutCommand({
     TableName: getTableName(),
     Item: {
@@ -58,6 +73,8 @@ export async function createMessage(record: MessageRecord): Promise<void> {
       serverTimestamp: record.serverTimestamp,
     },
   }));
+
+  return null;
 }
 
 /**
