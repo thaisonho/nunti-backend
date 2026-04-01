@@ -8,7 +8,7 @@
 
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import * as ConnectionRegistry from './connection-registry.js';
-import type { DirectMessageEvent, DeliveryState, DeliveryStatusEvent } from '../messages/message-model.js';
+import type { DirectMessageEvent, DeliveryState, DeliveryStatusEvent, ReplayCompleteEvent } from '../messages/message-model.js';
 
 function getManagementEndpoint(): string | null {
   return process.env.WEBSOCKET_MANAGEMENT_ENDPOINT ?? null;
@@ -118,6 +118,60 @@ export async function publishDeliveryStatus(
       console.warn('delivery-status publish failed', {
         senderUserId,
         senderDeviceId,
+        connectionId: connection.connectionId,
+        errorName: (error as { name?: string }).name ?? 'UnknownError',
+      });
+    }
+  }));
+}
+
+/**
+ * Emit a replay-complete event to the connecting device.
+ * Used exclusively by the reconnect replay handler to signal the end of backlog drain.
+ */
+export async function publishReplayComplete(
+  userId: string,
+  deviceId: string,
+  messagesReplayed: number,
+): Promise<void> {
+  const endpoint = getManagementEndpoint();
+  if (!endpoint) {
+    return;
+  }
+
+  const connections = await ConnectionRegistry.listDeviceConnections(
+    userId,
+    deviceId,
+  );
+
+  if (connections.length === 0) {
+    return;
+  }
+
+  const client = new ApiGatewayManagementApiClient({ endpoint });
+  const event: ReplayCompleteEvent = {
+    eventType: 'replay-complete',
+    deviceId,
+    messagesReplayed,
+    serverTimestamp: new Date().toISOString(),
+  };
+  const body = JSON.stringify(event);
+
+  await Promise.all(connections.map(async (connection) => {
+    try {
+      await client.send(new PostToConnectionCommand({
+        ConnectionId: connection.connectionId,
+        Data: Buffer.from(body),
+      }));
+    } catch (error) {
+      if ((error as { name?: string }).name === 'GoneException') {
+        await ConnectionRegistry.removeConnection(userId, connection.connectionId);
+        return;
+      }
+
+      console.warn('replay-complete publish failed', {
+        userId,
+        deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
       });

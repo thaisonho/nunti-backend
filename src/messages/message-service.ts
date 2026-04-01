@@ -142,3 +142,61 @@ export async function checkRetentionPolicy(
 
   return true;
 }
+
+/**
+ * Drain the accepted-queued backlog for a connected device.
+ * Reads the inbox in server order, attempts relay for each message,
+ * and emits a replay-complete boundary signal once finished.
+ */
+export async function replayBacklog(context: WebSocketConnectionContext): Promise<void> {
+  // Query all queued messages for the device in oldest-first order
+  const queuedMessages = await MessageRepository.listQueuedMessages(context.userId, context.deviceId);
+  
+  let replayedCount = 0;
+
+  // Replay sequentially to maintain exact server order and predictability
+  for (const record of queuedMessages) {
+    const relayEvent: DirectMessageEvent = {
+      eventType: 'direct-message',
+      messageId: record.messageId,
+      senderUserId: record.senderUserId,
+      senderDeviceId: record.senderDeviceId,
+      recipientUserId: record.recipientUserId,
+      recipientDeviceId: record.recipientDeviceId,
+      ciphertext: record.ciphertext,
+      serverTimestamp: record.serverTimestamp,
+    };
+
+    // Attempt delivery using the live relay mechanics
+    const deliveryOutcome = await MessageRelayPublisher.relayDirectMessage(
+      record.recipientUserId,
+      record.recipientDeviceId,
+      relayEvent
+    );
+
+    if (deliveryOutcome === 'delivered') {
+      // Mark as delivered to prevent future replays
+      await MessageRepository.updateDeliveryState(record, 'delivered');
+
+      // Notify the original sender that the message was finally delivered
+      await MessageRelayPublisher.publishDeliveryStatus(
+        record.senderUserId,
+        record.senderDeviceId,
+        record.messageId,
+        'delivered'
+      );
+      
+      replayedCount++;
+    }
+    // If delivery failed during replay (e.g. they disconnected concurrently),
+    // we leave it queued and continue, relying on the next reconnect.
+  }
+
+  // Backlog fully drained (or relay attempted for all)
+  // Signal replay-complete so the client can resume live traffic state
+  await MessageRelayPublisher.publishReplayComplete(
+    context.userId,
+    context.deviceId,
+    replayedCount
+  );
+}
