@@ -206,9 +206,7 @@ const attachmentEnvelopeSchema = z
   .object({
     attachmentId: z.string().min(1, 'attachmentId is required'),
     storagePointer: z.string().min(1, 'storagePointer is required'),
-    mimeType: z.enum(ALLOWED_MIME_TYPES, {
-      errorMap: () => ({ message: `mimeType must be one of: ${ALLOWED_MIME_TYPES.join(', ')}` }),
-    }),
+    mimeType: z.enum(ALLOWED_MIME_TYPES),
     byteSize: z
       .number()
       .int('byteSize must be an integer')
