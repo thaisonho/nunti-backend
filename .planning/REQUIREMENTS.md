@@ -26,7 +26,7 @@
 
 ### Groups and Devices
 
-- [ ] **GRP-01**: Backend routes group membership events (join, leave, update) to relevant members.
+- [x] **GRP-01**: Backend routes group membership events (join, leave, update) to relevant members.
 - [ ] **GRP-02**: User can send and receive encrypted group messages.
 - [ ] **GRP-03**: Backend fans out message delivery across user active devices.
 - [ ] **GRP-04**: Backend supports encrypted attachment envelope transport.
@@ -76,7 +76,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MSG-01 | Phase 4 | Complete |
 | MSG-02 | Phase 4 | Complete |
 | MSG-03 | Phase 4 | Complete |
-| GRP-01 | Phase 5 | Pending |
+| GRP-01 | Phase 5 | Complete |
 | GRP-02 | Phase 5 | Pending |
 | GRP-03 | Phase 5 | Pending |
 | GRP-04 | Phase 5 | Pending |

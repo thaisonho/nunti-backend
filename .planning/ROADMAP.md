@@ -86,7 +86,12 @@ Plans:
   2. User can send and receive encrypted group messages.
   3. Encrypted messages are fanned out across a user's active devices.
   4. User can send and receive encrypted attachment envelopes through backend transport workflows.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 05-01-PLAN.md - Implement group membership event contracts, fanout routing, and reconnect replay continuity.
+- [ ] 05-02-PLAN.md - Implement deterministic group send orchestration and trusted multi-device fanout outcomes.
+- [ ] 05-03-PLAN.md - Add strict encrypted attachment-envelope validation and transport through fanout/replay.
 
 ## Progress
 
@@ -99,4 +104,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Identity and Device Access | 2/2 | Complete | 2026-03-19 |
 | 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
 | 4. Reliable 1:1 Messaging Core | 0/3 | Not started | - |
-| 5. Groups, Fanout, and Attachments | 0/TBD | Not started | - |
+| 5. Groups, Fanout, and Attachments | 1/3 | In progress | 2026-04-02 |

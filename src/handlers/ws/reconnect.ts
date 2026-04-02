@@ -4,11 +4,14 @@
  * Triggered by the client after authentication to initiate
  * the backlog drain phase. Executes the replay orchestration
  * and emits the replay-complete event exactly once.
+ *
+ * Drain order: direct-message backlog, then membership backlog, then group message backlog.
  */
 
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import type { WebSocketConnectionContext } from '../../auth/websocket-auth.js';
 import * as MessageService from '../../messages/message-service.js';
+import * as GroupMessageService from '../../messages/group-message-service.js';
 import type { WebSocketErrorEvent } from '../../messages/message-model.js';
 
 interface WebSocketReconnectEvent {
@@ -39,9 +42,14 @@ export const handler = async (event: WebSocketReconnectEvent): Promise<APIGatewa
   try {
     const context = buildConnectionContext(event);
 
-    // Block awaiting the backlog drain. The service will emit relay events
-    // followed by a terminal replay-complete event over the active connection.
+    // Drain direct-message backlog first.
     await MessageService.replayBacklog(context);
+
+    // Then drain membership backlog and emit a membership replay boundary.
+    await GroupMessageService.replayMembershipBacklog(context);
+
+    // Then drain group message backlog and emit a group message replay boundary.
+    await GroupMessageService.replayGroupMessageBacklog(context);
 
     return { statusCode: 200, body: 'Replay requested' };
   } catch (error) {
