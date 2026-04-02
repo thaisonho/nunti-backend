@@ -63,23 +63,23 @@ Deferred to follow-up releases after live launch stabilization.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEP-01 | Phase TBD | Pending |
-| DEP-02 | Phase TBD | Pending |
-| SEC-01 | Phase TBD | Pending |
-| SEC-02 | Phase TBD | Pending |
-| REL-01 | Phase TBD | Pending |
-| REL-02 | Phase TBD | Pending |
-| DATA-01 | Phase TBD | Pending |
-| DATA-02 | Phase TBD | Pending |
-| VAL-01 | Phase TBD | Pending |
-| VAL-02 | Phase TBD | Pending |
-| OPS-01 | Phase TBD | Pending |
-| OPS-02 | Phase TBD | Pending |
+| DEP-01 | Phase 6 | Pending |
+| DEP-02 | Phase 6 | Pending |
+| SEC-01 | Phase 7 | Pending |
+| SEC-02 | Phase 7 | Pending |
+| REL-01 | Phase 8 | Pending |
+| REL-02 | Phase 8 | Pending |
+| DATA-01 | Phase 9 | Pending |
+| DATA-02 | Phase 9 | Pending |
+| VAL-01 | Phase 10 | Pending |
+| VAL-02 | Phase 10 | Pending |
+| OPS-01 | Phase 11 | Pending |
+| OPS-02 | Phase 11 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12 ⚠️
+- Mapped to phases: 12
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-02*

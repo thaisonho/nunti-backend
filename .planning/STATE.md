@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Live AWS Launch
-status: defining_requirements
-stopped_at: Milestone v1.1 started - defining requirements
-last_updated: "2026-04-02T16:30:00.000Z"
+status: ready_to_plan
+stopped_at: Roadmap created for milestone v1.1 with phases 6-11
+last_updated: "2026-04-02T17:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,14 +19,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Enable users to exchange and synchronize messages and related metadata reliably while preserving end-to-end confidentiality and protocol correctness.
-**Current focus:** Milestone v1.1 requirements definition
+**Current focus:** Phase 6 planning - Deployment Foundation and Promotion Path
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 6 of 6 in milestone v1.1 (Deployment Foundation and Promotion Path)
 Plan: -
-Status: Defining requirements
-Last activity: 2026-04-02 - Milestone v1.1 started
+Status: Ready to plan
+Last activity: 2026-04-02 - v1.1 roadmap created and traceability mapped
+
+Progress: [----------] 0%
 
 ## Performance Metrics
 
@@ -69,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Sender mirror fanout excludes the sending device itself.
 - [Phase 05]: Attachment validation happens before canonical write - invalid envelopes never reach persistence.
 - [Phase 05]: Same ordering and replay path used for attachment-bearing messages.
+- [Roadmap v1.1]: Phase numbering continues from 6 to preserve cross-milestone continuity.
+- [Roadmap v1.1]: Requirement categories map 1:1 to six delivery phases (deployment, security, reliability, correctness, validation, operations).
 
 ### Pending Todos
 
@@ -76,10 +80,10 @@ None.
 
 ### Blockers/Concerns
 
-No active execution blockers. Remaining work is deferred runtime validation for next milestone.
+No active blockers. Next action is planning Phase 6.
 
 ## Session Continuity
 
 Last session: 2026-04-02T15:20:00.000Z
-Stopped at: v1.0 milestone archived and closed
+Stopped at: v1.1 roadmap and traceability updated
 Resume file: None
