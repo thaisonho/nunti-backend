@@ -14,12 +14,20 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 - Completed scope: governance baseline, identity/device access, key bootstrap lifecycle, reliable 1:1 messaging, and group fanout with attachment envelope transport.
 - v1.0 archive: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
 
-## Next Milestone Goals
+## Current Milestone: v1.1 Live AWS Launch
 
-- Validate live AWS runtime behavior for WebSocket authorizer context propagation.
-- Validate real AWS fanout/replay behavior for trust-change, direct messages, and group messages.
-- Validate real client interoperability for attachment envelope transport.
-- Establish deployment and environment verification workflow for non-local testing.
+**Goal:** Deploy the backend to a live AWS environment and validate production-like runtime behavior for encrypted realtime messaging flows.
+
+**Target features:**
+- Deploy backend services to live AWS with repeatable release workflow.
+- Validate AWS runtime behavior for WebSocket auth context, fanout/replay, trust-change, and attachment flows.
+- Add security hardening for live operation (IAM least privilege and production-safe defaults).
+
+## Active Requirements
+
+- [ ] Deploy backend stack and configuration to live AWS.
+- [ ] Execute and pass end-to-end AWS validation for realtime messaging flows.
+- [ ] Implement security hardening needed for live deployment readiness.
 
 ## Constraints
 
@@ -38,4 +46,4 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 | Use Git Flow + PR review + Conventional Commits | Team needs auditable collaboration and consistent change history | ✓ Adopted in v1.0 |
 
 ---
-Last updated: 2026-04-02 after v1.0 completion
+Last updated: 2026-04-02 after starting milestone v1.1
