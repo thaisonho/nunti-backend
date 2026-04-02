@@ -1,7 +1,7 @@
 # Stack Research
 
-**Domain:** AWS-based end-to-end encrypted messaging backend (Signal protocol + WebSocket realtime)
-**Researched:** 2026-03-19
+**Domain:** v1.1 live AWS launch for existing serverless E2EE messaging backend
+**Researched:** 2026-04-02
 **Confidence:** HIGH
 
 ## Recommended Stack
@@ -9,106 +9,91 @@
 ### Core Technologies
 
 | Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Amazon API Gateway WebSocket API | Managed service (current) | Realtime bidirectional transport between clients and backend | AWS documents WebSocket APIs as bidirectional and explicitly positions them for realtime chat-style systems; this is the standard managed choice on AWS when you want serverless websocket transport. |
-| AWS Lambda | nodejs24.x on Amazon Linux 2023 (preferred), nodejs22.x acceptable | Stateless route handlers for websocket events, auth checks, key-bundle API, fanout orchestration | Lambda runtime docs now include nodejs24.x and recommend moving to AL2023-based runtimes; this is the mainstream 2025-2026 serverless control-plane runtime on AWS. |
-| Amazon DynamoDB | Managed service (on-demand capacity + TTL + Streams) | Session/prekey state, ciphertext metadata, device registry, delivery pointers | DynamoDB remains the standard serverless high-throughput metadata store for chat-like fanout patterns with predictable low-latency access and no server ops. |
-| Amazon Cognito User Pools | Managed service (OAuth 2.0/OIDC) | User authentication, JWT issuance, federation/SSO | Cognito is AWS-native identity for mobile/web with OAuth 2.0 tokens and direct integration into API auth flows, minimizing custom auth surface area. |
-| Amazon S3 + AWS KMS | Managed services (current) | Encrypted attachment object storage + envelope key management | For E2EE messaging, server should store ciphertext blobs and encrypted metadata only; S3+KMS is the standard AWS pattern for durable encrypted payload storage and key custody controls. |
-| Amazon SQS FIFO | Managed service (current) | Ordered async delivery pipeline per conversation/device shard | SQS FIFO is the practical standard when you need at-least-once async processing with ordering and retry controls in Lambda-based messaging pipelines. |
+| ---------- | ------- | ------- | --------------- |
+| AWS CDK (TypeScript) | aws-cdk-lib 2.247.0, constructs 10.6.0 | Define/deploy API Gateway WebSocket, Lambda, DynamoDB, Cognito wiring, IAM, alarms | v1.1 needs repeatable live deployment. CDK gives one source of truth and integrates cleanly with the existing TypeScript backend repo. |
+| Lambda runtime upgrade | nodejs24.x (fallback: nodejs22.x) | Production runtime baseline for all handlers | AWS Lambda runtime docs list both nodejs24.x and nodejs22.x. This is the right baseline for a new live launch and aligns with current AWS support. |
+| GitHub Actions OIDC to AWS IAM | Strategy: pin `aws-actions/configure-aws-credentials` by commit SHA from latest stable major | Secure CI/CD auth without long-lived AWS keys | GitHub documents OIDC with AWS and recommends trust policy conditions on `token.actions.githubusercontent.com:sub` for least-privilege role assumption. |
+| CloudWatch + X-Ray + alarms | Managed services (current) | Runtime validation in live AWS (latency, error rate, reconnect/replay behavior) | v1.1 requires production-like validation. Native AWS observability is the fastest path without introducing extra infra. |
+| AWS Systems Manager Parameter Store + AWS KMS | Managed services (current) | Runtime configuration and secret encryption at rest | Needed to harden live config management and remove environment-secret drift across stages. |
 
 ### Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| @signalapp/libsignal-client | 0.89.0 | Signal protocol primitives where backend must validate signed prekeys, identity signatures, and protocol payload structure | Use for protocol-correctness checks and key material validation paths. Keep double-ratchet message encryption/decryption client-side for strict E2EE boundaries. |
-| @aws-sdk/client-apigatewaymanagementapi | 3.1012.0 | Post-to-connection sends for API Gateway WebSocket | Use in Lambda handlers that push queued ciphertext events to active websocket connections. |
-| @aws-sdk/client-dynamodb + @aws-sdk/lib-dynamodb | 3.1012.0 | DynamoDB access with marshalling helpers | Use for all protocol-state and delivery-metadata persistence. Prefer single-table design with explicit PK/SK modeling. |
-| @aws-sdk/client-cognito-identity-provider | 3.1012.0 | Cognito admin/user pool automation | Use for backend-managed account/device workflows and secure bootstrap APIs. |
-| jose | 6.2.2 | JWT/JWK validation and JOSE utilities | Use for strict JWT verification and key rotation handling where built-in middleware is insufficient. |
-| @middy/core + @middy/http-json-body-parser | 7.2.1 | Lambda middleware pipeline | Use to standardize input validation, auth context hydration, and error mapping across handlers. |
-| @aws-lambda-powertools/logger, metrics, tracer | 2.31.0 | Observability baseline for Lambda | Use from day one for structured logs, CloudWatch metrics, and tracing correlation IDs across websocket events. |
-| zod | 4.3.6 | Runtime schema validation | Use for all external payload contracts (websocket frames, key registration payloads, attachment metadata APIs). |
-| pino | 10.3.1 | Fast structured logging (non-Lambda utilities/workers) | Use in local tooling, queue workers, and shared libraries where Powertools wrapper is not directly used. |
+| ------- | ------- | ------- | ----------- |
+| @aws-lambda-powertools/logger | 2.32.0 | Structured logging with correlation context | Use in all Lambda handlers (`$connect`, message routes, group routes) to trace per-request behavior in CloudWatch. |
+| @aws-lambda-powertools/metrics | 2.32.0 | EMF custom metrics | Use to emit delivery/replay/fanout metrics required for v1.1 runtime validation gates. |
+| @aws-lambda-powertools/tracer | 2.32.0 | X-Ray tracing helpers | Use for end-to-end request path visibility across auth, persistence, and relay operations. |
+| @aws-sdk/client-ssm | 3.1022.0 | Parameter Store reads | Use for stage-specific config (for example websocket endpoint, feature flags, limits) loaded at cold start. |
+| @aws-sdk/client-kms | 3.1022.0 | KMS decrypt/sign operations | Use when secrets or envelope metadata require explicit KMS operations from application code. |
+| cdk-nag | 2.37.55 | IaC security/compliance checks | Use in CI to fail insecure IAM/resource policies before deployment. |
+| artillery | 2.0.30 | WebSocket load and soak testing | Use for live AWS validation of reconnect/replay/fanout under realistic burst and retry patterns. |
 
 ### Development Tools
 
 | Tool | Purpose | Notes |
-|------|---------|-------|
-| TypeScript 5.9.3 | Type-safe backend implementation | Pin strict mode; generate types for websocket route contracts and DynamoDB entity models. |
-| esbuild 0.27.4 | Fast Lambda bundling | Bundle each handler independently to reduce cold start and package size. |
-| Vitest 4.1.0 | Unit/integration testing | Use for protocol flow tests (prekey upload, session bootstrap, message enqueue/dequeue). |
-| aws-cdk-lib 2.243.0 | Optional IaC once manual setup stabilizes | Use after architecture validation milestone to codify websocket routes, IAM, DynamoDB, and queue topology. |
+| ---- | ------- | ----- |
+| GitHub Actions environments + protection rules | Deployment approvals and branch gating | Pair with OIDC IAM role conditions per environment (`dev`, `staging`, `prod`). |
+| IAM Access Analyzer policy validation | Detect policy errors and security warnings | Run in CI for IAM policies and trust policies generated by CDK. |
+| `cdk diff` in pull requests | Deployment change review | Require human approval on IAM broadening, public exposure, and data retention changes. |
 
 ## Installation
 
 ```bash
-# Core
-npm install @aws-sdk/client-apigatewaymanagementapi @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb @aws-sdk/client-cognito-identity-provider @signalapp/libsignal-client
+# Core additions for v1.1
+npm install @aws-lambda-powertools/logger @aws-lambda-powertools/metrics @aws-lambda-powertools/tracer @aws-sdk/client-ssm @aws-sdk/client-kms
 
-# Supporting
-npm install jose zod pino @middy/core @middy/http-json-body-parser @aws-lambda-powertools/logger @aws-lambda-powertools/metrics @aws-lambda-powertools/tracer
-
-# Dev dependencies
-npm install -D typescript esbuild vitest @types/aws-lambda aws-cdk-lib
+# Dev dependencies for deployment and hardening
+npm install -D aws-cdk-lib constructs cdk-nag artillery
 ```
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| API Gateway WebSocket + Lambda | ECS/Fargate websocket gateway (uWebSockets.js/Socket.IO) | Use ECS/Fargate if you need very high sustained concurrent sockets and tighter control of connection lifecycle/cost profile than API Gateway provides. |
-| DynamoDB single-table metadata store | Aurora PostgreSQL | Use Aurora when cross-entity ad-hoc SQL analytics and relational joins are first-class product requirements, not just operational messaging metadata. |
-| Cognito User Pools | Auth0 / self-hosted Keycloak | Use alternative IdP if you require advanced enterprise federation workflows that materially exceed Cognito feature fit. |
-| @signalapp/libsignal-client | Custom crypto implementation | Use custom crypto only for research prototypes; never for production-like systems where protocol drift and cryptographic footguns are unacceptable. |
+| ----------- | ----------- | ----------------------- |
+| AWS CDK (TypeScript) | AWS SAM | Use SAM if the team wants simpler Lambda-first templates and no TypeScript IaC abstractions. |
+| GitHub Actions OIDC | Static AWS keys in GitHub secrets | Only for temporary bootstrapping in a sandbox account; do not use for long-lived production workflows. |
+| Artillery WS validation | k6 | Use k6 if the team already has k6-based performance dashboards and scripting expertise. |
+| Powertools (logger/metrics/tracer) | ad hoc manual logging/metrics | Use manual only for throwaway prototypes; for live launch, standardization is worth the small dependency cost. |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| libsignal-protocol-javascript (legacy package) | npm registry lookup returns not found (E404) and it is not a dependable modern baseline for 2025-2026 greenfield work | @signalapp/libsignal-client |
-| Long-polling REST as primary realtime channel | Increases latency, battery/network cost, and complexity for delivery state; not standard for modern chat transport | API Gateway WebSocket APIs |
-| Self-managed websocket fleet on EC2 for v1 | Adds heavy ops burden (autoscaling, draining, patching, fault handling) before core protocol correctness is validated | Managed API Gateway WebSocket + Lambda |
-| Storing plaintext message content server-side | Violates E2EE trust model and broadens breach impact | Store ciphertext blobs/metadata only; keep encryption/decryption client-side |
+| ----- | --- | ----------- |
+| Long-lived AWS access keys in CI | Persistent credentials are high-risk and harder to rotate/audit | GitHub OIDC + short-lived STS credentials |
+| Manual console-only infrastructure changes | Not reproducible, hard to review, drifts between environments | CDK in repo + PR-reviewed `cdk diff` |
+| Attaching AWS WAF as if it protects API Gateway WebSocket APIs | AWS WAF resource list includes API Gateway REST API, but not WebSocket API | Protect with IAM, authorizers, throttling, alarms, and abuse controls at API Gateway/Lambda layers |
+| Introducing ECS/Fargate websocket infrastructure in v1.1 | Adds operational complexity outside current milestone scope | Keep API Gateway WebSocket + Lambda; reevaluate only after measured scaling limits |
 
 ## Stack Patterns by Variant
 
-**If v1 scope is academic MVP (security-first, moderate scale):**
-- Use API Gateway WebSocket + Lambda + DynamoDB + SQS FIFO + Cognito
-- Because this minimizes ops and lets the team focus on Signal protocol correctness and key lifecycle discipline
+**If goal is fastest safe launch (recommended for v1.1):**
 
-**If growth target is very high sustained concurrency and strict p99 latency/cost tuning:**
-- Use hybrid: API Gateway for control plane, ECS/Fargate websocket edge for hot paths
-- Because dedicated websocket workers can outperform pure serverless for extreme steady-state connection density
+- Use CDK + GitHub Actions OIDC + Powertools + Access Analyzer + Artillery validation.
+- Because this adds deployment repeatability, production visibility, and security controls with minimal architecture churn.
+
+**If goal is compliance-heavy launch (stricter controls):**
+
+- Add mandatory `cdk-nag` enforcement in CI and deployment environment approvals with separate IAM roles per environment.
+- Because it hardens change control and least-privilege boundaries for production accounts.
 
 ## Version Compatibility
 
 | Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| Lambda nodejs24.x | AWS SDK for JavaScript v3.1012.0 | Current Lambda docs list nodejs24.x; v3 SDK line is actively updated and standard for Node Lambda. |
-| @middy/core 7.2.1 | TypeScript 5.9.3 | Strong fit for typed middleware pipelines in modern Lambda codebases. |
-| @signalapp/libsignal-client 0.89.0 | Node.js 22/24 Lambda-compatible build pipelines | Validate native/binary packaging strategy early in CI for Lambda deployment artifacts. |
-| @aws-lambda-powertools/* 2.31.0 | Lambda Node.js 22/24 | Use consistently across handlers for coherent tracing/log/metrics semantics. |
-
-## Recommendation Confidence
-
-| Recommendation Area | Confidence | Notes |
-|---------------------|------------|-------|
-| AWS service choices (API Gateway WebSocket, Lambda, DynamoDB, Cognito, SQS, S3/KMS) | HIGH | Backed by official AWS docs and standard serverless messaging architecture patterns. |
-| Runtime target (nodejs24.x on AL2023) | HIGH | Explicitly supported in current Lambda runtime docs; AWS guidance recommends AL2023 migration. |
-| Library version pins (AWS SDK v3, Powertools, Middy, Zod, Jose) | HIGH | Verified from npm registry metadata on 2026-03-19. |
-| Signal library recommendation (@signalapp/libsignal-client) | HIGH | Active upstream package with very recent publish metadata and Signal-maintained repository link. |
-| Hybrid ECS websocket variant threshold guidance | MEDIUM | Common architecture pattern but workload thresholds are deployment-specific and must be validated with load testing. |
+| --------- | --------------- | ----- |
+| aws-cdk-lib 2.247.0 | constructs 10.6.0 | Standard CDK v2 pairing. |
+| cdk-nag 2.37.55 | aws-cdk-lib 2.x | Keep both on latest compatible minor versions. |
+| @aws-lambda-powertools/* 2.32.0 | Node.js 22/24 Lambda runtimes | Works well with TypeScript Lambda handlers and CloudWatch/X-Ray integrations. |
+| @aws-sdk/client-ssm 3.1022.0 | @aws-sdk/client-kms 3.1022.0 | Keep AWS SDK v3 clients aligned to the same minor stream. |
 
 ## Sources
 
-- https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html - verified runtime identifiers (including nodejs24.x), AL2 EOL note, and AL2023 migration recommendation.
-- https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html - verified API Gateway WebSocket is bidirectional and positioned for realtime chat.
-- https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html - verified DynamoDB serverless/high-scale characteristics and on-demand model.
-- https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html - verified Cognito OAuth 2.0/OIDC identity platform positioning.
-- https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html - official FIFO queue semantics reference.
-- npm registry metadata (queried 2026-03-19): @signalapp/libsignal-client, @aws-sdk/client-dynamodb, @aws-sdk/client-apigatewaymanagementapi, @aws-sdk/client-cognito-identity-provider, @aws-sdk/lib-dynamodb, jose, zod, pino, @aws-lambda-powertools/*, @middy/*, typescript, esbuild, vitest, aws-cdk-lib.
+- [AWS Lambda runtimes](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) - confirmed nodejs24.x and nodejs22.x runtime identifiers.
+- [API Gateway WebSocket APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) - confirmed WebSocket API architecture and live publish/protect/monitor model.
+- [GitHub Actions OIDC in AWS](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws) - confirmed OIDC flow, `id-token: write`, and trust policy `sub` conditions for AWS role assumption.
+- [IAM Access Analyzer policy validation](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-policy-validation.html) - confirmed policy validation via IAM Access Analyzer and CLI/API usage.
+- [AWS WAF protected resources](https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html) - confirmed protected resource types include API Gateway REST API (not WebSocket API).
+- npm registry metadata (queried 2026-04-02): aws-cdk-lib, constructs, cdk-nag, @aws-lambda-powertools/logger, @aws-sdk/client-ssm, @aws-sdk/client-kms, artillery.
 
 ---
-*Stack research for: AWS-based E2EE messaging backend with Signal protocol and WebSocket transport*
-*Researched: 2026-03-19*
+*Stack research for: v1.1 Live AWS Launch (deployment, runtime validation, security hardening)*
+*Researched: 2026-04-02*

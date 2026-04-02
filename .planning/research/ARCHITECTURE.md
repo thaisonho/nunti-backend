@@ -1,8 +1,8 @@
 # Architecture Research
 
-**Domain:** AWS-based Signal-enabled E2EE messaging backend
-**Researched:** 2026-03-19
-**Confidence:** HIGH
+**Domain:** AWS-based Signal-enabled E2EE messaging backend (v1.1 live launch integration)
+**Researched:** 2026-04-02
+**Confidence:** MEDIUM-HIGH
 
 ## Standard Architecture
 
@@ -63,6 +63,21 @@
 | Delivery Service | Online fan-out via @connections and offline fallback marker | Lambda using ApiGatewayManagementApi POST /@connections/{connectionId} |
 | State Store (DynamoDB) | Durable protocol state metadata and encrypted message envelopes | Single-table or bounded multi-table model with TTL for ephemeral items |
 | Event Reactor | React to writes and async retries/dead-letter handling | DynamoDB Streams -> Lambda for delivery attempts, metrics, and repair tasks |
+
+## Milestone v1.1 Integration Scope
+
+### New vs Modified Components
+
+| Type | Component | Integration Point | Why in v1.1 |
+|------|-----------|-------------------|-------------|
+| New | Deployment pipeline workflow | Source control -> build/test -> deploy by environment | Repeatable live launch and rollback readiness |
+| New | Environment separation model | Stage-scoped stack config and resource naming | Prevent cross-environment data/policy bleed |
+| New | Runtime verification suite | Post-deploy execution against live websocket/API endpoints | Close v1.0 debt around real AWS behavior |
+| New | Ops dashboard and alarms | CloudWatch metrics/logs -> alerting | Detect fanout/replay/auth drift early |
+| Modified | `src/app/config.ts` contract | Add strict environment key validation for live stages | Production-safe defaults and fail-fast startup |
+| Modified | `src/handlers/ws/messages.ts` and sibling routes | Enforce stable authorizer-context assumptions in deployed API Gateway config | Resolve external-context propagation risk |
+| Modified | `src/realtime/message-relay-publisher.ts` and `src/realtime/group-relay-publisher.ts` | Add per-outcome telemetry and bounded retry policy | Improve operability under stale connections/churn |
+| Modified | `src/auth/jwt-verifier.ts` and `src/auth/auth-guard.ts` | Harden claim checks and stage-specific issuer/client config | IAM and auth hardening for live operation |
 
 ## Recommended Project Structure
 
@@ -178,6 +193,24 @@ await messageRepo.put({
 [Retry/repair Lambda workers]
 ```
 
+### Operational Flow (new in v1.1)
+
+```text
+[Commit to main/develop]
+    ↓
+[CI: lint/test/build]
+    ↓
+[Deploy to dev stack]
+    ↓
+[Run live AWS verification suite]
+    ↓ pass
+[Promote to staging]
+    ↓ pass
+[Promote to prod]
+    ↓
+[Observe alarms + rollback trigger if needed]
+```
+
 ### Key Data Flows
 
 1. **Connection lifecycle:** Client opens WebSocket -> $connect authorizes token -> connectionId bound to userId/deviceId in connection index -> $disconnect removes binding.
@@ -218,43 +251,48 @@ await messageRepo.put({
 
 ### External Services
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Amazon Cognito | JWT-based auth for API access; claims propagated to route handlers | Use User Pool tokens and explicit claim checks for device-level operations |
-| API Gateway WebSocket + @connections | Route invocation for ingress, management API for server-initiated callback messages | $connect/$disconnect lifecycle is core for presence and connection index |
-| DynamoDB + Streams | Durable metadata/envelopes in tables; stream consumers for retries and side effects | Streams provide near-real-time change capture and ordered per-item mutation sequence |
-| Signal specs/libsignal | Client cryptography and protocol state transitions | Server handles public key distribution, prekey consumption, and encrypted envelope transport only |
+| Service | Integration Pattern | v1.1 Change |
+|---------|---------------------|-------------|
+| Amazon Cognito | JWT-based auth for API access; claims propagated to route handlers | Harden claim validation and stage-specific issuer/client settings |
+| API Gateway WebSocket + @connections | Route invocation for ingress, management API for server-initiated callback messages | Validate stage config so non-connect routes preserve expected auth context |
+| DynamoDB + Streams | Durable metadata/envelopes in tables; stream consumers for retries and side effects | Keep schema patterns, but separate tables per environment and add alarms |
+| CloudWatch logs/metrics/alarms | Service observability and production alerting | Add dashboards and alerts for auth failures, relay failures, replay backlog |
+| Signal specs/libsignal | Client cryptography and protocol state transitions | No model change; validate runtime interoperability in deployed environment |
 
 ### Internal Boundaries
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| transport ↔ auth | direct API call | transport must not parse JWT internals directly |
-| transport ↔ messaging | command DTO | keep route schema decoupled from storage schema |
-| signal ↔ persistence | repository API | isolate conditional writes and key depletion invariants |
-| messaging ↔ delivery | event contract (stored envelope id + routing metadata) | enables durable-then-push and retries |
+| Boundary | Communication | v1.1 Integration Note |
+|----------|---------------|-----------------------|
+| handlers/ws ↔ auth | direct API call | verify deployed authorizer mapping consistency across connect and non-connect routes |
+| handlers/ws ↔ messaging | command DTO | keep route schema decoupled from storage schema; add latency/error telemetry |
+| signal ↔ persistence | repository API | preserve conditional writes and key depletion invariants |
+| messaging ↔ delivery | event contract (stored envelope id + routing metadata) | add delivery outcome tags for runtime verification observability |
 | streams workers ↔ delivery | async invocation/event | required for idempotent replay and dead-letter recovery |
+| runtime verifier ↔ deployed stack | black-box test calls | promotion gate from dev to staging to prod |
 
-## Suggested Build Order (Roadmap Implications)
+## Suggested Build Order (Risk-Minimizing for v1.1)
 
-1. **Identity + Connection Foundation**
-   - Build Cognito integration, WebSocket $connect/$disconnect handlers, and connection index table.
-   - Reason: all later flows depend on trusted principal/device mapping.
-2. **Signal Key Management Plane**
-   - Implement device registration, signed prekey and one-time prekey upload/fetch/consume.
-   - Reason: session bootstrap must exist before meaningful encrypted messaging.
-3. **1:1 Envelope Pipeline (Durable then Push)**
-   - Implement send route, envelope validation, durable message storage, then online delivery via @connections.
-   - Reason: establishes the core reliability model and offline sync basis.
-4. **Reconnect Sync + Receipts**
-   - Add pending-envelope fetch on reconnect and encrypted receipt events.
-   - Reason: completes consistency loop across multi-device and intermittent connectivity.
-5. **Group Messaging Fan-out**
-   - Add per-device fan-out semantics, sender-key update routing, and membership metadata boundaries.
-   - Reason: group complexity should build on validated 1:1 primitives.
-6. **Async Hardening and Operations**
-   - Add DynamoDB Streams workers, retry/DLQ handling, abuse controls, and observability dashboards.
-   - Reason: production-like resilience comes last once core behavior is stable.
+1. **Define stage isolation and config contract**
+    - Create explicit `dev`/`staging`/`prod` resource boundaries, env vars, and IAM scopes.
+    - Dependency reason: all later rollout and verification relies on stable environment identity.
+2. **Introduce CI build + artifact promotion pipeline**
+    - Produce immutable deploy artifacts and deterministic deployment steps.
+    - Dependency reason: required before safe iterative live changes.
+3. **Deploy current v1.0 runtime to `dev` without behavior changes**
+    - Lift-and-shift first to expose pure infrastructure mismatches.
+    - Dependency reason: separates infra risk from feature/hardening risk.
+4. **Add live runtime verification gates**
+    - Automate checks for websocket auth context, fanout/replay, trust-change, and attachments.
+    - Dependency reason: closes known v1.0 human-verification debt before promotion.
+5. **Apply runtime hardening changes**
+    - Tighten auth claims, logging redaction, relay telemetry, and failure handling.
+    - Dependency reason: safer after baseline behavior is measured in deployed env.
+6. **Progressive promotion (`dev` -> `staging` -> `prod`)**
+    - Require verification pass + alarm baseline before each promotion.
+    - Dependency reason: minimizes blast radius and shortens incident triage loops.
+7. **Operationalize recurring verification and rollback drills**
+    - Schedule verification runs and recovery playbook exercises.
+    - Dependency reason: sustains launch safety after initial go-live.
 
 ## Sources
 
@@ -268,7 +306,8 @@ await messageRepo.put({
 - Amazon Cognito overview: https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html
 - Cognito with API Gateway authorization guidance: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-accessing-resources-api-gateway-and-lambda.html
 - Signal technical specifications index (X3DH, PQXDH, Double Ratchet, Sesame): https://signal.org/docs/
+- Milestone context: `.planning/PROJECT.md` and `.planning/MILESTONES.md`
 
 ---
-*Architecture research for: AWS-based Signal-enabled E2EE messaging backend*
-*Researched: 2026-03-19*
+*Architecture research for: v1.1 Live AWS Launch integration*
+*Researched: 2026-04-02*
