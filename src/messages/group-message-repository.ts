@@ -380,7 +380,7 @@ export async function listQueuedGroupMessages(
 }
 
 function toGroupMessageRecord(item: Record<string, unknown>): GroupMessageRecord {
-  return {
+  const record: GroupMessageRecord = {
     groupMessageId: item.groupMessageId as string,
     groupId: item.groupId as string,
     senderUserId: item.senderUserId as string,
@@ -390,10 +390,17 @@ function toGroupMessageRecord(item: Record<string, unknown>): GroupMessageRecord
     serverTimestamp: item.serverTimestamp as string,
     createdAt: item.createdAt as string,
   };
+
+  // Include attachments if present
+  if (item.attachments && Array.isArray(item.attachments)) {
+    record.attachments = item.attachments as GroupMessageRecord['attachments'];
+  }
+
+  return record;
 }
 
 function toGroupMessageProjectionRecord(item: Record<string, unknown>): GroupMessageProjectionRecord {
-  return {
+  const record: GroupMessageProjectionRecord = {
     projectionType: 'group-message',
     userId: item.userId as string,
     deviceId: item.deviceId as string,
@@ -408,4 +415,11 @@ function toGroupMessageProjectionRecord(item: Record<string, unknown>): GroupMes
     serverTimestamp: item.serverTimestamp as string,
     createdAt: item.createdAt as string,
   };
+
+  // Include attachments if present
+  if (item.attachments && Array.isArray(item.attachments)) {
+    record.attachments = item.attachments as GroupMessageRecord['attachments'];
+  }
+
+  return record;
 }

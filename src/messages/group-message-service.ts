@@ -189,7 +189,7 @@ export async function sendGroupMessage(
   );
   const allProjections = [...recipientProjections, ...senderMirrorProjections];
 
-  // Build canonical message record
+  // Build canonical message record (including attachments if present)
   const record: GroupMessageRecord = {
     groupMessageId: request.groupMessageId,
     groupId: request.groupId,
@@ -199,6 +199,7 @@ export async function sendGroupMessage(
     recipientSnapshot,
     serverTimestamp,
     createdAt: serverTimestamp,
+    ...(request.attachments && request.attachments.length > 0 && { attachments: request.attachments }),
   };
 
   // Attempt idempotent canonical write
@@ -325,6 +326,7 @@ async function fanOutToDevice(
       ciphertext: record.ciphertext,
       serverTimestamp: record.serverTimestamp,
       audience: projection.audience,
+      ...(record.attachments && { attachments: record.attachments }),
     },
   );
 
@@ -376,6 +378,7 @@ export async function replayGroupMessageBacklog(context: WebSocketConnectionCont
         ciphertext: queued.ciphertext,
         serverTimestamp: queued.serverTimestamp,
         audience: queued.audience,
+        ...(queued.attachments && { attachments: queued.attachments }),
       },
     );
 

@@ -2,8 +2,8 @@
  * WebSocket group send route handler.
  *
  * Receives a group message send request from an authenticated sender,
- * validates the payload, and delegates to the group message service for
- * deterministic fanout and per-device delivery.
+ * validates the payload (including attachment envelopes), and delegates
+ * to the group message service for deterministic fanout and per-device delivery.
  */
 
 import type { APIGatewayProxyResult } from 'aws-lambda';
@@ -40,7 +40,22 @@ function buildConnectionContext(event: WebSocketGroupSendEvent): WebSocketConnec
   };
 }
 
+/**
+ * Extract requestId from parsed body for error correlation.
+ */
+function extractRequestId(body: unknown): string | undefined {
+  if (typeof body === 'object' && body !== null) {
+    const obj = body as Record<string, unknown>;
+    if (typeof obj.groupMessageId === 'string') {
+      return obj.groupMessageId;
+    }
+  }
+  return undefined;
+}
+
 export const handler = async (event: WebSocketGroupSendEvent): Promise<APIGatewayProxyResult> => {
+  let requestId: string | undefined;
+
   try {
     const context = buildConnectionContext(event);
 
@@ -55,11 +70,15 @@ export const handler = async (event: WebSocketGroupSendEvent): Promise<APIGatewa
       return errorResult('VALIDATION_ERROR', 'Invalid JSON body');
     }
 
+    // Extract requestId for error correlation before validation
+    requestId = extractRequestId(parsedBody);
+
     let request: GroupSendRequest;
     try {
       request = validateGroupSendRequest(parsedBody);
     } catch (error) {
-      return errorResult('VALIDATION_ERROR', (error as Error).message);
+      // Validation error - return with requestId for correlation
+      return errorResult('VALIDATION_ERROR', (error as Error).message, requestId);
     }
 
     const result = await GroupMessageService.sendGroupMessage(context, request);
@@ -80,15 +99,16 @@ export const handler = async (event: WebSocketGroupSendEvent): Promise<APIGatewa
       connectionId: event.requestContext.connectionId,
       error: (error as Error).message,
     });
-    return errorResult('INTERNAL_ERROR', 'Group message send failed');
+    return errorResult('INTERNAL_ERROR', 'Group message send failed', requestId);
   }
 };
 
-function errorResult(code: string, message: string): APIGatewayProxyResult {
+function errorResult(code: string, message: string, requestId?: string): APIGatewayProxyResult {
   const errorEvent: WebSocketErrorEvent = {
     eventType: 'error',
     code,
     message,
+    ...(requestId && { requestId }),
   };
   return {
     statusCode: 200, // WebSocket routes always return 200; error is in the payload

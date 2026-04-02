@@ -47,11 +47,51 @@ export interface GroupMembershipProjection {
 /** Per-device delivery outcome for group message fanout */
 export type GroupDeviceOutcome = 'delivered' | 'accepted-queued' | 'failed';
 
+// ============================================================================
+// Attachment Envelope Contracts
+// ============================================================================
+
+/** Maximum attachment envelope size in bytes (25 MiB) */
+export const MAX_ATTACHMENT_BYTE_SIZE = 25 * 1024 * 1024;
+
+/** Maximum number of attachment envelopes per message */
+export const MAX_ATTACHMENTS_PER_MESSAGE = 10;
+
+/** Allowed MIME types for attachments */
+export const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'video/mp4',
+  'video/webm',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/wav',
+  'application/pdf',
+  'application/zip',
+  'text/plain',
+] as const;
+
+export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
+
+/** Attachment envelope metadata (no binary payload) */
+export interface AttachmentEnvelope {
+  attachmentId: string;
+  storagePointer: string;
+  mimeType: AllowedMimeType;
+  byteSize: number;
+  contentHash: string;
+  originalFileName?: string;
+  thumbnailPointer?: string;
+}
+
 /** Client-sent group message request */
 export interface GroupSendRequest {
   groupMessageId: string;
   groupId: string;
   ciphertext: string;
+  attachments?: AttachmentEnvelope[];
 }
 
 /** Immediate accepted result returned to sender */
@@ -73,6 +113,7 @@ export interface GroupMessageEvent {
   ciphertext: string;
   serverTimestamp: string;
   audience?: 'recipient' | 'sender-sync';
+  attachments?: AttachmentEnvelope[];
 }
 
 /** Per-device delivery status event for group message */
@@ -109,6 +150,7 @@ export interface GroupMessageRecord {
   recipientSnapshot: GroupRecipientSnapshot;
   serverTimestamp: string;
   createdAt: string;
+  attachments?: AttachmentEnvelope[];
 }
 
 /** Persisted per-device projection record */
@@ -153,17 +195,53 @@ export function buildMembershipProjectionSk(serverTimestamp: string, eventId: st
   return `${serverTimestamp}#${eventId}`;
 }
 
+// ============================================================================
+// Attachment Envelope Validation
+// ============================================================================
+
+/** SHA-256 hash format regex (64 hex characters) */
+const SHA256_REGEX = /^[a-fA-F0-9]{64}$/;
+
+const attachmentEnvelopeSchema = z
+  .object({
+    attachmentId: z.string().min(1, 'attachmentId is required'),
+    storagePointer: z.string().min(1, 'storagePointer is required'),
+    mimeType: z.enum(ALLOWED_MIME_TYPES, {
+      errorMap: () => ({ message: `mimeType must be one of: ${ALLOWED_MIME_TYPES.join(', ')}` }),
+    }),
+    byteSize: z
+      .number()
+      .int('byteSize must be an integer')
+      .positive('byteSize must be positive')
+      .max(MAX_ATTACHMENT_BYTE_SIZE, `byteSize must not exceed ${MAX_ATTACHMENT_BYTE_SIZE} bytes (25 MiB)`),
+    contentHash: z
+      .string()
+      .min(1, 'contentHash is required')
+      .regex(SHA256_REGEX, 'contentHash must be a valid SHA-256 hash (64 hex characters)'),
+    originalFileName: z.string().optional(),
+    thumbnailPointer: z.string().optional(),
+  })
+  .strict();
+
 // Group send request validation
 const groupSendRequestSchema = z
   .object({
     groupMessageId: z.string().min(1),
     groupId: z.string().min(1),
     ciphertext: z.string().min(1),
+    attachments: z
+      .array(attachmentEnvelopeSchema)
+      .max(MAX_ATTACHMENTS_PER_MESSAGE, `Maximum ${MAX_ATTACHMENTS_PER_MESSAGE} attachments allowed`)
+      .optional(),
   })
   .strict();
 
 export function validateGroupSendRequest(body: unknown): GroupSendRequest {
   return groupSendRequestSchema.parse(body);
+}
+
+export function validateAttachmentEnvelope(body: unknown): AttachmentEnvelope {
+  return attachmentEnvelopeSchema.parse(body);
 }
 
 export function buildGroupMessageProjectionSk(serverTimestamp: string, groupMessageId: string): string {
