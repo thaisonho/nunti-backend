@@ -28,6 +28,11 @@ describe('groups attachments', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValue({
+      groupId: 'group-1',
+      userId: 'sender-user',
+      role: 'member',
+    });
     vi.mocked(GroupMessageRepository.listGroupMemberUserIds).mockResolvedValue([
       'sender-user',
       'recipient-a',
@@ -310,6 +315,33 @@ describe('groups attachments', () => {
       expect(body.code).toBe('VALIDATION_ERROR');
       expect(body.requestId).toBe('gmsg-invalid-attach');
       expect(body.message).toContain('mimeType');
+    });
+
+    it('returns AUTH_FORBIDDEN when sender is not a group member', async () => {
+      const { handler } = await import('../../src/handlers/ws/group-messages.js');
+
+      vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValueOnce(null);
+
+      const event = {
+        requestContext: {
+          connectionId: 'conn-1',
+          routeKey: 'groupSend',
+          authorizer: { userId: 'user-1', deviceId: 'device-1' },
+        },
+        body: JSON.stringify({
+          groupMessageId: 'gmsg-forbidden',
+          groupId: 'group-1',
+          ciphertext: 'payload',
+        }),
+      };
+
+      const result = await handler(event);
+      const body = JSON.parse(result.body);
+
+      expect(body.eventType).toBe('error');
+      expect(body.code).toBe('AUTH_FORBIDDEN');
+      expect(body.message).toBe('Forbidden group send');
+      expect(body.requestId).toBe('gmsg-forbidden');
     });
   });
 });

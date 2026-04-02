@@ -1,9 +1,11 @@
 import type { WebSocketConnectionContext } from '../auth/websocket-auth.js';
+import { AppError } from '../app/errors.js';
 import { isDeviceTrusted } from '../devices/device-policy.js';
 import * as DeviceService from '../devices/device-service.js';
 import type {
   GroupMembershipCommandRequest,
   GroupMembershipEvent,
+  GroupMemberRole,
   GroupMembershipProjection,
   MembershipChangeType,
   GroupSendRequest,
@@ -11,10 +13,12 @@ import type {
   GroupMessageRecord,
   GroupMessageProjection,
   GroupRecipientSnapshot,
-  GroupDeviceOutcome,
 } from './group-message-model.js';
 import * as GroupMessageRepository from './group-message-repository.js';
 import * as GroupRelayPublisher from '../realtime/group-relay-publisher.js';
+
+const FORBIDDEN_GROUP_ACTION_MESSAGE = 'Forbidden group action';
+const DEVICE_LOOKUP_CONCURRENCY = 10;
 
 export interface GroupMembershipChangeResult {
   requestId: string;
@@ -27,6 +31,7 @@ export async function processMembershipChange(
   context: WebSocketConnectionContext,
   request: GroupMembershipCommandRequest,
 ): Promise<GroupMembershipChangeResult> {
+  await assertActorCanProcessMembershipChange(context.userId, request);
   await applyMembershipMutation(request.groupId, request.changeType, request.targetUserId);
 
   const recipientUserIds = await resolveRecipientUserIds(request.groupId, context.userId);
@@ -116,6 +121,59 @@ export async function replayMembershipBacklog(context: WebSocketConnectionContex
   );
 }
 
+async function assertActorCanProcessMembershipChange(
+  actorUserId: string,
+  request: GroupMembershipCommandRequest,
+): Promise<void> {
+  const actorMembership = await GroupMessageRepository.getGroupMember(request.groupId, actorUserId);
+
+  if (!actorMembership) {
+    throw forbiddenGroupActionError();
+  }
+
+  if (request.changeType === 'member-left') {
+    if (request.targetUserId !== actorUserId) {
+      throw forbiddenGroupActionError();
+    }
+
+    return;
+  }
+
+  if (request.changeType === 'member-role-updated') {
+    if (actorMembership.role !== 'owner') {
+      throw forbiddenGroupActionError();
+    }
+
+    return;
+  }
+
+  if (
+    request.changeType === 'member-joined'
+    || request.changeType === 'member-removed-by-admin'
+    || request.changeType === 'group-profile-updated'
+  ) {
+    if (!hasAdminPrivileges(actorMembership.role)) {
+      throw forbiddenGroupActionError();
+    }
+  }
+}
+
+async function assertActorCanSendGroupMessage(groupId: string, actorUserId: string): Promise<void> {
+  const actorMembership = await GroupMessageRepository.getGroupMember(groupId, actorUserId);
+
+  if (!actorMembership) {
+    throw forbiddenGroupActionError();
+  }
+}
+
+function hasAdminPrivileges(role: GroupMemberRole): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
+function forbiddenGroupActionError(): AppError {
+  return new AppError('AUTH_FORBIDDEN', FORBIDDEN_GROUP_ACTION_MESSAGE, 403);
+}
+
 async function applyMembershipMutation(
   groupId: string,
   changeType: MembershipChangeType,
@@ -140,20 +198,31 @@ async function resolveRecipientUserIds(groupId: string, actorUserId: string): Pr
 }
 
 async function buildDeviceProjections(userIds: string[]): Promise<GroupMembershipProjection[]> {
-  const projections: GroupMembershipProjection[] = [];
+  const perUserProjections = await mapWithConcurrency(
+    userIds,
+    DEVICE_LOOKUP_CONCURRENCY,
+    async (userId): Promise<GroupMembershipProjection[]> => {
+      const devices = await DeviceService.listDevices(userId);
+      const userProjections: GroupMembershipProjection[] = [];
 
-  for (const userId of userIds) {
-    const devices = await DeviceService.listDevices(userId);
-    for (const device of devices) {
-      if (!isDeviceTrusted(device)) {
-        continue;
+      for (const device of devices) {
+        if (!isDeviceTrusted(device)) {
+          continue;
+        }
+
+        userProjections.push({
+          userId,
+          deviceId: device.deviceId,
+        });
       }
 
-      projections.push({
-        userId,
-        deviceId: device.deviceId,
-      });
-    }
+      return userProjections;
+    },
+  );
+
+  const projections: GroupMembershipProjection[] = [];
+  for (const userProjections of perUserProjections) {
+    projections.push(...userProjections);
   }
 
   return projections;
@@ -174,6 +243,8 @@ export async function sendGroupMessage(
   request: GroupSendRequest,
 ): Promise<GroupSendResult> {
   const serverTimestamp = new Date().toISOString();
+
+  await assertActorCanSendGroupMessage(request.groupId, context.userId);
 
   // Capture recipient snapshot at accept time (excludes sender)
   const recipientSnapshot = await captureRecipientSnapshot(request.groupId, context.userId);
@@ -197,6 +268,7 @@ export async function sendGroupMessage(
     senderDeviceId: context.deviceId,
     ciphertext: request.ciphertext,
     recipientSnapshot,
+    targetDeviceCount: allProjections.length,
     serverTimestamp,
     createdAt: serverTimestamp,
     ...(request.attachments && request.attachments.length > 0 && { attachments: request.attachments }),
@@ -211,7 +283,7 @@ export async function sendGroupMessage(
       groupMessageId: existingRecord.groupMessageId,
       status: 'accepted',
       recipientUserCount: existingRecord.recipientSnapshot.userIds.length,
-      targetDeviceCount: countProjectionsForSnapshot(existingRecord, allProjections),
+      targetDeviceCount: existingRecord.targetDeviceCount,
       serverTimestamp: existingRecord.serverTimestamp,
     };
   }
@@ -259,23 +331,69 @@ async function buildGroupMessageProjections(
   userIds: string[],
   audience: 'recipient' | 'sender-sync',
 ): Promise<GroupMessageProjection[]> {
-  const projections: GroupMessageProjection[] = [];
+  const perUserProjections = await mapWithConcurrency(
+    userIds,
+    DEVICE_LOOKUP_CONCURRENCY,
+    async (userId): Promise<GroupMessageProjection[]> => {
+      const devices = await DeviceService.listDevices(userId);
+      const userProjections: GroupMessageProjection[] = [];
 
-  for (const userId of userIds) {
-    const devices = await DeviceService.listDevices(userId);
-    for (const device of devices) {
-      if (!isDeviceTrusted(device)) {
-        continue;
+      for (const device of devices) {
+        if (!isDeviceTrusted(device)) {
+          continue;
+        }
+
+        userProjections.push({
+          userId,
+          deviceId: device.deviceId,
+          audience,
+        });
       }
-      projections.push({
-        userId,
-        deviceId: device.deviceId,
-        audience,
-      });
-    }
+
+      return userProjections;
+    },
+  );
+
+  const projections: GroupMessageProjection[] = [];
+  for (const userProjections of perUserProjections) {
+    projections.push(...userProjections);
   }
 
   return projections;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker(): Promise<void> {
+    while (true) {
+      const currentIndex = nextIndex;
+      if (currentIndex >= items.length) {
+        return;
+      }
+
+      nextIndex += 1;
+      results[currentIndex] = await mapper(items[currentIndex]);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  const workers: Promise<void>[] = [];
+  for (let i = 0; i < workerCount; i += 1) {
+    workers.push(worker());
+  }
+
+  await Promise.all(workers);
+  return results;
 }
 
 /**
@@ -398,13 +516,4 @@ export async function replayGroupMessageBacklog(context: WebSocketConnectionCont
     context.deviceId,
     replayed,
   );
-}
-
-function countProjectionsForSnapshot(
-  record: GroupMessageRecord,
-  projections: GroupMessageProjection[],
-): number {
-  // In case of duplicate, we don't have access to original projections,
-  // but we can estimate based on the snapshot
-  return projections.length;
 }

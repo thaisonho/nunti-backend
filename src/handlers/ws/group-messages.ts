@@ -8,6 +8,7 @@
 
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import type { WebSocketConnectionContext } from '../../auth/websocket-auth.js';
+import { AppError } from '../../app/errors.js';
 import { validateGroupSendRequest, type GroupSendRequest } from '../../messages/group-message-model.js';
 import type { WebSocketErrorEvent } from '../../messages/message-model.js';
 import * as GroupMessageService from '../../messages/group-message-service.js';
@@ -95,6 +96,10 @@ export const handler = async (event: WebSocketGroupSendEvent): Promise<APIGatewa
       }),
     };
   } catch (error) {
+    if (error instanceof AppError && error.code === 'AUTH_FORBIDDEN') {
+      return errorResult('AUTH_FORBIDDEN', 'Forbidden group send', requestId);
+    }
+
     console.error('WebSocket groupSend error', {
       connectionId: event.requestContext.connectionId,
       error: (error as Error).message,

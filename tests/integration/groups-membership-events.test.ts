@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../src/messages/group-message-service.js');
 
 import * as GroupMessageService from '../../src/messages/group-message-service.js';
+import { AppError } from '../../src/app/errors.js';
 import { handler } from '../../src/handlers/ws/group-membership.js';
 
 describe('groups-membership-events (integration)', () => {
@@ -97,6 +98,37 @@ describe('groups-membership-events (integration)', () => {
       code: 'INTERNAL_ERROR',
       message: 'Membership command failed',
       requestId: 'req-3',
+    });
+  });
+
+  it('returns structured forbidden errors with requestId on auth failure', async () => {
+    vi.mocked(GroupMessageService.processMembershipChange).mockRejectedValue(
+      new AppError('AUTH_FORBIDDEN', 'Forbidden group action', 403),
+    );
+
+    const response = await handler({
+      requestContext: {
+        connectionId: 'conn-1',
+        routeKey: 'group-membership',
+        authorizer: {
+          userId: 'actor-user',
+          deviceId: 'actor-device',
+        },
+      },
+      body: JSON.stringify({
+        requestId: 'req-4',
+        groupId: 'group-1',
+        changeType: 'member-removed-by-admin',
+        targetUserId: 'target-user',
+      }),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({
+      eventType: 'error',
+      code: 'AUTH_FORBIDDEN',
+      message: 'Forbidden membership action',
+      requestId: 'req-4',
     });
   });
 });

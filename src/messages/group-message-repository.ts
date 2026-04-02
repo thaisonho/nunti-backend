@@ -1,10 +1,11 @@
 import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { ddbDocClient } from '../devices/device-repository.js';
 import { getConfig } from '../app/config.js';
 import type {
   GroupMembershipEvent,
   GroupMembershipProjection,
+  GroupMemberRecord,
+  GroupMemberRole,
   GroupMessageRecord,
   GroupMessageProjection,
   GroupMessageProjectionRecord,
@@ -20,6 +21,14 @@ export interface GroupMembershipProjectionRecord extends GroupMembershipEvent {
   userId: string;
   deviceId: string;
   delivered: boolean;
+}
+
+function parseGroupMemberRole(role: unknown): GroupMemberRole {
+  if (role === 'owner' || role === 'admin' || role === 'member') {
+    return role;
+  }
+
+  return 'member';
 }
 
 function getTableName(): string {
@@ -173,13 +182,42 @@ export async function listGroupMemberUserIds(groupId: string): Promise<string[]>
     .filter((userId): userId is string => typeof userId === 'string' && userId.length > 0);
 }
 
-export async function addGroupMember(groupId: string, userId: string): Promise<void> {
+export async function getGroupMember(groupId: string, userId: string): Promise<GroupMemberRecord | null> {
+  const result = await ddbDocClient.send(new GetCommand({
+    TableName: getTableName(),
+    Key: {
+      pk: groupMemberPk(groupId),
+      sk: groupMemberSk(userId),
+    },
+    ConsistentRead: true,
+  }));
+
+  if (!result.Item) {
+    return null;
+  }
+
+  const item = result.Item as Record<string, unknown>;
+
+  return {
+    groupId,
+    userId,
+    role: parseGroupMemberRole(item.role),
+    joinedAt: typeof item.joinedAt === 'string' ? item.joinedAt : undefined,
+  };
+}
+
+export async function addGroupMember(
+  groupId: string,
+  userId: string,
+  role: GroupMemberRole = 'member',
+): Promise<void> {
   await ddbDocClient.send(new PutCommand({
     TableName: getTableName(),
     Item: {
       pk: groupMemberPk(groupId),
       sk: groupMemberSk(userId),
       userId,
+      role,
       joinedAt: new Date().toISOString(),
     },
   }));
@@ -276,7 +314,7 @@ export async function createGroupMessage(
       ConditionExpression: 'attribute_not_exists(pk) AND attribute_not_exists(sk)',
     }));
   } catch (error) {
-    if (error instanceof ConditionalCheckFailedException) {
+    if ((error as { name?: string }).name === 'ConditionalCheckFailedException') {
       // Duplicate - fetch and return existing record
       const existing = await getGroupMessage(record.groupMessageId);
       return existing;
@@ -387,6 +425,7 @@ function toGroupMessageRecord(item: Record<string, unknown>): GroupMessageRecord
     senderDeviceId: item.senderDeviceId as string,
     ciphertext: item.ciphertext as string,
     recipientSnapshot: item.recipientSnapshot as GroupMessageRecord['recipientSnapshot'],
+    targetDeviceCount: Number(item.targetDeviceCount ?? 0),
     serverTimestamp: item.serverTimestamp as string,
     createdAt: item.createdAt as string,
   };
@@ -412,6 +451,7 @@ function toGroupMessageProjectionRecord(item: Record<string, unknown>): GroupMes
     senderDeviceId: item.senderDeviceId as string,
     ciphertext: item.ciphertext as string,
     recipientSnapshot: item.recipientSnapshot as GroupMessageRecord['recipientSnapshot'],
+    targetDeviceCount: Number(item.targetDeviceCount ?? 0),
     serverTimestamp: item.serverTimestamp as string,
     createdAt: item.createdAt as string,
   };

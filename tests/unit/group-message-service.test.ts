@@ -20,6 +20,11 @@ describe('group-message-service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValue({
+      groupId: 'group-1',
+      userId: 'actor-user',
+      role: 'admin',
+    });
     vi.mocked(GroupMessageRepository.allocateMembershipEventId).mockResolvedValue('mev-group-1-000000000001');
     vi.mocked(GroupMessageRepository.createMembershipEvent).mockResolvedValue();
     vi.mocked(GroupMessageRepository.markMembershipProjectionDelivered).mockResolvedValue();
@@ -130,5 +135,19 @@ describe('group-message-service', () => {
       'actor-device',
       2,
     );
+  });
+
+  it('throws AUTH_FORBIDDEN when actor is not a member of the group', async () => {
+    vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValueOnce(null);
+
+    await expect(processMembershipChange(context, {
+      requestId: 'req-forbidden',
+      groupId: 'group-1',
+      changeType: 'member-joined',
+      targetUserId: 'target-user',
+    })).rejects.toMatchObject({
+      code: 'AUTH_FORBIDDEN',
+      statusCode: 403,
+    });
   });
 });

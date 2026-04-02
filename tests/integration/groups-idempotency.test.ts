@@ -21,6 +21,11 @@ describe('groups idempotency', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValue({
+      groupId: 'group-1',
+      userId: 'sender-user',
+      role: 'member',
+    });
     vi.mocked(GroupMessageRepository.listGroupMemberUserIds).mockResolvedValue([
       'sender-user',
       'recipient-a',
@@ -39,6 +44,7 @@ describe('groups idempotency', () => {
         userIds: ['recipient-a', 'recipient-b'],
         capturedAt: '2026-04-02T10:00:00.000Z',
       },
+      targetDeviceCount: 3,
       serverTimestamp: '2026-04-02T10:00:00.000Z',
       createdAt: '2026-04-02T10:00:00.000Z',
     };

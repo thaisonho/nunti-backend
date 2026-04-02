@@ -1,5 +1,6 @@
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import type { WebSocketConnectionContext } from '../../auth/websocket-auth.js';
+import { AppError } from '../../app/errors.js';
 import type { WebSocketErrorEvent } from '../../messages/message-model.js';
 import { validateGroupMembershipCommandRequest } from '../../messages/group-message-model.js';
 import * as GroupMessageService from '../../messages/group-message-service.js';
@@ -55,6 +56,10 @@ export const handler = async (event: WebSocketGroupMembershipEvent): Promise<API
       }),
     };
   } catch (error) {
+    if (error instanceof AppError && error.code === 'AUTH_FORBIDDEN') {
+      return errorResult('AUTH_FORBIDDEN', 'Forbidden membership action', requestId);
+    }
+
     const isValidationFailure =
       (error as Error).name === 'SyntaxError' ||
       (error as { name?: string }).name === 'ZodError';

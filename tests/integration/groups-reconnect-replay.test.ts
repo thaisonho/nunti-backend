@@ -12,6 +12,7 @@ describe('groups-reconnect-replay (integration)', () => {
     vi.clearAllMocks();
     vi.mocked(MessageService.replayBacklog).mockResolvedValue();
     vi.mocked(GroupMessageService.replayMembershipBacklog).mockResolvedValue();
+    vi.mocked(GroupMessageService.replayGroupMessageBacklog).mockResolvedValue();
   });
 
   it('replays direct messages and membership events before returning success', async () => {
@@ -33,6 +34,11 @@ describe('groups-reconnect-replay (integration)', () => {
       connectionId: 'conn-1',
     });
     expect(GroupMessageService.replayMembershipBacklog).toHaveBeenCalledWith({
+      userId: 'user-1',
+      deviceId: 'device-1',
+      connectionId: 'conn-1',
+    });
+    expect(GroupMessageService.replayGroupMessageBacklog).toHaveBeenCalledWith({
       userId: 'user-1',
       deviceId: 'device-1',
       connectionId: 'conn-1',

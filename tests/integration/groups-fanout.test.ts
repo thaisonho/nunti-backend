@@ -20,6 +20,11 @@ describe('groups fanout', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValue({
+      groupId: 'group-1',
+      userId: 'sender-user',
+      role: 'member',
+    });
   });
 
   describe('recipient device fanout', () => {
@@ -227,6 +232,7 @@ describe('groups fanout', () => {
           senderDeviceId: 'sender-device',
           ciphertext: 'payload-1',
           recipientSnapshot: { userIds: ['recipient-user'], capturedAt: '2026-04-02T10:00:00.000Z' },
+          targetDeviceCount: 1,
           serverTimestamp: '2026-04-02T10:00:00.000Z',
           createdAt: '2026-04-02T10:00:00.000Z',
         },
@@ -242,6 +248,7 @@ describe('groups fanout', () => {
           senderDeviceId: 'sender-device',
           ciphertext: 'payload-2',
           recipientSnapshot: { userIds: ['recipient-user'], capturedAt: '2026-04-02T10:01:00.000Z' },
+          targetDeviceCount: 1,
           serverTimestamp: '2026-04-02T10:01:00.000Z',
           createdAt: '2026-04-02T10:01:00.000Z',
         },

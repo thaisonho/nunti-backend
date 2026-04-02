@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Identity and Device Access** - Users authenticate through Cognito and manage trusted devices.
 - [ ] **Phase 3: Signal Key Lifecycle and Bootstrap** - Devices exchange bootstrap key material safely for async session starts.
 - [ ] **Phase 4: Reliable 1:1 Messaging Core** - Encrypted direct messaging works with delivery reliability and reconnect recovery.
-- [ ] **Phase 5: Groups, Fanout, and Attachments** - Group delivery, multi-device fanout, and encrypted attachment envelopes are operational.
+- [x] **Phase 5: Groups, Fanout, and Attachments** - Group delivery, multi-device fanout, and encrypted attachment envelopes are operational.
 
 ## Phase Details
 
@@ -90,8 +90,8 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md - Implement group membership event contracts, fanout routing, and reconnect replay continuity.
-- [ ] 05-02-PLAN.md - Implement deterministic group send orchestration and trusted multi-device fanout outcomes.
-- [ ] 05-03-PLAN.md - Add strict encrypted attachment-envelope validation and transport through fanout/replay.
+- [x] 05-02-PLAN.md - Implement deterministic group send orchestration and trusted multi-device fanout outcomes.
+- [x] 05-03-PLAN.md - Add strict encrypted attachment-envelope validation and transport through fanout/replay.
 
 ## Progress
 
@@ -104,4 +104,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Identity and Device Access | 2/2 | Complete | 2026-03-19 |
 | 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
 | 4. Reliable 1:1 Messaging Core | 0/3 | Not started | - |
-| 5. Groups, Fanout, and Attachments | 1/3 | In progress | 2026-04-02 |
+| 5. Groups, Fanout, and Attachments | 3/3 | Complete | 2026-04-02 |

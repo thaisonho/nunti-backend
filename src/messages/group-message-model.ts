@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { DeliveryState } from './message-model.js';
 
 export const membershipChangeTypes = [
   'member-joined',
@@ -38,6 +37,15 @@ export interface GroupReplayCompleteEvent {
 export interface GroupMembershipProjection {
   userId: string;
   deviceId: string;
+}
+
+export type GroupMemberRole = 'owner' | 'admin' | 'member';
+
+export interface GroupMemberRecord {
+  groupId: string;
+  userId: string;
+  role: GroupMemberRole;
+  joinedAt?: string;
 }
 
 // ============================================================================
@@ -148,6 +156,7 @@ export interface GroupMessageRecord {
   senderDeviceId: string;
   ciphertext: string;
   recipientSnapshot: GroupRecipientSnapshot;
+  targetDeviceCount: number;
   serverTimestamp: string;
   createdAt: string;
   attachments?: AttachmentEnvelope[];

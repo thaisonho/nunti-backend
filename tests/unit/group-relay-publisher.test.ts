@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as ConnectionRegistry from '../../src/realtime/connection-registry.js';
 import {
   publishMembershipEvent,
@@ -22,16 +22,22 @@ vi.mock('@aws-sdk/client-apigatewaymanagementapi', () => ({
 }));
 
 describe('group-relay-publisher', () => {
+  let originalManagementEndpoint: string | undefined;
+
   beforeEach(() => {
     vi.clearAllMocks();
     sendSpy.mockReset();
-    (globalThis as any).process = {
-      ...(globalThis as any).process,
-      env: {
-        ...((globalThis as any).process?.env ?? {}),
-        WEBSOCKET_MANAGEMENT_ENDPOINT: 'https://ws.example.test',
-      },
-    };
+    originalManagementEndpoint = process.env.WEBSOCKET_MANAGEMENT_ENDPOINT;
+    process.env.WEBSOCKET_MANAGEMENT_ENDPOINT = 'https://ws.example.test';
+  });
+
+  afterEach(() => {
+    if (typeof originalManagementEndpoint === 'undefined') {
+      delete process.env.WEBSOCKET_MANAGEMENT_ENDPOINT;
+      return;
+    }
+
+    process.env.WEBSOCKET_MANAGEMENT_ENDPOINT = originalManagementEndpoint;
   });
 
   it('returns delivered when at least one membership relay succeeds', async () => {
