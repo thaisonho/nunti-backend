@@ -34,7 +34,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 	1. Team can deploy a tagged backend release to staging and production via the same versioned workflow without manual console edits.
 	2. Team can promote the same immutable artifact from staging to production with verifiable provenance.
 	3. Team can execute an explicit rollback to the previous known-good artifact when a release gate fails.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md - Deterministic staging deployment foundation via SAM, manifest contract, and release-tag automation.
+- [ ] 06-02-PLAN.md - Immutable production promotion and explicit rollback workflow with operator runbook.
 
 ### Phase 7: Security Hardening for Live Runtime
 **Goal**: Live runtime enforces least-privilege access and production-safe auth/secret protections by default.
