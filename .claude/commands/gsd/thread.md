@@ -62,7 +62,7 @@ Create a new thread:
 
 1. Generate slug from description:
    ```bash
-   SLUG=$(node "/home/json/hcmus/applied_crypto/nunti-backend/.claude/get-shit-done/bin/gsd-tools.cjs" generate-slug "$ARGUMENTS")
+   SLUG=$(node ".claude/get-shit-done/bin/gsd-tools.cjs" generate-slug "$ARGUMENTS")
    ```
 
 2. Create the threads directory if needed:
