@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Nunti Backend Stack
+
+Parameters:
+  CognitoUserPoolId:
+    Type: String
+    Description: Expected from params
+  CognitoAppClientId:
+    Type: String
+  CognitoRegion:
+    Type: String
+  DevicesTableName:
+    Type: String
+  MessagesTableName:
+    Type: String
+  Stage:
+    Type: String
+    Default: staging
+
+Globals:
+  Function:
+    Environment:
+      Variables:
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+        COGNITO_APP_CLIENT_ID: !Ref CognitoAppClientId
+        COGNITO_REGION: !Ref CognitoRegion
+        DEVICES_TABLE_NAME: !Ref DevicesTableName
+        MESSAGES_TABLE_NAME: !Ref MessagesTableName
+        STAGE: !Ref Stage
+
+Resources:
+  DummyTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "nunti-dummy-${Stage}"
