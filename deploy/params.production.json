@@ -1,0 +1,11 @@
+{
+  "StackName": "nunti-backend-production",
+  "Parameters": {
+    "STAGE": "production",
+    "COGNITO_USER_POOL_ID": "production-pool-id",
+    "COGNITO_APP_CLIENT_ID": "production-client-id",
+    "COGNITO_REGION": "ap-southeast-1",
+    "DEVICES_TABLE_NAME": "nunti-production-devices",
+    "MESSAGES_TABLE_NAME": "nunti-production-messages"
+  }
+}

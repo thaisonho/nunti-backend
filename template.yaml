@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  nunti-backend serverless application
+
+Parameters:
+  STAGE:
+    Type: String
+  COGNITO_USER_POOL_ID:
+    Type: String
+  COGNITO_APP_CLIENT_ID:
+    Type: String
+  COGNITO_REGION:
+    Type: String
+  DEVICES_TABLE_NAME:
+    Type: String
+  MESSAGES_TABLE_NAME:
+    Type: String
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        STAGE: !Ref STAGE
+        COGNITO_USER_POOL_ID: !Ref COGNITO_USER_POOL_ID
+        COGNITO_APP_CLIENT_ID: !Ref COGNITO_APP_CLIENT_ID
+        COGNITO_REGION: !Ref COGNITO_REGION
+        DEVICES_TABLE_NAME: !Ref DEVICES_TABLE_NAME
+        MESSAGES_TABLE_NAME: !Ref MESSAGES_TABLE_NAME
+
+Resources:
+  BackendFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./dist
+      Handler: index.handler

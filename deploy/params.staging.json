@@ -1,0 +1,11 @@
+{
+  "StackName": "nunti-backend-staging",
+  "Parameters": {
+    "STAGE": "staging",
+    "COGNITO_USER_POOL_ID": "staging-pool-id",
+    "COGNITO_APP_CLIENT_ID": "staging-client-id",
+    "COGNITO_REGION": "ap-southeast-1",
+    "DEVICES_TABLE_NAME": "nunti-staging-devices",
+    "MESSAGES_TABLE_NAME": "nunti-staging-messages"
+  }
+}
