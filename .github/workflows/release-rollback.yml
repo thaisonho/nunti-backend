@@ -1,0 +1,57 @@
+name: Explicit Release Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      targetEnvironment:
+        description: 'Environment to rollback (staging/production)'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      releaseVersion:
+        description: 'Release version to rollback to'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-manifest-and-template
+
+      - name: Run Rollback
+        id: rollback-cmd
+        run: |
+          chmod +x scripts/deploy/rollback-release.sh
+          ./scripts/deploy/rollback-release.sh "${{ github.event.inputs.targetEnvironment }}" "${{ github.event.inputs.releaseVersion }}"
+          
+          MANIFEST_VER=$(jq -r '.releaseVersion' release-manifest.json)
+          GIT_SHA=$(jq -r '.gitSha' release-manifest.json)
+          TEMPLATE_SHA=$(jq -r '.templateSha256' release-manifest.json)
+          
+          echo "### Rollback Metadata" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Version:** $MANIFEST_VER" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git SHA:** $GIT_SHA" >> $GITHUB_STEP_SUMMARY
+          echo "- **Template SHA256:** $TEMPLATE_SHA" >> $GITHUB_STEP_SUMMARY
