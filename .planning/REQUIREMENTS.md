@@ -10,7 +10,7 @@ Requirements for the v1.1 milestone. Each requirement maps to exactly one roadma
 ### Deployment Foundation
 
 - [ ] **DEP-01**: Team can deploy backend stacks to live AWS using a repeatable, versioned workflow across staging and production.
-- [ ] **DEP-02**: Team can promote immutable build artifacts across environments with explicit rollback capability.
+- [x] **DEP-02**: Team can promote immutable build artifacts across environments with explicit rollback capability.
 
 ### Security Hardening
 
@@ -64,7 +64,7 @@ Deferred to follow-up releases after live launch stabilization.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DEP-01 | Phase 6 | Pending |
-| DEP-02 | Phase 6 | Pending |
+| DEP-02 | Phase 6 | Complete |
 | SEC-01 | Phase 7 | Pending |
 | SEC-02 | Phase 7 | Pending |
 | REL-01 | Phase 8 | Pending |
