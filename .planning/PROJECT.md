@@ -13,6 +13,7 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 - v1.0 shipped on 2026-04-02.
 - Completed scope: governance baseline, identity/device access, key bootstrap lifecycle, reliable 1:1 messaging, and group fanout with attachment envelope transport.
 - v1.0 archive: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
+- Phase 06 complete — deployment foundation, immutable artifact promotion, and explicit rollback paths are established.
 
 ## Current Milestone: v1.1 Live AWS Launch
 
@@ -25,9 +26,12 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 
 ## Active Requirements
 
-- [ ] Deploy backend stack and configuration to live AWS.
 - [ ] Execute and pass end-to-end AWS validation for realtime messaging flows.
 - [ ] Implement security hardening needed for live deployment readiness.
+
+## Validated Requirements
+
+- [x] Deploy backend stack and configuration to live AWS. (Validated in Phase 06: deployment-foundation-and-promotion-path)
 
 ## Constraints
 
@@ -46,4 +50,4 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 | Use Git Flow + PR review + Conventional Commits | Team needs auditable collaboration and consistent change history | ✓ Adopted in v1.0 |
 
 ---
-Last updated: 2026-04-02 after starting milestone v1.1
+Last updated: 2026-04-03
