@@ -1,8 +1,8 @@
 ---
 name: "gsd-list-phase-assumptions"
-description: "Surface Claude's assumptions about a phase approach before planning"
+description: "Surface the agent's assumptions about a phase approach before planning"
 metadata:
-  short-description: "Surface Claude's assumptions about a phase approach before planning"
+  short-description: "Surface the agent's assumptions about a phase approach before planning"
 ---
 
 <codex_skill_adapter>
@@ -46,9 +46,9 @@ Result parsing:
 </codex_skill_adapter>
 
 <objective>
-Analyze a phase and present Claude's assumptions about technical approach, implementation order, scope boundaries, risk areas, and dependencies.
+Analyze a phase and present the agent's assumptions about technical approach, implementation order, scope boundaries, risk areas, and dependencies.
 
-Purpose: Help users see what Claude thinks BEFORE planning begins - enabling course correction early when assumptions are wrong.
+Purpose: Help users see what the agent thinks BEFORE planning begins - enabling course correction early when assumptions are wrong.
 Output: Conversational output only (no file creation) - ends with "What do you think?" prompt
 </objective>
 

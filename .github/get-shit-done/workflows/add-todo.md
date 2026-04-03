@@ -63,7 +63,7 @@ Use existing area from step 2 if similar match exists.
 <step name="check_duplicates">
 ```bash
 # Search for key words from title in existing todos
-grep -l -i "[key words from title]" .planning/todos/pending/*.md 2>/dev/null
+grep -l -i "[key words from title]" .planning/todos/pending/*.md 2>/dev/null || true
 ```
 
 If potential duplicate found:
@@ -100,7 +100,7 @@ files:
 
 ## Problem
 
-[problem description - enough context for future Claude to understand weeks later]
+[problem description - enough context for future the agent to understand weeks later]
 
 ## Solution
 
@@ -150,7 +150,7 @@ Would you like to:
 <success_criteria>
 - [ ] Directory structure exists
 - [ ] Todo file created with valid frontmatter
-- [ ] Problem section has enough context for future Claude
+- [ ] Problem section has enough context for future the agent
 - [ ] No duplicates (checked and resolved)
 - [ ] Area consistent with existing todos
 - [ ] STATE.md updated if exists

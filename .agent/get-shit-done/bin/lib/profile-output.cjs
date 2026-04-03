@@ -5,8 +5,8 @@
  *   - write-profile: USER-PROFILE.md from analysis JSON
  *   - profile-questionnaire: fallback when no sessions available
  *   - generate-dev-preferences: dev-preferences.md command artifact
- *   - generate-claude-profile: Developer Profile section in CLAUDE.md
- *   - generate-claude-md: full CLAUDE.md with managed sections
+ *   - generate-claude-profile: Developer Profile section in GEMINI.md
+ *   - generate-claude-md: full GEMINI.md with managed sections
  */
 
 const fs = require('fs');
@@ -26,8 +26,8 @@ const PROFILING_QUESTIONS = [
   {
     dimension: 'communication_style',
     header: 'Communication Style',
-    context: 'Think about the last few times you asked Claude to build or change something. How did you frame the request?',
-    question: 'When you ask Claude to build something, how much context do you typically provide?',
+    context: 'Think about the last few times you asked the agent to build or change something. How did you frame the request?',
+    question: 'When you ask the agent to build something, how much context do you typically provide?',
     options: [
       { label: 'Minimal -- "fix the bug", "add dark mode", just say what\'s needed', value: 'a', rating: 'terse-direct' },
       { label: 'Some context -- explain what and why in a paragraph or two', value: 'b', rating: 'conversational' },
@@ -38,20 +38,20 @@ const PROFILING_QUESTIONS = [
   {
     dimension: 'decision_speed',
     header: 'Decision Making',
-    context: 'Think about times when Claude presented you with multiple options -- like choosing a library, picking an architecture, or selecting an approach.',
-    question: 'When Claude presents you with options, how do you typically decide?',
+    context: 'Think about times when the agent presented you with multiple options -- like choosing a library, picking an architecture, or selecting an approach.',
+    question: 'When the agent presents you with options, how do you typically decide?',
     options: [
       { label: 'Pick quickly based on gut feeling or past experience', value: 'a', rating: 'fast-intuitive' },
       { label: 'Ask for a comparison table or pros/cons, then decide', value: 'b', rating: 'deliberate-informed' },
       { label: 'Research independently (read docs, check GitHub stars) before deciding', value: 'c', rating: 'research-first' },
-      { label: 'Let Claude recommend -- I generally trust the suggestion', value: 'd', rating: 'delegator' },
+      { label: 'Let the agent recommend -- I generally trust the suggestion', value: 'd', rating: 'delegator' },
     ],
   },
   {
     dimension: 'explanation_depth',
     header: 'Explanation Preferences',
-    context: 'Think about when Claude explains code it wrote or an approach it took. How much detail feels right?',
-    question: 'When Claude explains something, how much detail do you want?',
+    context: 'Think about when the agent explains code it wrote or an approach it took. How much detail feels right?',
+    question: 'When the agent explains something, how much detail do you want?',
     options: [
       { label: 'Just the code -- I\'ll read it and figure it out myself', value: 'a', rating: 'code-only' },
       { label: 'Brief explanation with the code -- a sentence or two about the approach', value: 'b', rating: 'concise' },
@@ -62,12 +62,12 @@ const PROFILING_QUESTIONS = [
   {
     dimension: 'debugging_approach',
     header: 'Debugging Style',
-    context: 'Think about the last few times something broke in your code. How did you approach it with Claude?',
-    question: 'When something breaks, how do you typically approach debugging with Claude?',
+    context: 'Think about the last few times something broke in your code. How did you approach it with the agent?',
+    question: 'When something breaks, how do you typically approach debugging with the agent?',
     options: [
       { label: 'Paste the error and say "fix it" -- get it working fast', value: 'a', rating: 'fix-first' },
-      { label: 'Share the error plus context, ask Claude to diagnose what went wrong', value: 'b', rating: 'diagnostic' },
-      { label: 'Investigate myself first, then ask Claude about my specific theories', value: 'c', rating: 'hypothesis-driven' },
+      { label: 'Share the error plus context, ask the agent to diagnose what went wrong', value: 'b', rating: 'diagnostic' },
+      { label: 'Investigate myself first, then ask the agent about my specific theories', value: 'c', rating: 'hypothesis-driven' },
       { label: 'Walk through the code together step by step to understand the issue', value: 'd', rating: 'collaborative' },
     ],
   },
@@ -89,7 +89,7 @@ const PROFILING_QUESTIONS = [
     context: 'Think about the last time you needed a library or service for a project. How did you go about choosing it?',
     question: 'When choosing libraries or services, what is your typical approach?',
     options: [
-      { label: 'Use whatever Claude suggests -- speed matters more than the perfect choice', value: 'a', rating: 'pragmatic-fast' },
+      { label: 'Use whatever the agent suggests -- speed matters more than the perfect choice', value: 'a', rating: 'pragmatic-fast' },
       { label: 'Prefer well-known, battle-tested options (React, PostgreSQL, Express)', value: 'b', rating: 'conservative' },
       { label: 'Research alternatives, read docs, compare benchmarks before committing', value: 'c', rating: 'thorough-evaluator' },
       { label: 'Strong opinions -- I already know what I like and I stick with it', value: 'd', rating: 'opinionated' },
@@ -114,7 +114,7 @@ const PROFILING_QUESTIONS = [
     question: 'When you encounter something new in your codebase, how do you prefer to learn about it?',
     options: [
       { label: 'Read the code directly -- I figure things out by reading and experimenting', value: 'a', rating: 'self-directed' },
-      { label: 'Ask Claude to explain the relevant parts to me', value: 'b', rating: 'guided' },
+      { label: 'Ask the agent to explain the relevant parts to me', value: 'b', rating: 'guided' },
       { label: 'Read official docs and tutorials first, then try things', value: 'c', rating: 'documentation-first' },
       { label: 'See a working example, then modify it to understand how it works', value: 'd', rating: 'example-driven' },
     ],
@@ -178,6 +178,17 @@ const CLAUDE_MD_FALLBACKS = {
   conventions: 'Conventions not yet established. Will populate as patterns emerge during development.',
   architecture: 'Architecture not yet mapped. Follow existing patterns found in the codebase.',
 };
+
+const CLAUDE_MD_WORKFLOW_ENFORCEMENT = [
+  'Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.',
+  '',
+  'Use these entry points:',
+  '- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks',
+  '- `/gsd-debug` for investigation and bug fixing',
+  '- `/gsd-execute-phase` for planned phase work',
+  '',
+  'Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.',
+].join('\n');
 
 const CLAUDE_MD_PROFILE_PLACEHOLDER = [
   '<!-- GSD:profile-start -->',
@@ -264,7 +275,7 @@ function extractMarkdownSection(content, sectionName) {
   return result.length > 0 ? result.join('\n').trim() : null;
 }
 
-// ─── CLAUDE.md Section Generators ─────────────────────────────────────────────
+// ─── GEMINI.md Section Generators ─────────────────────────────────────────────
 
 function generateProjectSection(cwd) {
   const projectPath = path.join(cwd, '.planning', 'PROJECT.md');
@@ -354,6 +365,14 @@ function generateArchitectureSection(cwd) {
   }
   const summary = summaryLines.length > 0 ? summaryLines.join('\n') : content.trim();
   return { content: summary, source: 'ARCHITECTURE.md', hasFallback: false };
+}
+
+function generateWorkflowSection() {
+  return {
+    content: CLAUDE_MD_WORKFLOW_ENFORCEMENT,
+    source: 'GSD defaults',
+    hasFallback: false,
+  };
 }
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
@@ -753,11 +772,11 @@ function cmdGenerateClaudeProfile(cwd, options, raw) {
 
   let targetPath;
   if (options.global) {
-    targetPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+    targetPath = path.join(os.homedir(), '.claude', 'GEMINI.md');
   } else if (options.output) {
     targetPath = path.isAbsolute(options.output) ? options.output : path.join(cwd, options.output);
   } else {
-    targetPath = path.join(cwd, 'CLAUDE.md');
+    targetPath = path.join(cwd, 'GEMINI.md');
   }
 
   let action;
@@ -796,18 +815,20 @@ function cmdGenerateClaudeProfile(cwd, options, raw) {
 }
 
 function cmdGenerateClaudeMd(cwd, options, raw) {
-  const MANAGED_SECTIONS = ['project', 'stack', 'conventions', 'architecture'];
+  const MANAGED_SECTIONS = ['project', 'stack', 'conventions', 'architecture', 'workflow'];
   const generators = {
     project: generateProjectSection,
     stack: generateStackSection,
     conventions: generateConventionsSection,
     architecture: generateArchitectureSection,
+    workflow: generateWorkflowSection,
   };
   const sectionHeadings = {
     project: '## Project',
     stack: '## Technology Stack',
     conventions: '## Conventions',
     architecture: '## Architecture',
+    workflow: '## GSD Workflow Enforcement',
   };
 
   const generated = {};
@@ -827,7 +848,7 @@ function cmdGenerateClaudeMd(cwd, options, raw) {
 
   let outputPath = options.output;
   if (!outputPath) {
-    outputPath = path.join(cwd, 'CLAUDE.md');
+    outputPath = path.join(cwd, 'GEMINI.md');
   } else if (!path.isAbsolute(outputPath)) {
     outputPath = path.join(cwd, outputPath);
   }

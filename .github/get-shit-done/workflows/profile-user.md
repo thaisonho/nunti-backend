@@ -67,7 +67,7 @@ Display consent screen:
  GSD > PROFILE YOUR CODING STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Claude starts every conversation generic. A profile teaches Claude
+the agent starts every conversation generic. A profile teaches the agent
 how YOU actually work -- not how you think you work.
 
 ## What We'll Analyze
@@ -83,7 +83,7 @@ Your recent Claude Code sessions, looking for patterns in these
 | Debugging Approach   | How you tackle errors and bugs               |
 | UX Philosophy        | How much you care about design vs. function  |
 | Vendor Philosophy    | How you evaluate libraries and tools         |
-| Frustration Triggers | What makes you correct Claude                |
+| Frustration Triggers | What makes you correct the agent                |
 | Learning Style       | How you prefer to learn new things           |
 
 ## Data Handling
@@ -310,7 +310,7 @@ Pick 3-4 dimensions with the highest confidence and most evidence signals. Forma
   headers and problem statements before making requests
 - **Vendor Choices (HIGH):** You research alternatives thoroughly -- comparing
   docs, GitHub activity, and bundle sizes before committing
-- **Frustrations (MEDIUM):** You correct Claude most often for doing things
+- **Frustrations (MEDIUM):** You correct the agent most often for doing things
   you didn't ask for -- scope creep is your primary trigger
 ```
 
@@ -334,8 +334,8 @@ Use AskUserQuestion with multiSelect:
 - question: "Which artifacts should I generate?"
 - options (ALL pre-selected by default):
   - "/gsd-dev-preferences command file" -- "Load your preferences in any session"
-  - "CLAUDE.md profile section" -- "Add profile to this project's CLAUDE.md"
-  - "Global CLAUDE.md" -- "Add profile to .github/CLAUDE.md for all projects"
+  - "copilot-instructions.md profile section" -- "Add profile to this project's copilot-instructions.md"
+  - "Global copilot-instructions.md" -- "Add profile to .github/copilot-instructions.md for all projects"
 
 **If no artifacts selected:** Display "No artifacts generated. Your profile is saved at .github/get-shit-done/USER-PROFILE.md" and jump to step 10.
 
@@ -353,21 +353,21 @@ node .github/get-shit-done/bin/gsd-tools.cjs generate-dev-preferences --analysis
 
 Display: "✓ Generated /gsd-dev-preferences at .github/commands/gsd/dev-preferences.md"
 
-**For CLAUDE.md profile section (if selected):**
+**For copilot-instructions.md profile section (if selected):**
 
 ```bash
 node .github/get-shit-done/bin/gsd-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
-Display: "✓ Added profile section to CLAUDE.md"
+Display: "✓ Added profile section to copilot-instructions.md"
 
-**For Global CLAUDE.md (if selected):**
+**For Global copilot-instructions.md (if selected):**
 
 ```bash
 node .github/get-shit-done/bin/gsd-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --global --json 2>/dev/null
 ```
 
-Display: "✓ Added profile section to .github/CLAUDE.md"
+Display: "✓ Added profile section to .github/copilot-instructions.md"
 
 **Error handling:** If any gsd-tools.cjs call fails, display the error message and use AskUserQuestion to offer "Retry" or "Skip this artifact". On retry, re-run the command. On skip, continue to next artifact.
 
@@ -411,8 +411,8 @@ Then list paths for each generated artifact:
 ```
 Artifacts:
   ✓ /gsd-dev-preferences   .github/commands/gsd/dev-preferences.md
-  ✓ CLAUDE.md section       ./CLAUDE.md
-  ✓ Global CLAUDE.md        .github/CLAUDE.md
+  ✓ copilot-instructions.md section       ./copilot-instructions.md
+  ✓ Global copilot-instructions.md        .github/copilot-instructions.md
 ```
 
 (Only show artifacts that were actually generated.)

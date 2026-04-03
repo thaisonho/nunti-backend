@@ -14,6 +14,15 @@ Flags are composable: `--discuss --research --full` gives discussion + research 
 Read all files referenced by the invoking prompt's execution_context before starting.
 </required_reading>
 
+<available_agent_types>
+Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gsd-phase-researcher — Researches technical approaches for a phase
+- gsd-planner — Creates detailed plans from phase scope
+- gsd-plan-checker — Reviews plan quality before execution
+- gsd-executor — Executes plan tasks, commits, creates SUMMARY.md
+- gsd-verifier — Verifies phase completion, checks quality gates
+</available_agent_types>
+
 <process>
 **Step 1: Parse arguments and get task description**
 
@@ -109,13 +118,31 @@ If `$FULL_MODE` only:
 ```bash
 INIT=$(node ".agent/get-shit-done/bin/gsd-tools.cjs" init quick "$DESCRIPTION")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+AGENT_SKILLS_PLANNER=$(node ".agent/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-planner 2>/dev/null)
+AGENT_SKILLS_EXECUTOR=$(node ".agent/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-executor 2>/dev/null)
+AGENT_SKILLS_CHECKER=$(node ".agent/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-checker 2>/dev/null)
+AGENT_SKILLS_VERIFIER=$(node ".agent/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-verifier 2>/dev/null)
 ```
 
-Parse JSON for: `planner_model`, `executor_model`, `checker_model`, `verifier_model`, `commit_docs`, `quick_id`, `slug`, `date`, `timestamp`, `quick_dir`, `task_dir`, `roadmap_exists`, `planning_exists`.
+Parse JSON for: `planner_model`, `executor_model`, `checker_model`, `verifier_model`, `commit_docs`, `branch_name`, `quick_id`, `slug`, `date`, `timestamp`, `quick_dir`, `task_dir`, `roadmap_exists`, `planning_exists`.
 
 **If `roadmap_exists` is false:** Error — Quick mode requires an active project with ROADMAP.md. Run `/gsd-new-project` first.
 
 Quick tasks can run mid-phase - validation only checks ROADMAP.md exists, not phase status.
+
+---
+
+**Step 2.5: Handle quick-task branching**
+
+**If `branch_name` is empty/null:** Skip and continue on the current branch.
+
+**If `branch_name` is set:** Check out the quick-task branch before any planning commits:
+
+```bash
+git checkout -b "$branch_name" 2>/dev/null || git checkout "$branch_name"
+```
+
+All quick-task commits for this run stay on that branch. User handles merge/rebase afterward.
 
 ---
 
@@ -202,7 +229,7 @@ AskUserQuestion(
     { label: "${concrete_choice_1}", description: "${what_this_means}" },
     { label: "${concrete_choice_2}", description: "${what_this_means}" },
     { label: "${concrete_choice_3}", description: "${what_this_means}" },
-    { label: "You decide", description: "Claude's discretion" }
+    { label: "You decide", description: "the agent's discretion" }
   ],
   multiSelect: false
 )
@@ -212,7 +239,7 @@ Rules:
 - Options must be concrete choices, not abstract categories
 - Highlight recommended choice where you have a clear opinion
 - If user selects "Other" with freeform text, switch to plain text follow-up (per questioning.md freeform rule)
-- If user selects "You decide", capture as Claude's Discretion in CONTEXT.md
+- If user selects "You decide", capture as the agent's Discretion in CONTEXT.md
 - Max 2 questions per area — this is lightweight, not a deep dive
 
 Collect all decisions into `$DECISIONS`.
@@ -243,7 +270,7 @@ ${DESCRIPTION}
 ### ${area_2_name}
 - ${decision_from_discussion}
 
-### Claude's Discretion
+### the agent's Discretion
 ${areas_where_user_said_you_decide_or_areas_not_discussed}
 
 </decisions>
@@ -300,9 +327,11 @@ Task(
 <files_to_read>
 - .planning/STATE.md (Project state — what's already built)
 - .planning/PROJECT.md (Project context)
-- ./CLAUDE.md (if exists — project-specific guidelines)
+- ./GEMINI.md (if exists — project-specific guidelines)
 ${DISCUSS_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-CONTEXT.md (User decisions — research should align with these)' : ''}
 </files_to_read>
+
+${AGENT_SKILLS_PLANNER}
 
 </research_context>
 
@@ -353,10 +382,12 @@ Task(
 
 <files_to_read>
 - .planning/STATE.md (Project State)
-- ./CLAUDE.md (if exists — follow project-specific guidelines)
+- ./GEMINI.md (if exists — follow project-specific guidelines)
 ${DISCUSS_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-CONTEXT.md (User decisions — locked, do not revisit)' : ''}
 ${RESEARCH_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-RESEARCH.md (Research findings — use to inform implementation choices)' : ''}
 </files_to_read>
+
+${AGENT_SKILLS_PLANNER}
 
 **Project skills:** Check .agent/skills/ or .agents/skills/ directory (if either exists) — read SKILL.md files, plans should account for project skill rules
 
@@ -415,6 +446,8 @@ Checker prompt:
 - ${QUICK_DIR}/${quick_id}-PLAN.md (Plan to verify)
 </files_to_read>
 
+${AGENT_SKILLS_CHECKER}
+
 **Scope:** This is a quick task, not a full phase. Skip checks that require a ROADMAP phase goal.
 </verification_context>
 
@@ -467,6 +500,8 @@ Revision prompt:
 - ${QUICK_DIR}/${quick_id}-PLAN.md (Existing plan)
 </files_to_read>
 
+${AGENT_SKILLS_PLANNER}
+
 **Checker issues:** ${structured_issues_from_checker}
 
 </revision_context>
@@ -509,9 +544,11 @@ Execute quick task ${quick_id}.
 <files_to_read>
 - ${QUICK_DIR}/${quick_id}-PLAN.md (Plan)
 - .planning/STATE.md (Project state)
-- ./CLAUDE.md (Project instructions, if exists)
+- ./GEMINI.md (Project instructions, if exists)
 - .agent/skills/ or .agents/skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
 </files_to_read>
+
+${AGENT_SKILLS_EXECUTOR}
 
 <constraints>
 - Execute all tasks in the plan
@@ -522,6 +559,7 @@ Execute quick task ${quick_id}.
 ",
   subagent_type="gsd-executor",
   model="{executor_model}",
+  isolation="worktree",
   description="Execute: ${DESCRIPTION}"
 )
 ```
@@ -561,6 +599,8 @@ Task goal: ${DESCRIPTION}
 <files_to_read>
 - ${QUICK_DIR}/${quick_id}-PLAN.md (Plan)
 </files_to_read>
+
+${AGENT_SKILLS_VERIFIER}
 
 Check must_haves against actual codebase. Create VERIFICATION.md at ${QUICK_DIR}/${quick_id}-VERIFICATION.md.",
   subagent_type="gsd-verifier",
@@ -677,7 +717,7 @@ Commit: ${commit_hash}
 
 ---
 
-Ready for next task: /gsd-quick
+Ready for next task: /gsd-quick ${GSD_WS}
 ```
 
 **If NOT `$FULL_MODE`:**
@@ -694,7 +734,7 @@ Commit: ${commit_hash}
 
 ---
 
-Ready for next task: /gsd-quick
+Ready for next task: /gsd-quick ${GSD_WS}
 ```
 
 </process>

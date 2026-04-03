@@ -1,7 +1,6 @@
 ---
 description: Switch model profile for GSD agents (quality/balanced/budget/inherit)
 argument-hint: <profile (quality|balanced|budget|inherit)>
-model: haiku
 tools:
   bash: true
 ---

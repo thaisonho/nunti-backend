@@ -18,7 +18,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .gemini/hooks/gsd-context-monitor.js"
+            "command": "node .gemini/hooks/gsd-context-monitor.js",
+            "timeout": 10
+          }
+        ],
+        "matcher": "Bash|Edit|Write|MultiEdit|Agent|Task"
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .gemini/hooks/gsd-prompt-guard.js",
+            "timeout": 5
           }
         ]
       }
