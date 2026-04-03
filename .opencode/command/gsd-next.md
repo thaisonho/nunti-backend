@@ -15,9 +15,9 @@ Designed for rapid multi-project workflows where remembering which phase/step yo
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/workflows/next.md
+@./.opencode/get-shit-done/workflows/next.md
 </execution_context>
 
 <process>
-Execute the next workflow from @/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/workflows/next.md end-to-end.
+Execute the next workflow from @./.opencode/get-shit-done/workflows/next.md end-to-end.
 </process>

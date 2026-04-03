@@ -19,8 +19,8 @@ Flow: Validate → Research UI → Verify UI-SPEC → Done
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/workflows/ui-phase.md
-@/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/references/ui-brand.md
+@./.opencode/get-shit-done/workflows/ui-phase.md
+@./.opencode/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -28,6 +28,6 @@ Phase number: $ARGUMENTS — optional, auto-detects next unplanned phase if omit
 </context>
 
 <process>
-Execute @/home/json/hcmus/applied_crypto/nunti-backend/.opencode/get-shit-done/workflows/ui-phase.md end-to-end.
+Execute @./.opencode/get-shit-done/workflows/ui-phase.md end-to-end.
 Preserve all workflow gates.
 </process>

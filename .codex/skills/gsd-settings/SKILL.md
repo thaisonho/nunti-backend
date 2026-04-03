@@ -57,11 +57,11 @@ Routes to the settings workflow which handles:
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/settings.md
+@./.codex/get-shit-done/workflows/settings.md
 </execution_context>
 
 <process>
-**Follow the settings workflow** from `@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/settings.md`.
+**Follow the settings workflow** from `@./.codex/get-shit-done/workflows/settings.md`.
 
 The workflow handles all logic including:
 1. Config file creation with defaults if missing

@@ -5,7 +5,7 @@ description: "Researches domain ecosystem before roadmap creation. Produces file
 
 <codex_agent_role>
 role: gsd-project-researcher
-tools: Read, Write, Bash, Grep, Glob, WebSearch, WebFetch, mcp__context7__*
+tools: Read, Write, Bash, Grep, Glob, WebSearch, WebFetch, mcp__context7__*, mcp__firecrawl__*, mcp__exa__*
 purpose: Researches domain ecosystem before roadmap creation. Produces files in .planning/research/ consumed during roadmap creation. Spawned by $gsd-new-project or $gsd-new-milestone orchestrators.
 </codex_agent_role>
 
@@ -35,7 +35,7 @@ Your files feed the roadmap:
 
 ## Training Data = Hypothesis
 
-Claude's training is 6-18 months stale. Knowledge may be outdated, incomplete, or wrong.
+the agent's training is 6-18 months stale. Knowledge may be outdated, incomplete, or wrong.
 
 **Discipline:**
 1. **Verify before asserting** — check Context7 or official docs before stating capabilities
@@ -104,7 +104,7 @@ Always include current year. Use multiple query variations. Mark WebSearch-only 
 Check `brave_search` from orchestrator context. If `true`, use Brave Search for higher quality results:
 
 ```bash
-node "/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/bin/gsd-tools.cjs" websearch "your query" --limit 10
+node "./.codex/get-shit-done/bin/gsd-tools.cjs" websearch "your query" --limit 10
 ```
 
 **Options:**
@@ -114,6 +114,31 @@ node "/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/bin/gsd
 If `brave_search: false` (or not set), use built-in WebSearch tool instead.
 
 Brave Search provides an independent index (not Google/Bing dependent) with less SEO spam and faster responses.
+
+### Exa Semantic Search (MCP)
+
+Check `exa_search` from orchestrator context. If `true`, use Exa for research-heavy, semantic queries:
+
+```
+mcp__exa__web_search_exa with query: "your semantic query"
+```
+
+**Best for:** Research questions where keyword search fails — "best approaches to X", finding technical/academic content, discovering niche libraries, ecosystem exploration. Returns semantically relevant results rather than keyword matches.
+
+If `exa_search: false` (or not set), fall back to WebSearch or Brave Search.
+
+### Firecrawl Deep Scraping (MCP)
+
+Check `firecrawl` from orchestrator context. If `true`, use Firecrawl to extract structured content from discovered URLs:
+
+```
+mcp__firecrawl__scrape with url: "https://docs.example.com/guide"
+mcp__firecrawl__search with query: "your query" (web search + auto-scrape results)
+```
+
+**Best for:** Extracting full page content from documentation, blog posts, GitHub READMEs, comparison articles. Use after finding a relevant URL from Exa, WebSearch, or known docs. Returns clean markdown instead of raw HTML.
+
+If `firecrawl: false` (or not set), fall back to WebFetch.
 
 ## Verification Protocol
 
@@ -137,7 +162,7 @@ Never present LOW confidence findings as authoritative.
 | MEDIUM | WebSearch verified with official source, multiple credible sources agree | State with attribution |
 | LOW | WebSearch only, single source, unverified | Flag as needing validation |
 
-**Source priority:** Context7 → Official Docs → Official GitHub → WebSearch (verified) → WebSearch (unverified)
+**Source priority:** Context7 → Exa (verified) → Firecrawl (official docs) → Official GitHub → Brave/WebSearch (verified) → WebSearch (unverified)
 
 </tool_strategy>
 

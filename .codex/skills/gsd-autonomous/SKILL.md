@@ -59,8 +59,8 @@ Uses ROADMAP.md phase discovery and Skill() flat invocations for each phase comm
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/autonomous.md
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/references/ui-brand.md
+@./.codex/get-shit-done/workflows/autonomous.md
+@./.codex/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -70,6 +70,6 @@ Project context, phase list, and state are resolved inside the workflow using in
 </context>
 
 <process>
-Execute the autonomous workflow from @/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/autonomous.md end-to-end.
+Execute the autonomous workflow from @./.codex/get-shit-done/workflows/autonomous.md end-to-end.
 Preserve all workflow gates (phase discovery, per-phase execution, blocker handling, progress display).
 </process>

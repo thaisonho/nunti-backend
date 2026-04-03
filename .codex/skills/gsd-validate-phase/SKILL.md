@@ -55,7 +55,7 @@ Output: updated VALIDATION.md + generated test files.
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/validate-phase.md
+@./.codex/get-shit-done/workflows/validate-phase.md
 </execution_context>
 
 <context>
@@ -63,6 +63,6 @@ Phase: {{GSD_ARGS}} — optional, defaults to last completed phase.
 </context>
 
 <process>
-Execute @/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/validate-phase.md.
+Execute @./.codex/get-shit-done/workflows/validate-phase.md.
 Preserve all workflow gates.
 </process>
