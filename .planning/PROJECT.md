@@ -10,6 +10,7 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 
 ## Current State
 
+- Phase 06 complete — Immutable production promotion and rollback workflows utilizing release-manifest provenance checks
 - v1.0 shipped on 2026-04-02.
 - Completed scope: governance baseline, identity/device access, key bootstrap lifecycle, reliable 1:1 messaging, and group fanout with attachment envelope transport.
 - v1.0 archive: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
@@ -25,7 +26,7 @@ Enable users to exchange and synchronize encrypted messaging metadata reliably w
 
 ## Active Requirements
 
-- [ ] Deploy backend stack and configuration to live AWS.
+- [x] Deploy backend stack and configuration to live AWS. (Validated in Phase 06: deployment-foundation-and-promotion-path)
 - [ ] Execute and pass end-to-end AWS validation for realtime messaging flows.
 - [ ] Implement security hardening needed for live deployment readiness.
 
