@@ -38,8 +38,8 @@ jobs:
           
       - name: Verify Manifest against Schema
         run: |
-          npm install -g ajv-cli
-          ajv validate -s deploy/release-manifest.schema.json -d release-manifest.json
+          npm install -g ajv-cli ajv-formats
+          ajv validate -c ajv-formats -s deploy/release-manifest.schema.json -d release-manifest.json
 
       - name: Deploy to Staging
         run: |
