@@ -20,7 +20,7 @@ The phase successfully implemented the required deployment foundation (DEP-01) a
 - [x] DEP-02 (Covered via 06-02)
 
 ## Human Verification
-None required. All deployment scripts and manifest configurations are verifiable through structural inspection.
+None required for structural verification. Note: UAT testing (06-UAT.md) covers live runtime validation and has separate pending checkpoints for staging/production workflow execution.
 
 ## Gaps
 None.

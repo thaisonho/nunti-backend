@@ -8,7 +8,7 @@ if ! command -v sam &> /dev/null; then
     exit 1
 fi
 
-export ARTIFACT_BUCKET="${ARTIFACT_BUCKET:-nunti-artifacts}"
+export ARTIFACT_BUCKET="${ARTIFACT_BUCKET:-nunti-artifacts-thaisonho-nunti-backend}"
 export PKG_PREFIX="${PKG_PREFIX:-staging}"
 export RELEASE_VERSION="${RELEASE_VERSION:-$(git describe --tags --always)}"
 

@@ -4,11 +4,11 @@ set -e
 # setup-oidc-s3.sh
 # Scaffolds AWS infrastructure for Nunti CI/CD
 
-GITHUB_ORG="thaisonho"
-GITHUB_REPO="nunti-backend"
+GITHUB_ORG="${GITHUB_ORG:-${1:-thaisonho}}"
+GITHUB_REPO="${GITHUB_REPO:-${2:-nunti-backend}}"
 ARTIFACT_BUCKET="nunti-artifacts-${GITHUB_ORG}-${GITHUB_REPO}" # Make it globally unique
-REGION="ap-southeast-1"
-ROLE_NAME="github-actions-deploy-role"
+REGION="${REGION:-ap-southeast-1}"
+ROLE_NAME="${ROLE_NAME:-github-actions-deploy-role}"
 
 echo "1. Creating S3 Bucket for SAM deployment artifacts..."
 if aws s3api head-bucket --bucket "$ARTIFACT_BUCKET" 2>/dev/null; then
@@ -47,7 +47,10 @@ else
 fi
 
 echo "3. Creating IAM Role for GitHub Actions..."
-cat > trust-policy.json <<EOF
+TRUST_POLICY_FILE=$(mktemp)
+trap 'rm -f "$TRUST_POLICY_FILE"' EXIT
+
+cat > "$TRUST_POLICY_FILE" <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -72,11 +75,10 @@ EOF
 
 if aws iam get-role --role-name "$ROLE_NAME" 2>/dev/null; then
     echo "Role $ROLE_NAME already exists. Updating trust policy..."
-    aws iam update-assume-role-policy --role-name "$ROLE_NAME" --policy-document file://trust-policy.json
+    aws iam update-assume-role-policy --role-name "$ROLE_NAME" --policy-document "file://$TRUST_POLICY_FILE"
 else
-    aws iam create-role --role-name "$ROLE_NAME" --assume-role-policy-document file://trust-policy.json
+    aws iam create-role --role-name "$ROLE_NAME" --assume-role-policy-document "file://$TRUST_POLICY_FILE"
 fi
-rm trust-policy.json
 
 echo "4. Attaching Required Policies to the Role..."
 # Attach managed policies or create inline policy for SAM deployment.

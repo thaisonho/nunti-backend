@@ -26,10 +26,14 @@ if [ ! -f "$PARAMS_FILE" ]; then
     exit 1
 fi
 
-MANIFEST_VERSION=$(grep '"releaseVersion"' "$MANIFEST" | awk -F '"' '{print $4}' | tr -d '[:space:]')
-TEMPLATE_SHA=$(grep '"templateSha256"' "$MANIFEST" | awk -F '"' '{print $4}' | tr -d '[:space:]')
-TEMPLATE_PATH=$(grep '"templatePath"' "$MANIFEST" | awk -F '"' '{print $4}' | tr -d '[:space:]')
-GIT_SHA=$(grep '"gitSha"' "$MANIFEST" | awk -F '"' '{print $4}' | tr -d '[:space:]')
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/manifest-utils.sh
+source "$SCRIPT_DIR/lib/manifest-utils.sh"
+
+MANIFEST_VERSION=$(read_manifest_field "$MANIFEST" "releaseVersion")
+TEMPLATE_SHA=$(read_manifest_field "$MANIFEST" "templateSha256")
+TEMPLATE_PATH=$(read_manifest_field "$MANIFEST" "templatePath")
+GIT_SHA=$(read_manifest_field "$MANIFEST" "gitSha")
 
 MANIFEST_DIR=$(dirname "$MANIFEST")
 if [ "${TEMPLATE_PATH#/}" = "$TEMPLATE_PATH" ]; then
