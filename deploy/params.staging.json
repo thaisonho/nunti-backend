@@ -1,0 +1,11 @@
+{
+  "Parameters": {
+    "CognitoUserPoolId": "staging-pool-id",
+    "CognitoAppClientId": "staging-client-id",
+    "CognitoRegion": "ap-southeast-1",
+    "DevicesTableName": "nunti-devices-staging",
+    "MessagesTableName": "nunti-messages-staging",
+    "Stage": "staging"
+  },
+  "StackName": "nunti-backend-staging"
+}
