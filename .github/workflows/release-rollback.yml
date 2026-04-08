@@ -20,6 +20,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,15 +54,26 @@ jobs:
           fi
           gh run download $RUN_ID -n release-manifest
 
+          if [ -f "release-manifest/release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest/release-manifest.json"
+          elif [ -f "release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest.json"
+          else
+            echo "Failed to locate release-manifest.json after downloading release-manifest artifact"
+            exit 1
+          fi
+
+          echo "RELEASE_MANIFEST_PATH=$RELEASE_MANIFEST_PATH" >> "$GITHUB_ENV"
+
       - name: Perform Rollback
         id: rollback
         run: |
           chmod +x scripts/deploy/rollback-release.sh
-          ./scripts/deploy/rollback-release.sh ${{ inputs.targetEnvironment }} ${{ inputs.releaseVersion }} release-manifest.json
+          ./scripts/deploy/rollback-release.sh ${{ inputs.targetEnvironment }} ${{ inputs.releaseVersion }} "$RELEASE_MANIFEST_PATH"
           
           # Extract metadata for summary
-          GIT_SHA=$(grep '"gitSha"' release-manifest.json | awk -F '"' '{print $4}' | tr -d '[:space:]')
-          TEMPLATE_SHA=$(grep '"templateSha256"' release-manifest.json | awk -F '"' '{print $4}' | tr -d '[:space:]')
+          GIT_SHA=$(grep '"gitSha"' "$RELEASE_MANIFEST_PATH" | awk -F '"' '{print $4}' | tr -d '[:space:]')
+          TEMPLATE_SHA=$(grep '"templateSha256"' "$RELEASE_MANIFEST_PATH" | awk -F '"' '{print $4}' | tr -d '[:space:]')
           
           echo "GIT_SHA=$GIT_SHA" >> $GITHUB_ENV
           echo "TEMPLATE_SHA=$TEMPLATE_SHA" >> $GITHUB_ENV

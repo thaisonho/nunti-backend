@@ -13,6 +13,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,7 +47,18 @@ jobs:
           fi
           gh run download $RUN_ID -n release-manifest
 
+          if [ -f "release-manifest/release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest/release-manifest.json"
+          elif [ -f "release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest.json"
+          else
+            echo "Failed to locate release-manifest.json after downloading release-manifest artifact"
+            exit 1
+          fi
+
+          echo "RELEASE_MANIFEST_PATH=$RELEASE_MANIFEST_PATH" >> "$GITHUB_ENV"
+
       - name: Promote Release
         run: |
           chmod +x scripts/deploy/promote-release.sh
-          ./scripts/deploy/promote-release.sh ${{ inputs.releaseVersion }} release-manifest.json
+          ./scripts/deploy/promote-release.sh ${{ inputs.releaseVersion }} "$RELEASE_MANIFEST_PATH"

@@ -24,6 +24,13 @@ MANIFEST_VERSION=$(grep '"releaseVersion"' "$MANIFEST" | awk -F '"' '{print $4}'
 TEMPLATE_SHA=$(grep '"templateSha256"' "$MANIFEST" | awk -F '"' '{print $4}' | tr -d '[:space:]')
 TEMPLATE_PATH=$(grep '"templatePath"' "$MANIFEST" | awk -F '"' '{print $4}' | tr -d '[:space:]')
 
+MANIFEST_DIR=$(dirname "$MANIFEST")
+if [ "${TEMPLATE_PATH#/}" = "$TEMPLATE_PATH" ]; then
+    TEMPLATE_FILE="$MANIFEST_DIR/$TEMPLATE_PATH"
+else
+    TEMPLATE_FILE="$TEMPLATE_PATH"
+fi
+
 if [ "$MANIFEST_VERSION" != "$RELEASE_VERSION" ]; then
     echo "Error: Manifest releaseVersion ($MANIFEST_VERSION) does not match requested ($RELEASE_VERSION)."
     exit 1
@@ -34,12 +41,12 @@ if [ -z "$TEMPLATE_SHA" ]; then
     exit 1
 fi
 
-if [ ! -f "$TEMPLATE_PATH" ]; then
-    echo "Error: Template file $TEMPLATE_PATH not found."
+if [ ! -f "$TEMPLATE_FILE" ]; then
+    echo "Error: Template file $TEMPLATE_FILE not found."
     exit 1
 fi
 
-CALCULATED_SHA=$(shasum -a 256 "$TEMPLATE_PATH" | awk '{print $1}')
+CALCULATED_SHA=$(shasum -a 256 "$TEMPLATE_FILE" | awk '{print $1}')
 if [ "$CALCULATED_SHA" != "$TEMPLATE_SHA" ]; then
     echo "Error: Template SHA256 mismatch! Expected $TEMPLATE_SHA but got $CALCULATED_SHA."
     exit 1
@@ -54,10 +61,10 @@ console.log(str);
 
 STACK_NAME=$(node -e "console.log(require('./$PARAMS_FILE').StackName)")
 
-echo "Promoting release $RELEASE_VERSION to $STACK_NAME using template $TEMPLATE_PATH..."
+echo "Promoting release $RELEASE_VERSION to $STACK_NAME using template $TEMPLATE_FILE..."
 
 sam deploy \
-  --template-file "$TEMPLATE_PATH" \
+    --template-file "$TEMPLATE_FILE" \
   --stack-name "$STACK_NAME" \
   --parameter-overrides $PARAMS \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
