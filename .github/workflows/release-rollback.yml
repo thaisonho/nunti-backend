@@ -1,0 +1,87 @@
+name: Release Rollback
+on:
+  workflow_dispatch:
+    inputs:
+      targetEnvironment:
+        description: 'Target Environment (staging or production)'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      releaseVersion:
+        description: 'Release Version to rollback to (e.g. v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ github.event.inputs.targetEnvironment == 'production' && secrets.AWS_OIDC_ROLE_ARN_PROD || secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
+
+      - name: Download Release Artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Fetch the run ID for the workflow that deployed the given tag
+          RUN_ID=$(gh run list --workflow release-deploy.yml --branch ${{ inputs.releaseVersion }} --json databaseId -q '.[0].databaseId')
+          if [ -z "$RUN_ID" -o "$RUN_ID" = "null" ]; then
+            echo "Failed to find release-deploy run for tag ${{ inputs.releaseVersion }}"
+            exit 1
+          fi
+          gh run download $RUN_ID -n release-manifest
+
+          if [ -f "release-manifest/release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest/release-manifest.json"
+          elif [ -f "release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest.json"
+          else
+            echo "Failed to locate release-manifest.json after downloading release-manifest artifact"
+            exit 1
+          fi
+
+          echo "RELEASE_MANIFEST_PATH=$RELEASE_MANIFEST_PATH" >> "$GITHUB_ENV"
+
+      - name: Perform Rollback
+        id: rollback
+        run: |
+          chmod +x scripts/deploy/rollback-release.sh
+          ./scripts/deploy/rollback-release.sh ${{ inputs.targetEnvironment }} ${{ inputs.releaseVersion }} "$RELEASE_MANIFEST_PATH"
+          
+          # Extract metadata for summary
+          GIT_SHA=$(grep '"gitSha"' "$RELEASE_MANIFEST_PATH" | awk -F '"' '{print $4}' | tr -d '[:space:]')
+          TEMPLATE_SHA=$(grep '"templateSha256"' "$RELEASE_MANIFEST_PATH" | awk -F '"' '{print $4}' | tr -d '[:space:]')
+          
+          echo "GIT_SHA=$GIT_SHA" >> $GITHUB_ENV
+          echo "TEMPLATE_SHA=$TEMPLATE_SHA" >> $GITHUB_ENV
+
+      - name: Rollback Summary
+        run: |
+          echo "### Rollback Result" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target Environment:** ${{ inputs.targetEnvironment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rolled Back Release:** ${{ inputs.releaseVersion }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git SHA:** ${{ env.GIT_SHA }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Template SHA256:** ${{ env.TEMPLATE_SHA }}" >> $GITHUB_STEP_SUMMARY

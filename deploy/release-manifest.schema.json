@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "releaseVersion",
+    "gitSha",
+    "templatePath",
+    "templateSha256",
+    "artifactBucket",
+    "artifactPrefix",
+    "packageCommandVersion",
+    "builtAt"
+  ],
+  "properties": {
+    "releaseVersion": {
+      "type": "string"
+    },
+    "gitSha": {
+      "type": "string"
+    },
+    "templatePath": {
+      "type": "string"
+    },
+    "templateSha256": {
+      "type": "string"
+    },
+    "artifactBucket": {
+      "type": "string"
+    },
+    "artifactPrefix": {
+      "type": "string"
+    },
+    "packageCommandVersion": {
+      "type": "string"
+    },
+    "builtAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

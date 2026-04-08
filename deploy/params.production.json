@@ -1,0 +1,11 @@
+{
+  "Parameters": {
+    "CognitoUserPoolId": "production-pool-id",
+    "CognitoAppClientId": "production-client-id",
+    "CognitoRegion": "ap-southeast-1",
+    "DevicesTableName": "nunti-devices-production",
+    "MessagesTableName": "nunti-messages-production",
+    "Stage": "production"
+  },
+  "StackName": "nunti-backend-production"
+}

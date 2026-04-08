@@ -1,0 +1,64 @@
+name: Release Promote
+on:
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: 'Release Version to promote (e.g. v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
+
+      - name: Download Staging Artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Fetch the run ID for the workflow that deployed the given tag
+          RUN_ID=$(gh run list --workflow release-deploy.yml --branch ${{ inputs.releaseVersion }} --json databaseId -q '.[0].databaseId')
+          if [ -z "$RUN_ID" -o "$RUN_ID" = "null" ]; then
+            echo "Failed to find release-deploy run for tag ${{ inputs.releaseVersion }}"
+            exit 1
+          fi
+          gh run download $RUN_ID -n release-manifest
+
+          if [ -f "release-manifest/release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest/release-manifest.json"
+          elif [ -f "release-manifest.json" ]; then
+            RELEASE_MANIFEST_PATH="release-manifest.json"
+          else
+            echo "Failed to locate release-manifest.json after downloading release-manifest artifact"
+            exit 1
+          fi
+
+          echo "RELEASE_MANIFEST_PATH=$RELEASE_MANIFEST_PATH" >> "$GITHUB_ENV"
+
+      - name: Promote Release
+        run: |
+          chmod +x scripts/deploy/promote-release.sh
+          ./scripts/deploy/promote-release.sh ${{ inputs.releaseVersion }} "$RELEASE_MANIFEST_PATH"

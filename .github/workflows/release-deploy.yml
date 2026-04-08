@@ -1,0 +1,55 @@
+name: Release Deploy
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for aws oidc connection
+      contents: read  # required for actions/checkout
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
+
+      - name: Build and Package
+        run: |
+          chmod +x scripts/deploy/package-release.sh
+          ./scripts/deploy/package-release.sh
+          
+      - name: Verify Manifest against Schema
+        run: |
+          npm install -g ajv-cli
+          ajv validate -s deploy/release-manifest.schema.json -d release-manifest.json
+
+      - name: Deploy to Staging
+        run: |
+          chmod +x scripts/deploy/deploy-stage.sh
+          ./scripts/deploy/deploy-stage.sh
+          
+      - name: Upload Manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: |
+            release-manifest.json
+            packaged.yaml
