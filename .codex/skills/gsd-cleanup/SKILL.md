@@ -52,10 +52,10 @@ Use when `.planning/phases/` has accumulated directories from past milestones.
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/cleanup.md
+@./.codex/get-shit-done/workflows/cleanup.md
 </execution_context>
 
 <process>
-Follow the cleanup workflow at @/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/cleanup.md.
+Follow the cleanup workflow at @./.codex/get-shit-done/workflows/cleanup.md.
 Identify completed milestones, show a dry-run summary, and archive on confirmation.
 </process>

@@ -1,94 +1,86 @@
 # Requirements: AWS E2EE Messaging Backend
 
-**Defined:** 2026-03-19
-**Core Value:** Enable users to exchange and synchronize messages and related metadata reliably while preserving end-to-end confidentiality and protocol correctness.
+**Defined:** 2026-04-02
+**Core Value:** Enable users to exchange and synchronize encrypted messaging metadata reliably while preserving protocol correctness and end-to-end confidentiality.
 
-## v1 Requirements
+## v1.1 Requirements
 
-### Authentication
+Requirements for the v1.1 milestone. Each requirement maps to exactly one roadmap phase.
 
-- [ ] **AUTH-01**: User can sign up and sign in with email and password via Cognito.
-- [ ] **AUTH-02**: Backend validates JWT claims (issuer, audience, token_use, expiry) on protected routes.
-- [ ] **AUTH-03**: User can register multiple devices and revoke a device.
+### Deployment Foundation
 
-### Key Management
+- [ ] **DEP-01**: Team can deploy backend stacks to live AWS using a repeatable, versioned workflow across staging and production.
+- [x] **DEP-02**: Team can promote immutable build artifacts across environments with explicit rollback capability.
 
-- [ ] **KEYS-01**: Device can upload identity key and signed prekey for session bootstrap.
-- [ ] **KEYS-02**: Backend provides one-time prekey bundles with atomic consume semantics.
-- [ ] **KEYS-03**: Backend exposes session bootstrap metadata APIs for asynchronous initiation.
-- [ ] **KEYS-04**: Backend emits trust-change events when key or device state changes.
+### Security Hardening
 
-### Messaging Core
+- [ ] **SEC-01**: Backend enforces least-privilege IAM policies for runtime roles and deployment roles.
+- [ ] **SEC-02**: Backend enforces production-safe secret and auth configuration (strict JWT claim validation, secret management, metadata redaction defaults).
 
-- [ ] **MSG-01**: User can send and receive 1:1 encrypted messages through WebSocket relay.
-- [ ] **MSG-02**: Backend supports delivery acknowledgement and idempotent retry behavior.
-- [ ] **MSG-03**: User receives queued encrypted messages after reconnect.
+### Realtime Reliability
 
-### Groups and Devices
+- [ ] **REL-01**: Backend handles stale WebSocket connections safely (terminal invalidation + replay fallback) without repeated delivery storms.
+- [ ] **REL-02**: Backend applies bounded retry and concurrency controls so burst traffic does not cascade into persistent delivery failure.
 
-- [ ] **GRP-01**: Backend routes group membership events (join, leave, update) to relevant members.
-- [ ] **GRP-02**: User can send and receive encrypted group messages.
-- [ ] **GRP-03**: Backend fans out message delivery across user active devices.
-- [ ] **GRP-04**: Backend supports encrypted attachment envelope transport.
+### Data Correctness
 
-### Collaboration and Governance
+- [ ] **DATA-01**: Message and fanout operations are idempotent under at-least-once processing and retries.
+- [ ] **DATA-02**: Expiry and consistency-sensitive reads/writes enforce correctness rules for replay and trust-related state.
 
-- [ ] **GIT-01**: Team uses Git Flow branching model for feature, release, and hotfix workflows.
-- [ ] **GIT-02**: Merges to integration branches require at least one peer pull request approval.
-- [ ] **GIT-03**: Commits follow Conventional Commits format for consistent change history.
+### Runtime Validation
 
-## v2 Requirements
+- [ ] **VAL-01**: Team can execute live AWS end-to-end validation for WebSocket auth context propagation across message routes.
+- [ ] **VAL-02**: Team can execute live AWS validation for fanout/replay, trust-change propagation, and attachment envelope transport with release gates.
 
-### Security and Protocol Evolution
+### Operations Readiness
 
-- **SEC-01**: Backend supports post-quantum hybrid key exchange path.
-- **SEC-02**: Backend enforces advanced group admin rekey policies.
-- **SEC-03**: Backend supports disappearing message timer policy enforcement.
+- [ ] **OPS-01**: Team has actionable runbooks for incident response on key live flows (revoke/rekey/trust-change/replay anomalies).
+- [ ] **OPS-02**: Team defines and uses SLO-aligned alerts/health signals for promotion and incident triage.
 
-### Product Enhancements
+## v1.1.x / Future Requirements
 
-- **PROD-01**: Backend supports message editing and deletion event workflows.
-- **PROD-02**: Backend supports SSO federation providers beyond baseline Cognito auth.
+Deferred to follow-up releases after live launch stabilization.
+
+### Extended Operations
+
+- **XOPS-01**: Continuous protocol synthetic canaries run on schedule to detect runtime drift.
+- **XOPS-02**: Automated policy drift detection opens prioritized remediation work.
+
+### Advanced Resilience
+
+- **ARES-01**: Fault-injection and chaos scenarios validate reconnect/fanout behavior under controlled disruption.
+- **ARES-02**: Multi-region failover validation playbooks are defined and rehearsed.
 
 ## Out of Scope
 
-Explicitly excluded for this project cycle.
-
 | Feature | Reason |
 |---------|--------|
-| Server-side plaintext processing of message content | Violates end-to-end encryption trust boundary. |
-| Enterprise-grade compliance certification delivery | Academic project scope does not target formal certification in v1. |
-| Manual unreviewed code integration to mainline branches | Conflicts with team traceability and quality goals. |
+| New end-user messaging product features | v1.1 focuses on live AWS launch readiness and operational correctness of existing capabilities. |
+| Frontend/mobile UX redesign | Backend milestone; client UX iteration is a separate track. |
+| Protocol redesign (new cryptographic primitives) | Current Signal-style protocol boundary remains stable for this milestone. |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| KEYS-01 | Phase 3 | Pending |
-| KEYS-02 | Phase 3 | Pending |
-| KEYS-03 | Phase 3 | Pending |
-| KEYS-04 | Phase 3 | Pending |
-| MSG-01 | Phase 4 | Pending |
-| MSG-02 | Phase 4 | Pending |
-| MSG-03 | Phase 4 | Pending |
-| GRP-01 | Phase 5 | Pending |
-| GRP-02 | Phase 5 | Pending |
-| GRP-03 | Phase 5 | Pending |
-| GRP-04 | Phase 5 | Pending |
-| GIT-01 | Phase 1 | Pending |
-| GIT-02 | Phase 1 | Pending |
-| GIT-03 | Phase 1 | Pending |
+| DEP-01 | Phase 6 | Pending |
+| DEP-02 | Phase 6 | Complete |
+| SEC-01 | Phase 7 | Pending |
+| SEC-02 | Phase 7 | Pending |
+| REL-01 | Phase 8 | Pending |
+| REL-02 | Phase 8 | Pending |
+| DATA-01 | Phase 9 | Pending |
+| DATA-02 | Phase 9 | Pending |
+| VAL-01 | Phase 10 | Pending |
+| VAL-02 | Phase 10 | Pending |
+| OPS-01 | Phase 11 | Pending |
+| OPS-02 | Phase 11 | Pending |
 
 **Coverage:**
-- v1 requirements: 17 total
-- Mapped to phases: 17
-- Unmapped: 0
+- v1.1 requirements: 12 total
+- Mapped to phases: 12
+- Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after initial definition*
+*Requirements defined: 2026-04-02*
+*Last updated: 2026-04-02 after milestone v1.1 requirement scoping*

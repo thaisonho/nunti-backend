@@ -48,14 +48,14 @@ Result parsing:
 <objective>
 Validate built features through conversational testing with persistent state.
 
-Purpose: Confirm what Claude built actually works from user's perspective. One test at a time, plain text responses, no interrogation. When issues are found, automatically diagnose, plan fixes, and prepare for execution.
+Purpose: Confirm what the agent built actually works from user's perspective. One test at a time, plain text responses, no interrogation. When issues are found, automatically diagnose, plan fixes, and prepare for execution.
 
 Output: {phase_num}-UAT.md tracking all test results. If issues found: diagnosed gaps, verified fix plans ready for $gsd-execute-phase
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/verify-work.md
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/templates/UAT.md
+@./.codex/get-shit-done/workflows/verify-work.md
+@./.codex/get-shit-done/templates/UAT.md
 </execution_context>
 
 <context>
@@ -67,6 +67,6 @@ Context files are resolved inside the workflow (`init verify-work`) and delegate
 </context>
 
 <process>
-Execute the verify-work workflow from @/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/verify-work.md end-to-end.
+Execute the verify-work workflow from @./.codex/get-shit-done/workflows/verify-work.md end-to-end.
 Preserve all workflow gates (session management, test presentation, diagnosis, fix planning, routing).
 </process>

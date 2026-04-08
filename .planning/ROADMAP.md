@@ -1,86 +1,105 @@
 # Roadmap: AWS E2EE Messaging Backend
 
+## Milestones
+
+- [x] **v1.0: AWS E2EE Messaging Backend** - Shipped 2026-04-02. Full phase archive: `.planning/milestones/v1.0-ROADMAP.md`.
+- [ ] **v1.1: Live AWS Launch** - In planning. Phases 6-11.
+
 ## Overview
 
-This roadmap delivers the backend in dependency order from team governance and secure identity, through Signal key lifecycle and reliable 1:1 encrypted transport, then into group, multi-device, and attachment capabilities. Each phase maps directly to a coherent v1 requirement cluster so progress can be validated with observable behaviors.
+v1.1 focuses on launching the existing backend into live AWS with deterministic deployment, production hardening, runtime correctness controls, and operational readiness gates. Phase structure is derived from v1.1 requirement categories and ordered by dependency from deployment foundation through release validation and incident operations.
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- Integer phases (6, 7, 8): Planned milestone work
+- Decimal phases (6.1, 6.2): Urgent insertions (marked with INSERTED)
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Collaboration Governance Baseline** - Team collaboration workflow is enforceable and auditable.
-- [ ] **Phase 2: Identity and Device Access** - Users authenticate through Cognito and manage trusted devices.
-- [ ] **Phase 3: Signal Key Lifecycle and Bootstrap** - Devices exchange bootstrap key material safely for async session starts.
-- [ ] **Phase 4: Reliable 1:1 Messaging Core** - Encrypted direct messaging works with delivery reliability and reconnect recovery.
-- [ ] **Phase 5: Groups, Fanout, and Attachments** - Group delivery, multi-device fanout, and encrypted attachment envelopes are operational.
+- [ ] **Phase 6: Deployment Foundation and Promotion Path** - Establish repeatable AWS deployment with immutable promotion and rollback.
+- [ ] **Phase 7: Security Hardening for Live Runtime** - Enforce least privilege and production-safe auth/secret defaults.
+- [ ] **Phase 8: Realtime Reliability Controls** - Prevent stale-connection and burst-failure cascades in live traffic.
+- [ ] **Phase 9: Data Correctness Under Retry Semantics** - Guarantee idempotent and consistency-safe messaging state behavior.
+- [ ] **Phase 10: Live AWS Runtime Validation Gates** - Prove auth/fanout/replay/trust/attachment behavior before promotion.
+- [ ] **Phase 11: Operations Readiness and Incident Response** - Ensure live incident handling is actionable and SLO-aligned.
 
 ## Phase Details
 
-### Phase 1: Collaboration Governance Baseline
-**Goal**: Team can deliver backend changes through a consistent, review-gated, and auditable git workflow.
-**Depends on**: Nothing (first phase)
-**Requirements**: GIT-01, GIT-02, GIT-03
+### Phase 6: Deployment Foundation and Promotion Path
+**Goal**: Team can deploy and promote backend releases across staging and production using deterministic workflows and rollback-safe artifacts.
+**Depends on**: Nothing (first phase of v1.1)
+**Requirements**: DEP-01, DEP-02
 **Success Criteria** (what must be TRUE):
-  1. Contributors can create and complete feature, release, and hotfix work using the Git Flow branch model.
-  2. Pull requests targeting integration branches cannot be merged without at least one peer approval.
-  3. New commits follow Conventional Commits format and produce a consistently classifiable history.
+	1. Team can deploy a tagged backend release to staging and production via the same versioned workflow without manual console edits.
+	2. Team can promote the same immutable artifact from staging to production with verifiable provenance.
+	3. Team can execute an explicit rollback to the previous known-good artifact when a release gate fails.
+**Plans**: 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md - Deterministic staging deployment foundation via SAM, manifest contract, and release-tag automation.
+- [ ] 06-02-PLAN.md - Immutable production promotion and explicit rollback workflow with operator runbook.
+
+### Phase 7: Security Hardening for Live Runtime
+**Goal**: Live runtime enforces least-privilege access and production-safe auth/secret protections by default.
+**Depends on**: Phase 6
+**Requirements**: SEC-01, SEC-02
+**Success Criteria** (what must be TRUE):
+	1. Runtime and deployment roles operate with least-privilege permissions and deny overbroad access paths.
+	2. JWT validation rejects tokens that violate issuer, audience, claim, or context rules required by each protected route.
+	3. Secrets and sensitive metadata are managed through approved secret stores, and logs default to redacted metadata output.
 **Plans**: TBD
 
-### Phase 2: Identity and Device Access
-**Goal**: Users can securely authenticate and control which of their devices are allowed to participate.
-**Depends on**: Phase 1
-**Requirements**: AUTH-01, AUTH-02, AUTH-03
+### Phase 8: Realtime Reliability Controls
+**Goal**: Realtime delivery remains stable under stale connections and burst traffic without retry amplification.
+**Depends on**: Phase 7
+**Requirements**: REL-01, REL-02
 **Success Criteria** (what must be TRUE):
-  1. User can sign up and sign in with email and password via Cognito.
-  2. Requests with invalid JWT claims are rejected on protected routes, while valid tokens are accepted.
-  3. User can register multiple devices and revoke a device so it is no longer authorized.
+	1. Stale WebSocket connections are terminally invalidated and no longer trigger repeated delivery storms.
+	2. Offline recipients receive replay fallback instead of indefinite realtime retry loops.
+	3. Burst traffic is handled with bounded retry and concurrency controls that prevent persistent relay failure cascades.
 **Plans**: TBD
 
-### Phase 3: Signal Key Lifecycle and Bootstrap
-**Goal**: Clients can publish and retrieve Signal bootstrap key material with safe one-time semantics.
-**Depends on**: Phase 2
-**Requirements**: KEYS-01, KEYS-02, KEYS-03, KEYS-04
+### Phase 9: Data Correctness Under Retry Semantics
+**Goal**: Messaging and fanout state remains correct under retries, at-least-once processing, and consistency-sensitive reads.
+**Depends on**: Phase 8
+**Requirements**: DATA-01, DATA-02
 **Success Criteria** (what must be TRUE):
-  1. Device can upload identity key and signed prekey, and later retrieve current device key state.
-  2. Initiating client can fetch a one-time prekey bundle that is consumed atomically and not re-issued.
-  3. Client can obtain session bootstrap metadata required for asynchronous session initiation.
-  4. Trust-change events are emitted to affected clients when key or device trust state changes.
+	1. Duplicate ingest or fanout attempts do not create duplicated persisted message state.
+	2. Replay and trust-related reads honor expiry and consistency rules, preventing stale or invalid state from being served.
+	3. Retry-driven write paths preserve correctness invariants through idempotent and conditional persistence behavior.
 **Plans**: TBD
 
-### Phase 4: Reliable 1:1 Messaging Core
-**Goal**: Users can exchange encrypted direct messages in real time with durable retry-safe delivery behavior.
-**Depends on**: Phase 3
-**Requirements**: MSG-01, MSG-02, MSG-03
+### Phase 10: Live AWS Runtime Validation Gates
+**Goal**: Release promotion is gated by successful live AWS validation of critical realtime and envelope flows.
+**Depends on**: Phase 9
+**Requirements**: VAL-01, VAL-02
 **Success Criteria** (what must be TRUE):
-  1. User can send and receive 1:1 encrypted messages through the WebSocket relay.
-  2. Delivery acknowledgement and idempotent retry behavior prevent duplicate message side effects.
-  3. User who reconnects receives queued encrypted messages that were missed while offline.
+	1. Team can run live AWS end-to-end tests that verify auth context propagation across WebSocket message routes.
+	2. Team can run live validation for fanout/replay, trust-change propagation, and attachment envelope transport.
+	3. Production promotion is blocked when required live validation gates fail.
 **Plans**: TBD
 
-### Phase 5: Groups, Fanout, and Attachments
-**Goal**: Encrypted messaging scales to groups and multiple devices, including attachment envelope transport.
-**Depends on**: Phase 4
-**Requirements**: GRP-01, GRP-02, GRP-03, GRP-04
+### Phase 11: Operations Readiness and Incident Response
+**Goal**: On-call and release operators can detect, triage, and respond to key encrypted messaging incidents in live AWS.
+**Depends on**: Phase 10
+**Requirements**: OPS-01, OPS-02
 **Success Criteria** (what must be TRUE):
-  1. Group members receive membership events (join, leave, update) relevant to their groups.
-  2. User can send and receive encrypted group messages.
-  3. Encrypted messages are fanned out across a user's active devices.
-  4. User can send and receive encrypted attachment envelopes through backend transport workflows.
+	1. Team can follow runbooks to execute revoke, rekey, trust-change, and replay anomaly response paths during incidents.
+	2. SLO-aligned alerts and health signals identify live regressions early enough to support safe promotion decisions.
+	3. Incident triage for key live flows is actionable without ad-hoc undocumented recovery steps.
 **Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 6 -> 6.1 -> 6.2 -> 7 -> 7.1 -> 8 -> ...
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Collaboration Governance Baseline | 0/TBD | Not started | - |
-| 2. Identity and Device Access | 0/TBD | Not started | - |
-| 3. Signal Key Lifecycle and Bootstrap | 0/TBD | Not started | - |
-| 4. Reliable 1:1 Messaging Core | 0/TBD | Not started | - |
-| 5. Groups, Fanout, and Attachments | 0/TBD | Not started | - |
+| 6. Deployment Foundation and Promotion Path | 0/0 | Not started | - |
+| 7. Security Hardening for Live Runtime | 0/0 | Not started | - |
+| 8. Realtime Reliability Controls | 0/0 | Not started | - |
+| 9. Data Correctness Under Retry Semantics | 0/0 | Not started | - |
+| 10. Live AWS Runtime Validation Gates | 0/0 | Not started | - |
+| 11. Operations Readiness and Incident Response | 0/0 | Not started | - |

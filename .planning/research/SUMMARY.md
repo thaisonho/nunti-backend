@@ -1,6 +1,178 @@
 # Project Research Summary
 
 **Project:** AWS E2EE Messaging Backend
+**Domain:** Live AWS launch of a serverless Signal-style E2EE messaging backend
+**Researched:** 2026-04-02
+**Confidence:** MEDIUM-HIGH
+
+## Executive Summary
+
+This milestone is a launch-readiness effort, not a greenfield build. The product is an AWS serverless realtime messaging backend that handles ciphertext envelopes and protocol metadata while clients retain all plaintext cryptography responsibilities. Across stack, features, architecture, and pitfalls research, the expert pattern is clear: preserve the existing API Gateway WebSocket + Lambda + DynamoDB + Cognito architecture, then harden deployment, runtime validation, and security controls before production promotion.
+
+The recommended approach is staged and dependency-driven: establish deterministic infrastructure and environment isolation first, then add observability and progressive rollout controls, then enforce security and data-correctness guarantees, and finally run release-blocking live AWS validation before promotion. This sequencing minimizes blast radius and separates infrastructure defects from runtime behavior regressions, which is critical for a milestone whose acceptance criteria are live fanout/replay/trust-change/attachment behavior.
+
+The dominant risks are not feature gaps; they are operational correctness failures under real traffic: stale websocket connection handling, duplicate event side effects, claim-validation drift in JWT auth, and metadata leakage in telemetry. Mitigation must be built into v1.1 phases as required controls (idempotency keys, strict claim matrix, redaction policy checks, concurrency guardrails, alarm-gated promotion), not postponed to v1.1.x.
+
+## Key Findings
+
+### Recommended Stack
+
+Research strongly supports an AWS-native launch stack with minimal architectural churn and maximum operational guardrails. The stack should keep current serverless primitives, upgrade runtime baseline to modern Lambda Node, and add deployment/observability/security tooling to turn the existing backend into a repeatable production system.
+
+**Core technologies:**
+- AWS CDK v2 (`aws-cdk-lib` 2.247.0 + `constructs` 10.6.0): infrastructure-as-code baseline for reproducible multi-stage deployment and drift visibility.
+- AWS Lambda (`nodejs24.x`, fallback `nodejs22.x`): production runtime for websocket/auth/messaging handlers aligned with current AWS support.
+- GitHub Actions OIDC -> AWS IAM role assumption: CI/CD authentication without long-lived cloud keys; enforce trust policy subject conditions.
+- CloudWatch + X-Ray + alarms: runtime observability and promotion gating for latency/error/replay/fanout behavior.
+- SSM Parameter Store + KMS: stage-safe configuration and encrypted secret/material handling.
+- Powertools (`logger`, `metrics`, `tracer`): standardized structured logs, custom metrics, and traces across handlers.
+- `cdk-nag`, IAM Access Analyzer, `cdk diff`: IaC and IAM security controls integrated into CI.
+- Artillery WebSocket tests: realistic burst/reconnect validation against deployed AWS endpoints.
+
+Critical version note: keep AWS SDK v3 clients (`@aws-sdk/client-ssm`, `@aws-sdk/client-kms`) aligned on same minor stream (researched at 3.1022.0).
+
+### Expected Features
+
+v1.1 table stakes focus on production launch safety and runtime correctness rather than net-new user capabilities. The backlog should treat deploy determinism, progressive rollout, observability, security hardening, and live validation as first-class feature work.
+
+**Must have (table stakes):**
+- Repeatable staging/prod deployment pipeline with rollback path.
+- Progressive Lambda rollout (canary/linear) with alarm-driven rollback.
+- WebSocket + Lambda observability baseline (metrics, logs, alarms, correlation IDs).
+- Live AWS validation suite for auth context, fanout/replay, trust-change, and attachment flows.
+- IAM least-privilege hardening and temporary-credential model.
+- Secrets handling and production-safe defaults.
+- Load/concurrency guardrails to protect downstream dependencies under burst.
+
+**Should have (competitive):**
+- Protocol-level synthetic canaries for continuous runtime drift detection.
+- Release health scorecards as deployment gates.
+- Replay/fanout diagnostics dashboards.
+- Automated IAM/resource policy drift detection with remediation queue.
+
+**Defer (v2+):**
+- Chaos/fault-injection resilience programs.
+- Automated traffic reshaping by anomaly class.
+- Multi-region failover validation playbooks.
+
+### Architecture Approach
+
+Architecture guidance is to preserve the v1.0 serverless shape and harden integration seams for live operation. Keep route-oriented transport adapters, stateless crypto boundary, and durability-first write-then-deliver flow. For v1.1, introduce environment-isolated stacks, deployment workflow, runtime verification harness, and stronger telemetry around relay outcomes and auth context propagation.
+
+**Major components:**
+1. Cognito + Auth/Connection handlers: validate JWT claim context, bind and clean connection identity mappings.
+2. Message ingest + delivery services: persist encrypted envelopes first, then fan out via `@connections` with bounded retries and offline fallback.
+3. DynamoDB state layer (+ streams): manage identities, keys, messages, and connection index with idempotent and conditional write invariants.
+4. Observability + verification plane: CloudWatch/X-Ray dashboards, alarms, and black-box runtime validation as promotion gates.
+
+### Critical Pitfalls
+
+1. **Environment drift from console-first changes** - Avoid with CDK-only deployments, immutable artifact promotion, and CI drift checks.
+2. **Overbroad IAM and weak JWT claim validation** - Avoid with per-function least privilege, Access Analyzer gating, centralized verifier, and strict per-route claim matrix.
+3. **Stale websocket connection retry storms** - Avoid by treating 410/Gone as terminal invalidation, evicting stale connection mappings, and replaying offline.
+4. **Assuming exactly-once processing** - Avoid with end-to-end idempotency keys, conditional writes, duplicate-event tests, and retry-safe workflows.
+5. **TTL/consistency and telemetry leakage mistakes** - Avoid by read-time expiry enforcement, strong reads where correctness-critical, and allowlist-based redacted logs.
+
+## Implications for Roadmap
+
+Based on research, suggested phase structure:
+
+### Phase 1: Deployment Foundation and Stage Isolation
+**Rationale:** Every later validation and hardening activity depends on deterministic, environment-separated infrastructure.
+**Delivers:** CDK-defined stacks (`dev`/`staging`/`prod`), immutable artifact path, baseline CI deploy workflow, `cdk diff` review gate.
+**Addresses:** repeatable infra deployment, environment parity, rollback readiness.
+**Avoids:** deployment drift and unreproducible prod-only failures.
+
+### Phase 2: Security Hardening and Identity Guardrails
+**Rationale:** Live launch is blocked if auth or IAM controls are weak, even when functional tests pass.
+**Delivers:** least-privilege IAM roles, OIDC trust restrictions, JWT claim-matrix verification hardening, secrets/config policy, redaction enforcement.
+**Uses:** IAM Access Analyzer, Parameter Store/KMS, Powertools structured logging.
+**Avoids:** wildcard-permission blast radius, context-confused token acceptance, metadata leakage.
+
+### Phase 3: Realtime Reliability and Concurrency Controls
+**Rationale:** Fanout/replay behavior under churn is the highest runtime risk area for this backend class.
+**Delivers:** stale-connection invalidation logic, bounded retry/offline fallback behavior, reserved concurrency strategy, relay outcome metrics.
+**Implements:** write-then-deliver durability pattern with operational backpressure.
+**Avoids:** 410/Gone retry storms, downstream throttling cascades, silent delivery regressions.
+
+### Phase 4: Data Correctness and Idempotency
+**Rationale:** At-least-once serverless semantics require explicit correctness controls before production promotion.
+**Delivers:** operation idempotency keys, conditional-write invariants, TTL-safe read guards, duplicate-event test suite.
+**Addresses:** duplicate fanout/persistence side effects, stale-record policy bypass, replay correctness drift.
+**Avoids:** message duplication, ghost session/device state, intermittent correctness bugs.
+
+### Phase 5: Runtime Validation Gates and Progressive Promotion
+**Rationale:** v1.1 success criteria require proof in live AWS, not just deploy success.
+**Delivers:** automated black-box validation suite for auth context, fanout/replay, trust-change, attachments; canary/linear rollout; release-blocking alarm gates.
+**Uses:** Artillery + CloudWatch metrics/alarms + deployment gating.
+**Avoids:** user-discovered regressions after nominally successful deploys.
+
+### Phase 6: Operations Readiness and Incident Drills
+**Rationale:** Compromise and recovery workflows are recurring production realities, not optional post-launch work.
+**Delivers:** runbooks and rehearsals for revoke/rekey/trust-change, owner mapping, SLO-backed incident workflow.
+**Addresses:** security operations continuity and recovery confidence.
+**Avoids:** prolonged compromise impact and inconsistent emergency response.
+
+### Phase Ordering Rationale
+
+- Infrastructure determinism first: validation without environment stability produces noisy and non-actionable failures.
+- Security before scale validation: auth/IAM/logging controls are launch blockers and reduce risk during load testing.
+- Realtime reliability before promotion: fanout/replay correctness and connection lifecycle handling are primary user-trust vectors.
+- Idempotency and lifecycle correctness before gate enforcement: promotion gates are meaningful only when system semantics are stable under retries/staleness.
+- Incident readiness last but mandatory: once production promotion begins, operational response capability must already be rehearsed.
+
+### Research Flags
+
+Phases likely needing deeper research during planning:
+- **Phase 3:** websocket churn behavior, callback failure handling patterns, and concurrency budgets under realistic reconnect storms.
+- **Phase 4:** idempotency key design and conditional-write schema details for existing DynamoDB model.
+- **Phase 6:** practical revoke/rekey/trust-change drill design and measurable SLO definitions.
+
+Phases with standard patterns (skip research-phase):
+- **Phase 1:** CDK-based stage isolation and CI deploy workflow are mature, well-documented patterns.
+- **Phase 2:** IAM least-privilege + OIDC federation + centralized JWT claim validation are standard AWS security baselines.
+- **Phase 5:** canary/linear rollout and alarm-gated promotion via AWS-native tooling are established patterns.
+
+## Confidence Assessment
+
+| Area | Confidence | Notes |
+|------|------------|-------|
+| Stack | HIGH | Strongly grounded in official AWS/GitHub docs and concrete version pinning in STACK research. |
+| Features | HIGH | Clear table-stakes vs differentiators with direct mapping to v1.1 acceptance goals. |
+| Architecture | MEDIUM-HIGH | High alignment with existing platform; some implementation specifics still depend on current repo wiring and deploy topology. |
+| Pitfalls | MEDIUM | Risk themes are strong, but PITFALLS file includes two merged research blocks (2026-04-02 and 2026-03-19), requiring synthesis and deduplication assumptions. |
+
+**Overall confidence:** MEDIUM-HIGH
+
+### Gaps to Address
+
+- Existing PITFALLS content is duplicated/merged from two contexts; normalize into one canonical pitfall register before phase planning to avoid conflicting controls.
+- Concrete AWS account topology (single-account vs multi-account promotion path) is not finalized in research and should be fixed during Phase 1 planning.
+- Exact alarm thresholds/SLO budgets for rollout gating are not numerically specified; define target values before production promotion.
+- Current test harness coverage for trust-change and attachment envelope runtime checks should be baseline-audited before building new validation gates.
+
+## Sources
+
+### Primary (HIGH confidence)
+- AWS Lambda runtimes, best practices, concurrency, and metrics docs - runtime baseline and operational controls.
+- AWS API Gateway WebSocket docs (`$connect`, `$disconnect`, routes, `@connections`) - transport behavior and callback lifecycle.
+- AWS DynamoDB docs (TTL and read consistency) - lifecycle and correctness constraints.
+- AWS IAM best practices + Access Analyzer docs - least privilege and policy validation.
+- Amazon Cognito JWT verification docs - signature + claims + key rotation requirements.
+- GitHub Actions OIDC in AWS docs - short-lived CI/CD credential model.
+
+### Secondary (MEDIUM confidence)
+- Signal protocol specifications (X3DH, Double Ratchet) referenced in PITFALLS append for protocol-abuse and state-race considerations.
+- npm package metadata snapshots (2026-04-02) for stack version recommendations.
+
+### Tertiary (LOW confidence)
+- None identified as standalone decision drivers; low-confidence inferences were excluded from roadmap implications.
+
+---
+*Research completed: 2026-04-02*
+*Ready for roadmap: yes*# Project Research Summary
+
+**Project:** AWS E2EE Messaging Backend
 **Domain:** AWS serverless end-to-end encrypted messaging backend (Signal protocol)
 **Researched:** 2026-03-19
 **Confidence:** HIGH

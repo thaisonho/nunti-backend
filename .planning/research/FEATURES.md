@@ -1,138 +1,132 @@
 # Feature Research
 
-**Domain:** AWS-based end-to-end encrypted (E2EE) messaging backend
-**Researched:** 2026-03-19
-**Confidence:** MEDIUM-HIGH
+**Domain:** Live AWS launch and runtime validation for a serverless realtime E2EE messaging backend
+**Researched:** 2026-04-02
+**Confidence:** HIGH
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-Features users assume exist. Missing these = product feels incomplete.
+Features users assume exist. Missing these = launch feels unsafe or incomplete.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Identity and device registration (auth + device binding) | Every mainstream messenger binds identity to one or more devices before encrypted messaging can work. | MEDIUM | Backend scope: Cognito auth, device records, signed device key registration, revocation. |
-| Prekey bundle service and asynchronous session bootstrap (X3DH/PQXDH-ready) | Users expect they can message offline recipients and start chats instantly. | HIGH | Backend must store and atomically serve one-time prekeys, signed prekeys, and identity keys with anti-abuse rate limits. |
-| Pairwise E2EE session lifecycle (Double Ratchet state transport support) | Core expectation: confidentiality, forward secrecy, post-compromise healing behavior. | HIGH | Server transports ciphertext/headers and stores minimal protocol state metadata; never plaintext keys/messages. |
-| Reliable encrypted message delivery and ordering metadata | Users expect messages to arrive, retry, and appear in consistent order across reconnects. | HIGH | Backend needs message queueing, idempotency keys, ack/retry semantics, and out-of-order tolerance metadata. |
-| Group messaging key distribution primitives | Group chat is table stakes in 2026 secure messengers. | HIGH | Backend coordinates sender key fanout / group state events / membership transitions without plaintext access. |
-| Attachment envelope transport | Users expect encrypted media/docs, not text-only chat. | MEDIUM | Backend stores encrypted blobs and encrypted attachment pointers/keys separately from payload objects. |
-| Multi-device message fanout and sync | Users expect phone + desktop/tablet consistency. | HIGH | Backend must track per-device queues, delivery state, device add/remove events, and stale device cutoff. |
-| Key verification and trust-change signaling | Users expect ability to detect MITM risk when contacts rekey or reinstall. | MEDIUM | Backend carries safety-number identity data and emits trust-change events; verification UX is client-side. |
-| Disappearing message timers and retention policy hooks | Ephemeral messaging is a standard privacy expectation. | MEDIUM | Backend stores timer metadata and enforces delete windows for queued ciphertext and delivery artifacts. |
-| Abuse controls for encrypted systems | Users expect spam/scam blocking even in private apps. | HIGH | Backend supports rate limits, message requests, blocklists, unknown-sender throttles, and reporting envelopes (metadata only). |
+| Repeatable infra deployment pipeline (staging + production) | Live launch requires deterministic, auditable releases and environment parity. | HIGH | IaC-first deploy flow, immutable artifacts, config by environment, and rollback-capable release command path. |
+| Progressive Lambda rollout with automated rollback gates | Big-bang production switches are no longer acceptable for realtime systems. | MEDIUM | Use weighted alias and CodeDeploy canary/linear configs; tie rollback to alarm thresholds. |
+| WebSocket and Lambda observability baseline | Runtime behavior in AWS must be measurable in real time to detect regressions. | MEDIUM | API Gateway WebSocket metrics (ConnectCount, MessageCount, IntegrationError, ClientError, ExecutionError, IntegrationLatency) plus Lambda service/custom metrics and alarms. |
+| Structured access/execution logging with trace correlation | Incident triage and auth/fanout debugging require correlated logs across API Gateway and Lambda. | MEDIUM | Enable API Gateway execution + access logs and JSON Lambda logs; include request IDs and route/auth context identifiers. |
+| Live AWS runtime validation suite for critical flows | Milestone goal is proof of real runtime behavior, not just local/integration confidence. | HIGH | Validate connect/auth context, fanout, replay/reconnect, trust-change, and attachment envelope flows against deployed stack. |
+| Load and concurrency guardrails | Realtime launch must survive bursty connection/message spikes without cascading failure. | MEDIUM | Reserved concurrency to protect downstream dependencies; provisioned concurrency for latency-sensitive paths where needed. |
+| IAM least-privilege hardening for humans and workloads | Production launch is expected to enforce modern IAM security controls. | MEDIUM | Temporary credentials via roles, MFA for privileged access, Access Analyzer policy generation/validation, remove unused permissions. |
+| Secrets and production-safe defaults | Storing sensitive values in code or plain env vars is considered unsafe for launch. | LOW | Keep secrets in Secrets Manager; use encrypted env vars only for non-secret config and operational parameters. |
 
 ### Differentiators (Competitive Advantage)
 
-Features that set the product apart. Not required, but valuable.
+Features that set the launch quality apart. Not mandatory for day one, but materially valuable.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Phone-number privacy with username-first discovery | Reduces social graph leakage and improves pseudonymous contact initiation. | HIGH | Backend needs private lookup, anti-enumeration controls, optional discoverability modes, and alias lifecycle APIs. |
-| Sealed-sender style sender-metadata minimization | Better metadata privacy than basic E2EE transport. | HIGH | Requires tokenized delivery auth so relay can route messages without learning stable sender identity in normal flow. |
-| E2EE backup key escrow design (opt-in, user-held secret) | Helps recovery expectations without server plaintext access. | HIGH | Backend supports encrypted backup blobs + wrapped backup keys only; strict zero-knowledge handling and recovery audit trails. |
-| Adaptive trust/risk engine for key events | Better security UX by highlighting unusual key/device churn and session anomalies. | MEDIUM | Metadata-only analytics over key-change velocity, unfamiliar device joins, geo anomalies; never content analysis. |
-| Message request and consent gates for first contact | Cuts spam and harassment while preserving E2EE. | MEDIUM | Backend supports pending inbox state, quota buckets, and explicit recipient acceptance before full delivery privileges. |
-| Granular group key policies (admin-controlled rekey triggers) | Stronger security posture for sensitive groups and teams. | HIGH | Trigger rekey on role change, member leave, device compromise, or timer policy changes; enforce server-side policy orchestration. |
-| Post-quantum migration readiness (hybrid ratchet path) | Future-proofs architecture and can be a major trust differentiator. | HIGH | Build protocol version negotiation and migration envelopes now, even if PQ ratchets are phased in later. |
-| Transparency and audit surfaces (key-state attestations) | Builds trust for academic/security-conscious audiences. | MEDIUM | Backend emits signed append-only events for key upload/rotation/deletion and group membership cryptographic state transitions. |
+| Protocol-level synthetic canaries (CloudWatch Synthetics) | Detects realtime flow regressions before users report them. | MEDIUM | Schedule scripts for websocket connect/auth/message/replay smoke checks and alert on drift. |
+| Release health scorecards per deploy (runtime SLO gate) | Converts launch decisions from intuition to measurable policy. | MEDIUM | Gate promotion on error/latency/success thresholds per route and flow class. |
+| Stage-by-stage validation matrix (staging -> pre-prod -> prod) | Reduces environment-specific surprises during launch week. | MEDIUM | Same test catalog run across environments with stricter acceptance in higher tiers. |
+| Automated policy drift detection and remediation queue | Sustains security posture after initial hardening. | HIGH | Detect IAM/resource policy drift and auto-open remediation tasks with severity tags. |
+| Replay/fanout diagnostics dashboard for realtime internals | Speeds MTTR when delivery semantics regress under load. | MEDIUM | Purpose-built panels for reconnect backlog age, replay success %, duplicate suppression, and trust event propagation delay. |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
-Features that seem good but create problems.
+Features that seem attractive but increase launch risk.
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Server-side plaintext search/indexing | Feels convenient for "find old messages" | Breaks E2EE trust boundary and expands breach impact massively. | Client-side encrypted index/search only. |
-| Server-managed master decryption key / "lawful access" backdoor | Marketed as recovery/compliance shortcut | Single catastrophic compromise point; destroys protocol credibility. | User-controlled recovery secrets + explicit endpoint controls. |
-| Automatic contact discovery by unrestricted phone-number enumeration | Easy growth hack | Enables scraping, stalking, and spam at scale. | Rate-limited private contact discovery, username links, invitation tokens. |
-| Unlimited message retention by default on backend | Simplifies troubleshooting | Increases metadata and ciphertext exposure window and compliance burden. | Short bounded retention + explicit archival modes. |
-| Cross-platform plaintext backup in cloud by default | Reduces migration friction | Cloud provider or account compromise leaks full history. | Opt-in E2EE backups with user-held passphrase or hardware-protected key. |
+| All-at-once production deployment | Faster release and fewer moving parts | Maximizes blast radius and rollback pressure during unknown runtime behavior. | Canary or linear rollout with alarm-driven rollback. |
+| Validation by manual spot checks only | Feels quick and avoids writing automation | Misses nondeterministic realtime failures and does not scale across deploys. | Automated runtime validation suite plus synthetic canaries. |
+| Over-verbose production logging (auth headers/tokens/payload-like metadata) | Easier debugging in the moment | Creates security/compliance risk and high log costs; can leak sensitive metadata. | Structured minimal logs with redaction and explicit safe fields. |
+| Long-lived IAM user keys in CI/CD | Simpler initial setup | High credential leakage risk and weak revocation posture. | Role-based temporary credentials and federated access. |
+| Unbounded Lambda scaling during launch | Maximizes throughput on paper | Can overload downstream services and cause broad incident cascades. | Reserved concurrency limits and staged load increases. |
 
 ## Feature Dependencies
 
 ```text
-Identity and device registration
-    -> required by Prekey bundle service
-    -> required by Multi-device fanout
+Repeatable infra deployment pipeline
+    -> required by Progressive Lambda rollout
+    -> required by Stage-by-stage validation matrix
 
-Prekey bundle service
-    -> required by Pairwise E2EE sessions
-    -> required by First-message request flow
+WebSocket + Lambda observability baseline
+    -> required by Automated rollback gates
+    -> required by Release health scorecards
+    -> required by Replay/fanout diagnostics dashboard
 
-Pairwise E2EE sessions
-    -> required by Group messaging key distribution
-    -> required by Attachment envelope transport
+Structured logging + trace correlation
+    -> required by Live AWS runtime validation triage
+    -> required by Synthetic canary troubleshooting
 
-Multi-device fanout
-    -> required by Key verification/trust-change signaling
-    -> required by Reliable delivery and ordering metadata
+IAM least-privilege hardening
+    -> required by Production launch approval
+    -> required by Drift detection/remediation program
 
-Reliable delivery and ordering metadata
-    -> required by Disappearing timers enforcement consistency
+Secrets and production-safe defaults
+    -> required by Security hardening sign-off
 
-Group membership state
-    -> required by Group rekey policy differentiator
+Load/concurrency guardrails
+    -> required by Reliable fanout/replay validation under stress
 
-Phone-number privacy and username discovery
-    -> enhances Abuse controls (lower unsolicited reachability)
-
-E2EE backup key escrow
-    -> conflicts with strict no-backup posture (choose one policy track for MVP)
+Live AWS runtime validation suite
+    -> required by Final production promotion
 ```
 
 ### Dependency Notes
 
-- **Identity/device registration requires Cognito + device key model first:** every downstream encrypted flow assumes authenticated device identities.
-- **Prekey service must be built before conversational messaging:** asynchronous first-message delivery depends on one-time prekey retrieval.
-- **Reliable delivery metadata is a prerequisite for timer correctness:** disappearing/ephemeral semantics break if delivery and read-state sequencing is weak.
-- **Group security depends on membership event integrity:** rekey-on-membership-change only works if backend membership state is strongly consistent.
-- **Username discovery and anti-enumeration should launch together:** username-only discovery without abuse controls invites scraping pressure.
+- **Observability precedes trustworthy rollout:** progressive deployment without alarms/metrics is effectively blind deployment.
+- **Validation depends on diagnosability:** when live tests fail, request-level correlation across API Gateway and Lambda is needed for fast triage.
+- **Security gates are launch blockers:** IAM and secret handling must be hardened before production sign-off, not after first incident.
+- **Concurrency controls protect validation quality:** without guardrails, load tests can produce false negatives caused by preventable saturation.
 
 ## MVP Definition
 
-### Launch With (v1)
+### Launch With (v1.1)
 
-Minimum viable product - what is needed to validate the concept.
+Minimum viable live-launch feature set for this milestone.
 
-- [ ] Identity and device registration (Cognito + device key records) - foundational auth and trust anchor.
-- [ ] Prekey bundle service and pairwise session bootstrap - enables asynchronous E2EE starts.
-- [ ] 1:1 encrypted messaging transport with reliable delivery metadata - validates core messaging loop.
-- [ ] Group messaging baseline (membership events + encrypted payload transport) - aligns with project requirements.
-- [ ] Attachment envelope transport (encrypted pointer flow) - satisfies v1 attachments scope.
-- [ ] Multi-device fanout baseline and trust-change signaling - required for realistic usage and safety alerts.
-- [ ] Core abuse controls (rate limit, block/report, unknown sender gating) - required for safe operation.
+- [ ] Repeatable AWS deploy pipeline for staging and production with rollback support - baseline for controlled launch.
+- [ ] Progressive rollout strategy (canary/linear) with alarm-driven rollback - limits blast radius.
+- [ ] WebSocket + Lambda observability and alerting baseline - required for runtime visibility.
+- [ ] Structured production logging with correlation IDs and redaction policy - enables safe debugging.
+- [ ] Live AWS runtime validation suite covering auth context, fanout/replay, trust-change, and attachments - milestone acceptance criteria.
+- [ ] IAM least-privilege and temporary-credential model with MFA for privileged paths - production security baseline.
+- [ ] Secrets Manager adoption and production-safe configuration defaults - reduces credential exposure risk.
 
-### Add After Validation (v1.x)
+### Add After Validation (v1.1.x)
 
-- [ ] Disappearing message policy hardening (timer edge cases, retention audits) - after core delivery correctness is stable.
-- [ ] Username-based discovery with phone-number privacy controls - after anti-enumeration and contact-intent flows are proven.
-- [ ] E2EE backup (opt-in) - after threat model and key custody UX are validated.
-- [ ] Group admin security policies (mandatory rekey triggers) - once baseline group flow is stable.
+- [ ] CloudWatch Synthetics-based protocol canaries - continuous post-launch confidence.
+- [ ] Release health scorecards as deploy gates - tighten release governance after first live cycles.
+- [ ] Replay/fanout diagnostics dashboard - improve on-call speed after observing real incidents.
+- [ ] Policy drift detection and remediation queue - maintain hardening over time.
 
 ### Future Consideration (v2+)
 
-- [ ] Sealed-sender style metadata minimization - strong differentiator but protocol and infra heavy.
-- [ ] Hybrid post-quantum ratchet migration path - strategic roadmap item, requires protocol versioning and compatibility testing.
-- [ ] Transparency log style key-state attestations - valuable for trust and audits after core operations mature.
+- [ ] Fault-injection and chaos scenarios for websocket reconnect/fanout - deep resilience maturity work.
+- [ ] Automated rollback plus traffic re-shaping by anomaly class - advanced autonomous operations.
+- [ ] Multi-region failover validation playbooks - important later, but beyond this launch milestone.
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Identity/device registration | HIGH | MEDIUM | P1 |
-| Prekey bundle + session bootstrap | HIGH | HIGH | P1 |
-| Reliable encrypted transport | HIGH | HIGH | P1 |
-| Group encrypted messaging baseline | HIGH | HIGH | P1 |
-| Attachment envelope transport | HIGH | MEDIUM | P1 |
-| Multi-device fanout baseline | HIGH | HIGH | P1 |
-| Abuse controls baseline | HIGH | MEDIUM | P1 |
-| Disappearing message enforcement | MEDIUM | MEDIUM | P2 |
-| Username privacy discovery | MEDIUM-HIGH | HIGH | P2 |
-| E2EE backup (opt-in) | MEDIUM | HIGH | P2 |
-| Sealed-sender style metadata protection | MEDIUM-HIGH | HIGH | P3 |
-| Post-quantum migration path | MEDIUM (now), HIGH (later) | HIGH | P3 |
+| Repeatable infra deploy pipeline | HIGH | HIGH | P1 |
+| Progressive rollout + rollback gates | HIGH | MEDIUM | P1 |
+| WebSocket + Lambda observability baseline | HIGH | MEDIUM | P1 |
+| Structured logging + trace correlation | HIGH | MEDIUM | P1 |
+| Live AWS runtime validation suite | HIGH | HIGH | P1 |
+| IAM least-privilege hardening | HIGH | MEDIUM | P1 |
+| Secrets Manager + safe defaults | HIGH | LOW | P1 |
+| Load/concurrency guardrails | HIGH | MEDIUM | P1 |
+| Protocol synthetic canaries | MEDIUM-HIGH | MEDIUM | P2 |
+| Release health scorecards | MEDIUM-HIGH | MEDIUM | P2 |
+| Drift detection + remediation queue | MEDIUM | HIGH | P2 |
+| Realtime internals diagnostics dashboard | MEDIUM | MEDIUM | P2 |
+| Chaos/fault-injection coverage | MEDIUM | HIGH | P3 |
+| Multi-region launch posture | MEDIUM (now), HIGH (later) | HIGH | P3 |
 
 **Priority key:**
 - P1: Must have for launch
@@ -141,29 +135,26 @@ Minimum viable product - what is needed to validate the concept.
 
 ## Competitor Feature Analysis
 
-| Feature | Signal | WhatsApp | Our Approach |
-|---------|--------|----------|--------------|
-| Default E2EE messaging | Default and protocol-forward | Default at massive scale | Match baseline with strict no-plaintext backend contract. |
-| Device and key verification | Safety numbers / verification model | Security notifications and verification flows | Implement trust-change events and verification artifacts early. |
-| Disappearing messages | Mature timer controls | Mature timer controls | Include v1 baseline, then harden semantics in v1.x. |
-| Multi-device | Linked-device model with constraints | Broad multi-device support | Start with deterministic per-device queues and explicit device lifecycle events. |
-| Backup strategy | Local-device oriented and constrained restores | Optional end-to-end encrypted cloud backups | Keep out of v1; design opt-in E2EE backup for v1.x. |
-| Phone-number privacy options | Username + phone number privacy controls | Number-centric with privacy controls | Use as differentiator in v1.x with anti-enumeration by design. |
+| Feature | Typical Early-Stage Serverless Team | Mature Serverless SaaS Team | Our v1.1 Approach |
+|---------|-------------------------------------|-----------------------------|-------------------|
+| Deployment strategy | Mostly all-at-once or manual canary | Automated canary/linear with rollback hooks | Start with CodeDeploy-backed canary/linear and strict rollback alarms. |
+| Runtime validation | Manual smoke checks after deploy | Continuous synthetic probes + scripted acceptance suites | Milestone requires scripted live validation; add continuous canaries in v1.1.x. |
+| Observability depth | Basic logs only | Metrics + traces + curated dashboards | Implement metrics, alerts, and correlated logs first; dashboard depth next. |
+| Security hardening | Broad IAM policies and static CI keys | Least privilege, temporary credentials, drift controls | Enforce least privilege + temporary creds now; drift automation next. |
+| Realtime incident response | Ad-hoc debugging | Standardized runbooks and flow-specific telemetry | Build baseline runbook-compatible telemetry in launch scope. |
 
 ## Sources
 
-- Signal X3DH specification: https://signal.org/docs/specifications/x3dh/
-- Signal Double Ratchet specification (rev 4, 2025-11-04): https://signal.org/docs/specifications/doubleratchet/
-- Matrix E2EE implementation guide: https://matrix.org/docs/matrix-concepts/end-to-end-encryption/
-- Signal support: Safety and trust posture: https://support.signal.org/hc/en-us/articles/360007320391-Is-it-private-Can-I-trust-it
-- Signal support: Disappearing messages: https://support.signal.org/hc/en-us/articles/360007320771-Set-and-manage-disappearing-messages
-- Signal support: Phone number privacy and usernames: https://support.signal.org/hc/en-us/articles/6712070553754-Phone-Number-Privacy-and-Usernames
-- Signal support: Linked devices / multi-device constraints: https://support.signal.org/hc/en-us/articles/360007320451-Troubleshooting-multiple-devices
-- Signal support: Backup and restore behavior: https://support.signal.org/hc/en-us/articles/360007059752-Backup-and-Restore-Messages
-- WhatsApp privacy feature overview: https://www.whatsapp.com/privacy
-- WhatsApp security overview: https://www.whatsapp.com/security/
-- Apple Platform Security (iMessage secure delivery model): https://support.apple.com/guide/security/imessage-security-sec70e68c949/web
+- AWS Lambda - Best practices: https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html (HIGH)
+- AWS Lambda - Implement canary deployments using weighted alias: https://docs.aws.amazon.com/lambda/latest/dg/configuring-alias-routing.html (HIGH)
+- AWS CodeDeploy - Deployment configurations (Lambda canary/linear/all-at-once): https://docs.aws.amazon.com/codedeploy/latest/userguide/deployment-configurations.html (HIGH)
+- AWS Lambda - Configuring reserved concurrency: https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html (HIGH)
+- API Gateway - Monitor WebSocket API execution with CloudWatch metrics: https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-logging.html (HIGH)
+- API Gateway - Configure logging for WebSocket APIs: https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-logging.html (HIGH)
+- IAM - Security best practices: https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html (HIGH)
+- AWS Lambda - Working with environment variables (Secrets Manager recommendation): https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html (HIGH)
+- CloudWatch - Synthetic monitoring (canaries): https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries.html (HIGH)
 
 ---
-*Feature research for: AWS-based E2EE messaging backend*
-*Researched: 2026-03-19*
+*Feature research for: v1.1 live AWS launch and runtime validation milestone*
+*Researched: 2026-04-02*

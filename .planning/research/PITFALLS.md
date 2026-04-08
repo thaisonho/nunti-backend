@@ -1,5 +1,334 @@
 # Pitfalls Research
 
+**Domain:** Live AWS launch for serverless realtime E2EE messaging backend
+**Researched:** 2026-04-02
+**Confidence:** MEDIUM-HIGH
+
+## Critical Pitfalls
+
+### Pitfall 1: Console-first deployment causes environment drift
+
+**What goes wrong:**
+Staging and production diverge (API routes, Lambda env vars, IAM policies, table settings), so runtime behavior is inconsistent and defects cannot be reproduced safely.
+
+**Why it happens:**
+Teams ship via console edits or ad hoc scripts during launch pressure.
+
+**How to avoid:**
+Use IaC as the single source of truth, enforce immutable artifact promotion, and block manual changes with drift detection in CI.
+
+**Warning signs:**
+- "Works in staging, broken in prod" without code differences.
+- CloudFormation/CDK diff is non-empty after a "no-op" deploy.
+- Environment variables differ across stages.
+
+**Phase to address:**
+Phase 1 - Deployment Foundation and Release Workflow.
+
+---
+
+### Pitfall 2: IAM wildcard permissions in launch templates
+
+**What goes wrong:**
+Compromised function credentials can access unrelated resources, increasing blast radius.
+
+**Why it happens:**
+Launches start with broad permissions (`*`) to move fast, then never get tightened.
+
+**How to avoid:**
+Enforce least-privilege IAM roles per Lambda, add IAM Access Analyzer policy validation in CI, and require explicit resource scoping and conditions.
+
+**Warning signs:**
+- Policies include `Action: *` or `Resource: *` for runtime roles.
+- No automated policy lint/validation in the pipeline.
+- Same role shared by many unrelated handlers.
+
+**Phase to address:**
+Phase 2 - Security Hardening and IAM Guardrails.
+
+---
+
+### Pitfall 3: JWT validation checks signature only
+
+**What goes wrong:**
+Validly signed but wrong-context tokens are accepted (wrong issuer/client/token_use/scope), allowing privilege misuse.
+
+**Why it happens:**
+Custom auth code verifies cryptographic signature but skips strict claim policy per route.
+
+**How to avoid:**
+Centralize token verification and enforce claim matrix per endpoint (`iss`, `exp`, audience/client, `token_use`, scopes), including JWKS rotation behavior.
+
+**Warning signs:**
+- ID and access tokens both accepted on protected APIs.
+- Per-route auth checks differ in code.
+- Key rotation events trigger auth outages.
+
+**Phase to address:**
+Phase 2 - Security Hardening and IAM Guardrails.
+
+---
+
+### Pitfall 4: WebSocket lifecycle mishandling (stale connectionId)
+
+**What goes wrong:**
+Backend repeatedly posts to dead connections, causing 410/Gone failures, retry storms, and missed realtime delivery.
+
+**Why it happens:**
+`$disconnect` cleanup is unreliable, and callback errors are not treated as hard invalidation.
+
+**How to avoid:**
+On callback failure/Gone, immediately evict connection registry entry; use freshness timestamps and fallback to offline replay path.
+
+**Warning signs:**
+- Rising `GoneException`/410 errors from `@connections` callback path.
+- Users only receive messages after app reopen.
+- High callback retry volume during reconnect bursts.
+
+**Phase to address:**
+Phase 3 - Realtime Runtime Validation on AWS.
+
+---
+
+### Pitfall 5: Assuming exactly-once event processing
+
+**What goes wrong:**
+Duplicate Lambda/event processing creates duplicated fanout, duplicate persistence, and inconsistent delivery state.
+
+**Why it happens:**
+At-least-once semantics are ignored; no idempotency key strategy across handlers.
+
+**How to avoid:**
+Make every write path idempotent with stable operation keys and conditional writes; test retries and batch partial-failure paths.
+
+**Warning signs:**
+- Same message ID appears multiple times in durable storage.
+- Duplicate client notifications for one message.
+- Retry storms after transient downstream errors.
+
+**Phase to address:**
+Phase 4 - Data Correctness and Idempotency.
+
+---
+
+### Pitfall 6: DynamoDB TTL/consistency assumptions in auth or delivery paths
+
+**What goes wrong:**
+Expired or stale records continue affecting authorization, session/device validity, or replay queues.
+
+**Why it happens:**
+Teams assume TTL deletes are immediate and all reads are current.
+
+**How to avoid:**
+Treat TTL as eventual cleanup only, enforce `expiresAt > now` checks in code, and use strong consistency where correctness is mandatory.
+
+**Warning signs:**
+- Expired records still appear in Query/Scan outputs.
+- Ghost sessions/devices after revoke/rotate flows.
+- Intermittent auth mismatch after successful writes.
+
+**Phase to address:**
+Phase 4 - Data Correctness and Idempotency.
+
+---
+
+### Pitfall 7: No explicit concurrency guardrails for Lambda + downstreams
+
+**What goes wrong:**
+Traffic spikes saturate DynamoDB or callback paths, causing throttles, timeouts, and cascading retries.
+
+**Why it happens:**
+Reserved concurrency and backpressure settings are not tuned per function criticality.
+
+**How to avoid:**
+Set reserved concurrency per workload class, isolate noisy functions, add queue-based smoothing where needed, and define throttle budgets.
+
+**Warning signs:**
+- Rising `Throttles`, `Errors`, and p95 duration during bursts.
+- Downstream services fail during message fanout spikes.
+- One hot function starves others.
+
+**Phase to address:**
+Phase 3 - Realtime Runtime Validation on AWS.
+
+---
+
+### Pitfall 8: Launching without runtime validation gates
+
+**What goes wrong:**
+Production incidents are discovered by users first because release criteria measure deployment success, not runtime correctness.
+
+**Why it happens:**
+No synthetic probes/UAT gates for reconnect replay, trust-change fanout, attachment flow, and websocket auth context.
+
+**How to avoid:**
+Add release-blocking AWS validation suite, canary scenarios, and CloudWatch alarm thresholds for key reliability/security SLOs.
+
+**Warning signs:**
+- Deploy succeeds but critical flows regress in prod.
+- No alarm coverage for replay lag, callback failure, auth anomalies.
+- UAT is manual and non-repeatable.
+
+**Phase to address:**
+Phase 5 - Runtime Validation Gates and Observability.
+
+---
+
+### Pitfall 9: Sensitive metadata leakage in logs/traces/DLQ
+
+**What goes wrong:**
+Ciphertext envelopes, device identifiers, or key metadata leak into telemetry stores, increasing breach impact.
+
+**Why it happens:**
+Default structured logging captures full payloads; failure pipelines retain raw bodies.
+
+**How to avoid:**
+Use allowlist-based logging, redaction tests in CI, encrypted payload storage for failure paths, and strict log retention.
+
+**Warning signs:**
+- Search queries find ciphertext or key-like fields in CloudWatch.
+- DLQ payloads contain full message envelopes.
+- Debug mode routinely enabled in production.
+
+**Phase to address:**
+Phase 2 - Security Hardening and IAM Guardrails.
+
+---
+
+### Pitfall 10: No tested incident runbook for compromise/revocation
+
+**What goes wrong:**
+During key compromise or stolen device events, responses are slow/inconsistent and stale devices remain in fanout.
+
+**Why it happens:**
+Teams implement revoke APIs but do not test end-to-end emergency workflows under production constraints.
+
+**How to avoid:**
+Create operational runbooks and drills for revoke, rekey, trust-change fanout, and post-incident verification.
+
+**Warning signs:**
+- "Device stolen" scenario has no timed drill history.
+- Revoked devices still receive messages in validation runs.
+- No owner/on-call mapping for security incidents.
+
+**Phase to address:**
+Phase 6 - Security Operations and Incident Response.
+
+## Technical Debt Patterns
+
+Shortcuts that feel fast in launch week but create long-term instability.
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Manual console edits in prod | Quick hotfix | Irreproducible environments and hidden drift | Never for milestone launch |
+| Shared broad IAM execution role | Faster initial setup | High blast radius and audit pain | Never |
+| No idempotency keys | Less code now | Duplicate messages and state corruption | Never |
+| TTL-only expiry enforcement | Simple data lifecycle | Expired state still influences logic | Never |
+| Raw payload logging for debugging | Faster diagnosis | Sensitive metadata exposure | Only local synthetic fixtures |
+
+## Integration Gotchas
+
+Common mistakes when integrating live AWS services.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| API Gateway WebSocket callbacks | Retrying stale `connectionId` indefinitely | Treat 410/Gone as terminal, evict registry entry, replay offline |
+| Lambda event sources | Assuming exactly-once processing | Implement idempotent handlers and conditional writes |
+| DynamoDB TTL | Assuming immediate deletion | Apply read-time expiry filters and safe conditions |
+| Cognito JWT verification | Signature-only checks | Validate claims and token context per endpoint |
+| IAM policy management | Hand-written broad policies shipped to prod | Validate with analyzer and tighten to least privilege |
+
+## Performance Traps
+
+Patterns that pass in test but fail under live traffic.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Unbounded fanout retries | Cost spike, growing backlog | Capped retries, dead-letter strategy, backpressure | Reconnect storms |
+| Missing reserved concurrency strategy | Cross-function starvation | Per-function reserved concurrency and isolation | Traffic spikes |
+| Large monolithic batch processing | Timeouts and duplicate retries | Smaller idempotent units with partial-failure handling | Medium-high message throughput |
+| No hot-key strategy in DynamoDB | Throttles and p95 spikes | Access-pattern review, partition-aware keys, smoothing | Group chats with uneven traffic |
+
+## Security Mistakes
+
+Domain-specific mistakes for live serverless messaging operation.
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Overbroad Lambda IAM roles | Lateral access after credential compromise | Least-privilege roles with conditions and analyzer checks |
+| Incomplete JWT claim validation | Unauthorized route access | Central verifier + endpoint claim matrix |
+| Logging cryptographic metadata | Data exposure beyond message content | Redaction, schema allowlists, retention controls |
+| Long-lived static credentials in CI or ops | Credential leakage and persistence | Temporary credentials, role assumption, key rotation |
+| Missing MFA/guardrails for privileged access | Administrative account takeover risk | MFA, restricted break-glass, access reviews |
+
+## UX Pitfalls
+
+Operational issues that users experience as product trust failures.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Realtime messages silently dropped during reconnect | Users think messages are lost | Reliable offline replay and explicit delivery status |
+| Trust/device changes not reflected quickly | Confusing security posture | Fast trust-change propagation with clear client events |
+| Incident recovery unclear | Users abandon after compromise | Clear revoke/recover flow backed by tested runbook |
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete but are missing critical launch controls.
+
+- [ ] **Deployment:** IaC deploy passes in all stages, with automated drift detection and rollback rehearsal.
+- [ ] **Auth:** Negative-token suite rejects wrong issuer/client/token type/scope.
+- [ ] **Realtime:** Forced stale-connection test confirms 410/Gone invalidation and offline fallback.
+- [ ] **Idempotency:** Retry/duplicate event tests produce exactly one durable effect per operation key.
+- [ ] **Data lifecycle:** Expired records never influence auth/session/delivery decisions.
+- [ ] **Observability:** Release gate requires healthy alarms on errors, throttles, callback failures, and replay lag.
+- [ ] **Security:** Policy validation and log-redaction checks run in CI.
+- [ ] **Operations:** Compromise drill (revoke/rekey/trust-change) meets SLO.
+
+## Recovery Strategies
+
+When prevention fails, how to recover quickly.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Deployment drift incident | MEDIUM | Freeze console changes, re-apply IaC baseline, verify config parity, re-run validation suite |
+| Overbroad IAM discovered in prod | HIGH | Reduce policies immediately, rotate credentials, audit access logs, enforce analyzer gates |
+| Stale connection retry storm | MEDIUM | Trip circuit breaker, purge stale registry entries, route to replay queue, ramp callbacks gradually |
+| Idempotency defect causing duplicates | HIGH | Enable dedupe guard, reconcile duplicate records, replay from trusted checkpoint |
+| Metadata leak in telemetry | HIGH | Purge/expire affected logs where possible, rotate affected secrets, deploy redaction fix, perform post-incident audit |
+
+## Pitfall-to-Phase Mapping
+
+How v1.1 phases should prevent these issues.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Console drift / non-repeatable deploys | Phase 1 | Drift check is empty after deploy; rollback drill succeeds |
+| IAM wildcard permissions | Phase 2 | CI policy validation passes with no high-severity findings |
+| JWT context validation gaps | Phase 2 | Negative auth suite blocks wrong claims/token_use/client |
+| Stale WebSocket connection handling | Phase 3 | 410/Gone test triggers eviction + successful replay fallback |
+| Duplicate event side effects | Phase 4 | Duplicate-event tests produce single durable effect |
+| TTL/consistency misuse | Phase 4 | Expired/stale state tests cannot bypass policy or replay correctness |
+| Concurrency/throttle cascades | Phase 3 | Load test stays within SLO and alarm budgets |
+| Missing runtime validation gates | Phase 5 | Release blocked unless synthetic AWS validation suite passes |
+| Telemetry metadata leakage | Phase 2 | Automated log scans find zero disallowed fields |
+| Untested compromise response | Phase 6 | Incident drill completes revoke/rekey/trust-change within SLO |
+
+## Sources
+
+- AWS Lambda best practices (idempotency, duplicate processing, throttle controls): https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html
+- AWS Lambda reserved concurrency (limit scaling, protect downstream systems): https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
+- AWS Lambda metrics (Errors, Throttles, Duration, concurrency, dropped async events): https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics-types.html
+- API Gateway WebSocket lifecycle (`$connect`, `$disconnect`, `@connections` usage): https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-overview.html
+- API Gateway WebSocket backend callbacks and GoneException behavior: https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html
+- DynamoDB TTL behavior (eventual deletion, read-time filtering guidance): https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html
+- DynamoDB read consistency model: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadConsistency.html
+- IAM security best practices (temporary credentials, MFA, least privilege, Access Analyzer): https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+- Cognito JWT verification guidance (signature + claim validation): https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html
+
+---
+*Pitfalls research for: v1.1 Live AWS Launch (existing serverless E2EE backend)*
+*Researched: 2026-04-02*# Pitfalls Research
+
 **Domain:** AWS-based Signal-protocol E2EE messaging backend (serverless)
 **Researched:** 2026-03-19
 **Confidence:** MEDIUM-HIGH

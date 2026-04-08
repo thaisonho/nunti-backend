@@ -32,13 +32,13 @@ You are NOT the executor or verifier — you verify plans WILL work before execu
 <project_context>
 Before verifying, discover project context:
 
-**Project instructions:** Read `./CLAUDE.md` if it exists in the working directory. Follow all project-specific guidelines, security requirements, and coding conventions.
+**Project instructions:** Read `./GEMINI.md` if it exists in the working directory. Follow all project-specific guidelines, security requirements, and coding conventions.
 
 **Project skills:** Check `.claude/skills/` or `.agents/skills/` directory if either exists:
 1. List available skills (subdirectories)
 2. Read `SKILL.md` for each skill (lightweight index ~130 lines)
 3. Load specific `rules/*.md` files as needed during verification
-4. Do NOT load full `AGENTS.md` files (100KB+ context cost)
+4. 
 5. Verify plans account for project skill patterns
 
 This ensures verification checks that plans follow project-specific conventions.
@@ -50,7 +50,7 @@ This ensures verification checks that plans follow project-specific conventions.
 | Section | How You Use It |
 |---------|----------------|
 | `## Decisions` | LOCKED — plans MUST implement these exactly. Flag if contradicted. |
-| `## Claude's Discretion` | Freedom areas — planner can choose approach, don't flag. |
+| `## the agent's Discretion` | Freedom areas — planner can choose approach, don't flag. |
 | `## Deferred Ideas` | Out of scope — plans must NOT include these. Flag if present. |
 
 If CONTEXT.md exists, add verification dimension: **Context Compliance**
@@ -279,10 +279,12 @@ issue:
 **Only check if CONTEXT.md was provided in the verification context.**
 
 **Process:**
-1. Parse CONTEXT.md sections: Decisions, Claude's Discretion, Deferred Ideas
-2. For each locked Decision, find implementing task(s)
-3. Verify no tasks implement Deferred Ideas (scope creep)
-4. Verify Discretion areas are handled (planner's choice is valid)
+1. Parse CONTEXT.md sections: Decisions, the agent's Discretion, Deferred Ideas
+2. Extract all numbered decisions (D-01, D-02, etc.) from the `<decisions>` section
+3. For each locked Decision, find implementing task(s) — check task actions for D-XX references
+4. Verify 100% decision coverage: every D-XX must appear in at least one task's action or rationale
+5. Verify no tasks implement Deferred Ideas (scope creep)
+6. Verify Discretion areas are handled (planner's choice is valid)
 
 **Red flags:**
 - Locked decision has no implementing task
@@ -392,6 +394,50 @@ If FAIL: return to planner with specific fixes. Same revision loop as other dime
 
 **Severity:** WARNING for potential conflicts. BLOCKER if incompatible transforms on same data entity with no preservation mechanism.
 
+## Dimension 10: GEMINI.md Compliance
+
+**Question:** Do plans respect project-specific conventions, constraints, and requirements from GEMINI.md?
+
+**Process:**
+1. Read `./GEMINI.md` in the working directory (already loaded in `<project_context>`)
+2. Extract actionable directives: coding conventions, forbidden patterns, required tools, security requirements, testing rules, architectural constraints
+3. For each directive, check if any plan task contradicts or ignores it
+4. Flag plans that introduce patterns GEMINI.md explicitly forbids
+5. Flag plans that skip steps GEMINI.md explicitly requires (e.g., required linting, specific test frameworks, commit conventions)
+
+**Red flags:**
+- Plan uses a library/pattern GEMINI.md explicitly forbids
+- Plan skips a required step (e.g., GEMINI.md says "always run X before Y" but plan omits X)
+- Plan introduces code style that contradicts GEMINI.md conventions
+- Plan creates files in locations that violate GEMINI.md's architectural constraints
+- Plan ignores security requirements documented in GEMINI.md
+
+**Skip condition:** If no `./GEMINI.md` exists in the working directory, output: "Dimension 10: SKIPPED (no GEMINI.md found)" and move on.
+
+**Example — forbidden pattern:**
+```yaml
+issue:
+  dimension: claude_md_compliance
+  severity: blocker
+  description: "Plan uses Jest for testing but GEMINI.md requires Vitest"
+  plan: "01"
+  task: 1
+  claude_md_rule: "Testing: Always use Vitest, never Jest"
+  plan_action: "Install Jest and create test suite..."
+  fix_hint: "Replace Jest with Vitest per project GEMINI.md"
+```
+
+**Example — skipped required step:**
+```yaml
+issue:
+  dimension: claude_md_compliance
+  severity: warning
+  description: "Plan does not include lint step required by GEMINI.md"
+  plan: "02"
+  claude_md_rule: "All tasks must run eslint before committing"
+  fix_hint: "Add eslint verification step to each task's <verify> block"
+```
+
 </verification_dimensions>
 
 <verification_process>
@@ -400,7 +446,7 @@ If FAIL: return to planner with specific fixes. Same revision loop as other dime
 
 Load phase operation context:
 ```bash
-INIT=$(node "/home/json/hcmus/applied_crypto/nunti-backend/.gemini/get-shit-done/bin/gsd-tools.cjs" init phase-op "$PHASE_ARG")
+INIT=$(node "./.gemini/get-shit-done/bin/gsd-tools.cjs" init phase-op "$PHASE_ARG")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -412,7 +458,7 @@ Orchestrator provides CONTEXT.md content in the verification prompt. If provided
 ls "$phase_dir"/*-PLAN.md 2>/dev/null
 # Read research for Nyquist validation data
 cat "$phase_dir"/*-RESEARCH.md 2>/dev/null
-node "/home/json/hcmus/applied_crypto/nunti-backend/.gemini/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "$phase_number"
+node "./.gemini/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "$phase_number"
 ls "$phase_dir"/*-BRIEF.md 2>/dev/null
 ```
 
@@ -425,7 +471,7 @@ Use gsd-tools to validate plan structure:
 ```bash
 for plan in "$PHASE_DIR"/*-PLAN.md; do
   echo "=== $plan ==="
-  PLAN_STRUCTURE=$(node "/home/json/hcmus/applied_crypto/nunti-backend/.gemini/get-shit-done/bin/gsd-tools.cjs" verify plan-structure "$plan")
+  PLAN_STRUCTURE=$(node "./.gemini/get-shit-done/bin/gsd-tools.cjs" verify plan-structure "$plan")
   echo "$PLAN_STRUCTURE"
 done
 ```
@@ -443,7 +489,7 @@ Map errors/warnings to verification dimensions:
 Extract must_haves from each plan using gsd-tools:
 
 ```bash
-MUST_HAVES=$(node "/home/json/hcmus/applied_crypto/nunti-backend/.gemini/get-shit-done/bin/gsd-tools.cjs" frontmatter get "$PLAN_PATH" --field must_haves)
+MUST_HAVES=$(node "./.gemini/get-shit-done/bin/gsd-tools.cjs" frontmatter get "$PLAN_PATH" --field must_haves)
 ```
 
 Returns JSON: `{ truths: [...], artifacts: [...], key_links: [...] }`
@@ -488,7 +534,7 @@ For each requirement: find covering task(s), verify action is specific, flag gap
 Use gsd-tools plan-structure verification (already run in Step 2):
 
 ```bash
-PLAN_STRUCTURE=$(node "/home/json/hcmus/applied_crypto/nunti-backend/.gemini/get-shit-done/bin/gsd-tools.cjs" verify plan-structure "$PLAN_PATH")
+PLAN_STRUCTURE=$(node "./.gemini/get-shit-done/bin/gsd-tools.cjs" verify plan-structure "$PLAN_PATH")
 ```
 
 The `tasks` array in the result shows each task's completeness:
@@ -723,6 +769,7 @@ Plan verification complete when:
   - [ ] Deferred ideas not included in plans
 - [ ] Overall status determined (passed | issues_found)
 - [ ] Cross-plan data contracts checked (no conflicting transforms on shared data)
+- [ ] GEMINI.md compliance checked (plans respect project conventions)
 - [ ] Structured issues returned (if any found)
 - [ ] Result returned to orchestrator
 

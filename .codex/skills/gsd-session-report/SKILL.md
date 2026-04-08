@@ -50,9 +50,9 @@ Generate a structured SESSION_REPORT.md document capturing session outcomes, wor
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/session-report.md
+@./.codex/get-shit-done/workflows/session-report.md
 </execution_context>
 
 <process>
-Execute the session-report workflow from @/home/json/hcmus/applied_crypto/nunti-backend/.codex/get-shit-done/workflows/session-report.md end-to-end.
+Execute the session-report workflow from @./.codex/get-shit-done/workflows/session-report.md end-to-end.
 </process>

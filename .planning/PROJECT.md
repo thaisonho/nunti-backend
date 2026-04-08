@@ -2,52 +2,50 @@
 
 ## What This Is
 
-This project builds the server side of an AWS-based end-to-end encrypted messaging application for a school team project. The backend provides identity, signaling, session bootstrapping, and message transport orchestration while keeping message content encrypted end-to-end using the Signal Protocol family of cryptographic mechanisms. Clients communicate through AWS API Gateway WebSocket, with serverless logic on AWS Lambda, persistence on AWS DynamoDB, and SSO via AWS Cognito.
+This project delivers the backend of an end-to-end encrypted messaging platform using AWS-oriented architecture and Signal-style protocol workflows.
 
 ## Core Value
 
-Enable users to exchange and synchronize messages and related metadata reliably while preserving end-to-end confidentiality and protocol correctness.
+Enable users to exchange and synchronize encrypted messaging metadata reliably while preserving protocol correctness and end-to-end confidentiality.
 
-## Requirements
+## Current State
 
-### Validated
+- Phase 06 deployment foundation complete; UAT runtime validation for live AWS flows is still in progress.
+- v1.0 shipped on 2026-04-02.
+- Completed scope: governance baseline, identity/device access, key bootstrap lifecycle, reliable 1:1 messaging, and group fanout with attachment envelope transport.
+- v1.0 archive: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
 
-(None yet — ship to validate)
+## Current Milestone: v1.1 Live AWS Launch
 
-### Active
+**Goal:** Deploy the backend to a live AWS environment and validate production-like runtime behavior for encrypted realtime messaging flows.
 
-- [ ] Provide secure user identity and authentication integration using AWS Cognito for client access control.
-- [ ] Support Signal-style key lifecycle and session establishment flows for multi-device E2EE messaging.
-- [ ] Deliver real-time messaging transport through AWS API Gateway WebSocket and Lambda orchestration.
-- [ ] Persist required encrypted payload metadata and protocol state safely in AWS DynamoDB.
-- [ ] Support v1 capabilities: 1:1 text messaging, group messaging, attachments, and device key management.
-- [ ] Establish strong git governance for team collaboration with Git Flow, pull request review, and Conventional Commits.
+**Target features:**
 
-### Out of Scope
+- Deploy backend services to live AWS with repeatable release workflow.
+- Validate AWS runtime behavior for WebSocket auth context, fanout/replay, trust-change, and attachment flows.
+- Add security hardening for live operation (IAM least privilege and production-safe defaults).
 
-- Full production-grade compliance certification — this is an academic project with strong technical rigor but not formal enterprise certification.
-- Manual unmanaged code changes without review — excluded to preserve team traceability and quality.
+## Active Requirements
 
-## Context
-
-This is a school project with no hard deadline, but quality and correctness are prioritized. Security posture target is strong academic-grade: protocol correctness, key lifecycle discipline, auditable architecture choices, and practical abuse resistance where feasible. Infrastructure setup preference is manual AWS setup first, with potential IaC adoption later. Success for early milestone is security architecture validation, alongside demonstrable E2EE backend workflows.
+- [x] Deploy backend stack and configuration to live AWS. (Validated in Phase 06: deployment-foundation-and-promotion-path)
+- [ ] Execute and pass end-to-end AWS validation for realtime messaging flows.
+- [ ] Implement security hardening needed for live deployment readiness.
 
 ## Constraints
 
-- **Platform**: AWS serverless stack (API Gateway WebSocket, Lambda, DynamoDB, Cognito) — fixed core architecture from project intent.
-- **Cryptography**: Signal Protocol-based E2EE flows — central technical requirement for messaging and calling-related signaling readiness.
-- **Scope**: Backend-first implementation — client UX implementation is out of current scope.
-- **Collaboration**: Git Flow with mandatory pull request review and Conventional Commits — team project must be carefully tracked.
+- Platform remains AWS serverless: API Gateway WebSocket, Lambda, DynamoDB, Cognito.
+- Cryptography remains Signal-style E2EE and metadata-only backend handling.
+- Scope remains backend-first; frontend/client UX is out of scope.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Use AWS API Gateway WebSocket for realtime backend communication | Managed WebSocket infrastructure integrates cleanly with Lambda event model | — Pending |
-| Use AWS Lambda for core backend logic | Serverless reduces ops overhead and fits event-driven messaging pipelines | — Pending |
-| Use AWS DynamoDB for protocol and messaging state | Scalable key-value/document model suits session/prekey/message metadata patterns | — Pending |
-| Use AWS Cognito for identity and SSO | Native AWS identity service simplifies auth integration for team project scope | — Pending |
-| Use Git Flow + PR review + Conventional Commits | Team needs auditable, structured, low-chaos collaboration | — Pending |
+| --- | --- | --- |
+| Use AWS API Gateway WebSocket for realtime backend communication | Managed WebSocket infrastructure integrates with Lambda event model | ✓ Adopted in v1.0 |
+| Use AWS Lambda for core backend logic | Serverless fits event-driven messaging pipelines | ✓ Adopted in v1.0 |
+| Use AWS DynamoDB for protocol and messaging state | Key-value/document model fits prekey/session/message metadata | ✓ Adopted in v1.0 |
+| Use AWS Cognito for identity and SSO | Native AWS identity service simplifies auth integration | ✓ Adopted in v1.0 |
+| Use Git Flow + PR review + Conventional Commits | Team needs auditable collaboration and consistent change history | ✓ Adopted in v1.0 |
 
 ---
-*Last updated: 2026-03-19 after project initialization questioning*
+Last updated: 2026-04-08 after reviewing Phase 06 deployment foundation and UAT state

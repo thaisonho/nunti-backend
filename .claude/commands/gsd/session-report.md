@@ -11,9 +11,9 @@ Generate a structured SESSION_REPORT.md document capturing session outcomes, wor
 </objective>
 
 <execution_context>
-@/home/json/hcmus/applied_crypto/nunti-backend/.claude/get-shit-done/workflows/session-report.md
+@./.claude/get-shit-done/workflows/session-report.md
 </execution_context>
 
 <process>
-Execute the session-report workflow from @/home/json/hcmus/applied_crypto/nunti-backend/.claude/get-shit-done/workflows/session-report.md end-to-end.
+Execute the session-report workflow from @./.claude/get-shit-done/workflows/session-report.md end-to-end.
 </process>
