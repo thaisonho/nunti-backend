@@ -57,8 +57,4 @@ Set the `ARTIFACT_BUCKET` locally if it differs from the default:
 export ARTIFACT_BUCKET=nunti-artifacts-thaisonho-nunti-backend
 ```
 
-<<<<<<< HEAD
 Also, ensure `deploy/params.staging.json` exists and is configured with the real parameter override values required for your environment before running scripts successfully.
-=======
-Also, ensure `deploy/params.staging.json` exists and is configured with the real parameter override values required for your environment before running scripts successfully.
->>>>>>> 989aa74 (fix(deploy): address remaining review feedback)
