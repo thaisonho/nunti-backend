@@ -9,6 +9,7 @@ GITHUB_REPO="${GITHUB_REPO:-${2:-nunti-backend}}"
 ARTIFACT_BUCKET="nunti-artifacts-${GITHUB_ORG}-${GITHUB_REPO}" # Make it globally unique
 REGION="${REGION:-ap-southeast-1}"
 ROLE_NAME="${ROLE_NAME:-github-actions-deploy-role}"
+ATTACH_ADMIN_ACCESS="${ATTACH_ADMIN_ACCESS:-false}"
 
 echo "1. Creating S3 Bucket for SAM deployment artifacts..."
 if aws s3api head-bucket --bucket "$ARTIFACT_BUCKET" 2>/dev/null; then
@@ -81,10 +82,12 @@ else
 fi
 
 echo "4. Attaching Required Policies to the Role..."
-# Attach managed policies or create inline policy for SAM deployment.
-aws iam attach-role-policy --role-name "$ROLE_NAME" --policy-arn "arn:aws:iam::aws:policy/AdministratorAccess"
-# Note: For production use, it's highly recommended to scope this down to least privilege!
-# AdministratorAccess is used here for brevity when deploying SAM Applications containing unpredicted resources.
+if [ "$ATTACH_ADMIN_ACCESS" = "true" ]; then
+    aws iam attach-role-policy --role-name "$ROLE_NAME" --policy-arn "arn:aws:iam::aws:policy/AdministratorAccess"
+    echo "AdministratorAccess attached because ATTACH_ADMIN_ACCESS=true."
+else
+    echo "Skipping AdministratorAccess attach. Set ATTACH_ADMIN_ACCESS=true to preserve the previous behavior for non-production bootstrap runs."
+fi
 
 ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query 'Role.Arn' --output text)
 
