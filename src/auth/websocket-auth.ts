@@ -2,9 +2,13 @@
  * WebSocket identity extraction for authenticated device connections.
  *
  * Extracts user identity (via Cognito JWT) and device identity from
- * the API Gateway WebSocket $connect event. Tokens can be passed via
- * Authorization header or `token` query parameter. Device ID is
- * required in query parameters.
+ * the API Gateway WebSocket $connect event.
+ *
+ * Token source policy:
+ *   - Production: Authorization header ONLY (query-token fallback rejected)
+ *   - Non-production: Authorization header preferred, `token` query parameter as fallback
+ *
+ * Device ID is always required in query parameters.
  */
 
 import { requireAuth } from './auth-guard.js';
@@ -29,13 +33,22 @@ interface WebSocketConnectEvent {
 }
 
 /**
+ * Returns true if running in production environment.
+ * Checks the STAGE environment variable set by SAM template.
+ */
+function isProduction(): boolean {
+  return process.env.STAGE === 'production';
+}
+
+/**
  * Extract authenticated user and device context from a WebSocket connection event.
  *
  * Token resolution order:
  *   1. Authorization header (preferred — standard Bearer format)
- *   2. `token` query parameter (fallback for WebSocket clients that cannot set headers)
+ *   2. `token` query parameter (non-production only — rejected in production)
  *
  * @throws AuthError if token is missing, invalid, or expired
+ * @throws AuthError if query-token fallback is attempted in production
  * @throws Error if deviceId is missing from query parameters
  */
 export async function extractWebSocketContext(
@@ -45,7 +58,7 @@ export async function extractWebSocketContext(
   const queryParams = event.queryStringParameters ?? {};
   const headers = event.headers ?? {};
 
-  // Resolve auth token: prefer header, fall back to query param
+  // Resolve auth token: prefer header, conditionally fall back to query param
   const authHeader = headers.Authorization ?? headers.authorization ?? null;
   const queryToken = queryParams.token ?? null;
 
@@ -53,6 +66,10 @@ export async function extractWebSocketContext(
   if (authHeader) {
     bearerValue = authHeader;
   } else if (queryToken) {
+    // Production: reject query-token fallback
+    if (isProduction()) {
+      throw new AuthError('AUTH_TOKEN_MISSING_OR_MALFORMED', 401);
+    }
     bearerValue = `Bearer ${queryToken}`;
   } else {
     bearerValue = '';

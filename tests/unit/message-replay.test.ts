@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/messages/message-repository.js');
 vi.mock('../../src/realtime/message-relay-publisher.js');
@@ -18,6 +18,12 @@ describe('message-replay', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-01T12:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('drains empty backlog and emits replay-complete with 0 count', async () => {
