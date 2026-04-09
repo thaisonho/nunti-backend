@@ -86,13 +86,42 @@ Parameters:
       - "true"
       - "false"
     Description: Require MFA for Cognito users (optional vs on)
+  # DNS and CDN Parameters
+  Route53HostedZoneId:
+    Type: String
+    Default: "Z123ABCDEFGHIJ"
+    Description: Route53 hosted zone for production domain
+  ProductionDomainName:
+    Type: String
+    Default: "api.example.com"
+    Description: Production domain (e.g., api.example.com)
+  HealthCheckInterval:
+    Type: Number
+    Default: 30
+    AllowedValues: [10, 30]
+    Description: Seconds between checks
+  HealthCheckFailureThreshold:
+    Type: Number
+    Default: 3
+    Description: Minimum failures to mark unhealthy
+  CloudFrontDefaultTTL:
+    Type: Number
+    Default: 0
+    Description: Seconds to cache responses (default 0 for dynamic)
+  CloudFrontMaxTTL:
+    Type: Number
+    Default: 3600
+    Description: Maximum cache duration
+  CloudFrontMinTTL:
+    Type: Number
+    Default: 0
+    Description: Minimum cache duration
 
 Globals:
   Function:
     Runtime: nodejs22.x
     Timeout: 30
     MemorySize: 256
-    Role: !GetAtt NuntiRuntimeRole.Arn
     Environment:
       Variables:
         COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
@@ -504,6 +533,274 @@ Resources:
         - Key: SecurityLevel
           Value: strict
 
+  ProductionApiHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Condition: IsProduction
+    Properties:
+      Type: HTTPS
+      IPAddress: !Sub "{{API_GATEWAY_ENDPOINT}}" # Will be resolved from CloudFormation reference
+      Port: 443
+      ResourcePath: /health  # API Gateway endpoint paths depend on Lambda configuration
+      RequestInterval: !Ref HealthCheckInterval
+      FailureThreshold: !Ref HealthCheckFailureThreshold
+      MeasureLatency: true
+      EnableSNI: true
+      FullyQualifiedDomainName: !Sub "{{API_GATEWAY_DOMAIN}}"
+      Tags:
+        - Key: Name
+          Value: nunti-production-api-health
+        - Key: Environment
+          Value: production
+
+  ProductionRoute53HealthCheckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProduction
+    Properties:
+      AlarmName: nunti-production-api-health-down
+      AlarmDescription: Alert when production API Gateway health check fails
+      MetricName: HealthCheckStatus
+      Namespace: AWS/Route53
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+        - Name: HealthCheckId
+          Value: !Ref ProductionApiHealthCheck
+      TreatMissingData: breaching
+
+  ProductionRoute53DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: IsProduction
+    Properties:
+      HostedZoneId: !Ref Route53HostedZoneId
+      Name: !Ref ProductionDomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ProductionCloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront's hosted zone ID (constant)
+        EvaluateTargetHealth: false
+      HealthCheckId: !Ref ProductionApiHealthCheck
+      SetIdentifier: primary
+      Failover: PRIMARY
+      Comment: Production DNS routing via CloudFront with health monitoring
+      Tags:
+        - Key: Environment
+          Value: production
+
+  ProductionCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: IsProduction
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: /
+        HttpVersion: http2and3
+        
+        # Origin configuration pointing to API Gateway
+        Origins:
+          - Id: ApiGatewayOrigin
+            DomainName: !Sub "{{API_GATEWAY_DOMAIN}}"  # Placeholder for API Gateway endpoint
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            OriginShield:
+              Enabled: true
+              OriginShieldRegion: !Ref AWS::Region
+
+        # Default cache behavior for all requests
+        DefaultCacheBehavior:
+          TargetOriginId: ApiGatewayOrigin
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+          CacheMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # Managed-CachingDisabled for dynamic API endpoints
+          OriginRequestPolicyId: "216adef6-5c7f-47e4-b340-823c8e510848" # Managed-AllViewerExceptHostHeader
+          Compress: true
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt CloudFrontSecurityHeadersFunction.FunctionMetadata.FunctionArn
+
+        # WebSocket cache behavior (if Phase 8+ needs WebSocket specifically)
+        CacheBehaviors:
+          - PathPattern: "/ws/*"
+            TargetOriginId: ApiGatewayOrigin
+            AllowedMethods:
+              - GET
+              - HEAD
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CacheMethods:
+              - GET
+              - HEAD
+            ViewerProtocolPolicy: https-only
+            CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+            OriginRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewer
+            Compress: false  # WebSocket doesn't benefit from compression
+
+        # Logging
+        Logging:
+          Bucket: !GetAtt CloudFrontLogsBucket.DomainName
+          IncludeCookies: false
+          Prefix: cloudfront-logs/
+
+        # Price class (cost optimization: North America + Europe only)
+        PriceClass: PriceClass_100
+
+        # AWS Shield Standard (included free with CloudFront)
+        WebACLId: !GetAtt ProductionWAF.Arn
+
+        # Security headers and restrictions
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: /error/403.html
+            ErrorCachingMinTTL: 60
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /error/404.html
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 500
+            ResponseCode: 500
+            ResponsePagePath: /error/500.html
+            ErrorCachingMinTTL: 30
+
+        Comment: Production CloudFront distribution for API Gateway with caching and DDoS protection
+        Tags:
+          - Key: Environment
+            Value: production
+          - Key: CDN
+            Value: CloudFront
+
+  CloudFrontSecurityHeadersFunction:
+    Type: AWS::CloudFront::Function
+    Condition: IsProduction
+    Properties:
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+            var response = event.response;
+            var headers = response.headers;
+
+            headers['strict-transport-security'] = {value: 'max-age=31536000; includeSubdomains; preload'};
+            headers['x-content-type-options'] = {value: 'nosniff'};
+            headers['x-frame-options'] = {value: 'DENY'};
+            headers['x-xss-protection'] = {value: '1; mode=block'};
+            headers['referrer-policy'] = {value: 'strict-origin-when-cross-origin'};
+            headers['content-security-policy'] = {value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"};
+
+            return response;
+        }
+      FunctionConfig:
+        Comment: Add security headers to CloudFront responses
+        Runtime: cloudfront-js-1.0
+      Name: nunti-cloudfront-security-headers
+
+  ProductionWAF:
+    Type: AWS::WAFv2::WebACL
+    Condition: IsProduction
+    Properties:
+      Name: nunti-production-waf
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      Rules:
+        # Rate limiting (100 requests per 5 minutes from single IP)
+        - Name: RateLimitRule
+          Priority: 0
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 100
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+        
+        # AWS Managed Rules - Core Rule Set
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSetMetric
+
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: nunti-production-waf-metrics
+      Tags:
+        - Key: Environment
+          Value: production
+
+  CloudFrontLogsBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsProduction
+    Properties:
+      BucketName: !Sub "nunti-cloudfront-logs-${AWS::AccountId}-production"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldLogs
+            Status: Enabled
+            ExpirationInDays: 90
+            NoncurrentVersionExpirationInDays: 30
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: Purpose
+          Value: CloudFront logging
+
+  CloudFrontLogsS3Policy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProduction
+    Properties:
+      Bucket: !Ref CloudFrontLogsBucket
+      PolicyText:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub "${CloudFrontLogsBucket.Arn}/*"
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt CloudFrontLogsBucket.Arn
+
   ProductionCognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Condition: IsProduction
@@ -595,3 +892,13 @@ Outputs:
     Value: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${ProductionCognitoUserPool}"
     Export:
       Name: !Sub "nunti-cognito-issuer-${Stage}"
+  ProductionCloudFrontDomainName:
+    Condition: IsProduction
+    Value: !GetAtt ProductionCloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub "nunti-cloudfront-domain-${Stage}"
+  ProductionCloudFrontDistributionId:
+    Condition: IsProduction
+    Value: !Ref ProductionCloudFrontDistribution
+    Export:
+      Name: !Sub "nunti-cloudfront-distribution-id-${Stage}"
