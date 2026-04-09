@@ -70,6 +70,22 @@ Parameters:
     Default: 7
     MinValue: 7
     Description: Backup retention period in days (minimum 7)
+  # Cognito Resilience/Prod Parameters
+  ProductionCognitoEmailAttribute:
+    Type: String
+    Default: email
+    Description: Attribute required for Cognito user pool
+  CognitoPasswordMinLength:
+    Type: Number
+    Default: 12
+    Description: Minimum length for Cognito password
+  RequireCognitoMFA:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Require MFA for Cognito users (optional vs on)
 
 Globals:
   Function:
@@ -434,9 +450,94 @@ Resources:
         - Key: Environment
           Value: production
 
+  # ==== Production Cognito User Pool ====
+  ProductionCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Condition: IsProduction
+    Properties:
+      UserPoolName: nunti-production-user-pool
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: false
+        - Name: phone_number
+          AttributeDataType: String
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: !Ref CognitoPasswordMinLength
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 1
+      MFAConfiguration: !If [RequireMFA, OPTIONAL, OFF]
+      EnabledMfas:
+        - SOFTWARE_TOKEN_MFA
+        - SMS_MFA
+      AuthPolicies:
+        ComplexityConfiguration:
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          RequireLowercase: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate:
+          - email
+          - phone_number
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: false
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: SecurityLevel
+          Value: strict
+
+  ProductionCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Condition: IsProduction
+    Properties:
+      ClientName: nunti-production-app
+      UserPoolId: !Ref ProductionCognitoUserPool
+      GenerateSecret: true
+      AllowedOAuthFlows:
+        - authorization_code
+      AllowedOAuthScopes:
+        - email
+        - openid
+      AllowedOAuthFlowsUserPoolClient: true
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+      PreventUserExistenceErrors: LEGACY
+      RefreshTokenValidity: 30
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: hours
+        IdToken: hours
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowUserPasswordAuthFlow: true
+      EnableTokenRevocation: true
+      EnablePropagateAttributes: true
+
 Conditions:
   IsProduction: !Equals [!Ref Stage, "production"]
   UseProvisioned: !Equals [!Ref DynamoDBBillingMode, "PROVISIONED"]
+  RequireMFA: !Equals [!Ref RequireCognitoMFA, "true"]
 
 Outputs:
   ProductionVpcId:
@@ -479,3 +580,18 @@ Outputs:
     Value: !GetAtt ConnectionsTableProduction.Arn
     Export:
       Name: !Sub "nunti-connections-table-arn-${Stage}"
+  ProductionCognitoUserPoolId:
+    Condition: IsProduction
+    Value: !Ref ProductionCognitoUserPool
+    Export:
+      Name: !Sub "nunti-cognito-user-pool-id-${Stage}"
+  ProductionCognitoAppClientId:
+    Condition: IsProduction
+    Value: !Ref ProductionCognitoUserPoolClient
+    Export:
+      Name: !Sub "nunti-cognito-app-client-id-${Stage}"
+  ProductionCognitoIssuer:
+    Condition: IsProduction
+    Value: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${ProductionCognitoUserPool}"
+    Export:
+      Name: !Sub "nunti-cognito-issuer-${Stage}"
