@@ -1,7 +1,14 @@
 {
   "Parameters": {
-    "CognitoUserPoolId": "prod-cognito-user-pool-id",
-    "CognitoAppClientId": "prod-cognito-app-client-id",
+    "// Production Cognito Configuration": "",
+    "// - CognitoPasswordMinLength: 12 characters minimum (enforced by User Pool policy)": "",
+    "// - RequireCognitoMFA: true = MFA required for all users in production": "",
+    "// - CognitoUserPoolId and CognitoAppClientId are populated from CloudFormation Outputs": "",
+    "//   after first deployment. See docs/deployment/cognito-production-setup.md": "",
+    "CognitoPasswordMinLength": "12",
+    "RequireCognitoMFA": "true",
+    "CognitoUserPoolId": "{output-from-first-deployment}",
+    "CognitoAppClientId": "{output-from-first-deployment}",
     "CognitoRegion": "ap-southeast-1",
     "DevicesTableName": "nunti-devices-production",
     "MessagesTableName": "nunti-messages-production",
