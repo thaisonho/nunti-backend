@@ -13,6 +13,15 @@ import { getConfig, resetConfig } from '../../src/app/config.js';
 
 describe('config', () => {
   const originalEnv = { ...process.env };
+  const touchedKeys = [
+    'COGNITO_USER_POOL_ID',
+    'COGNITO_APP_CLIENT_ID',
+    'DEVICES_TABLE_NAME',
+    'MESSAGES_TABLE_NAME',
+    'COGNITO_REGION',
+    'AWS_REGION',
+    'STAGE',
+  ] as const;
 
   beforeEach(() => {
     resetConfig();
@@ -24,8 +33,15 @@ describe('config', () => {
   });
 
   afterEach(() => {
-    // Restore original environment
-    process.env = { ...originalEnv };
+    // Restore only the env keys this suite mutates.
+    for (const key of touchedKeys) {
+      const originalValue = originalEnv[key];
+      if (originalValue === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = originalValue;
+      }
+    }
     resetConfig();
   });
 

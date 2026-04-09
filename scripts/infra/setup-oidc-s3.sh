@@ -81,7 +81,8 @@ trap 'rm -f "$TRUST_POLICY_FILE"' EXIT
 # Staging: triggered by tag pushes (release-deploy.yml on v* tags)
 # Production: triggered by release-promote.yml and release-rollback.yml workflows
 if [ "$DEPLOY_ENV" = "production" ]; then
-    # Production role: only allow assumption from promote and rollback workflows
+    # Production role: allow assumption from the production GitHub environment
+    # and versioned release tags.
     cat > "$TRUST_POLICY_FILE" <<EOF
 {
     "Version": "2012-10-17",

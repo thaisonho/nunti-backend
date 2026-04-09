@@ -7,7 +7,6 @@ import { requireAuth } from '../../src/auth/auth-guard.js';
 import * as DeviceService from '../../src/devices/device-service.js';
 import { extractWebSocketContext } from '../../src/auth/websocket-auth.js';
 import { DeviceStatus } from '../../src/devices/device-model.js';
-import { AuthError } from '../../src/app/errors.js';
 
 describe('websocket-auth', () => {
   let originalStage: string | undefined;

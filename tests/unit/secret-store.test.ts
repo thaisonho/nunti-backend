@@ -4,7 +4,7 @@
  * Verifies fail-closed semantics:
  * - Missing secrets throw immediately
  * - Empty secrets throw immediately
- * - Resolved values are cached per invocation
+ * - Resolved values are cached for the Lambda warm-container lifetime
  * - JSON key extraction works with validation
  * - No fallback to insecure defaults
  */

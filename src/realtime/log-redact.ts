@@ -2,8 +2,8 @@
  * Log redaction utilities for realtime publishers.
  *
  * Replaces raw sensitive identifiers (userId, deviceId, connectionId)
- * with truncated hashes while preserving triage metadata (requestId,
- * error code, event type, timestamp).
+ * with truncated hashes while preserving non-sensitive triage metadata
+ * (error name and event type).
  *
  * Raw Authorization headers, query tokens, and message bodies
  * MUST NOT appear in warning or error logs.
