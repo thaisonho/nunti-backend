@@ -14,7 +14,7 @@ Requirements for the v1.1 milestone. Each requirement maps to exactly one roadma
 
 ### Security Hardening
 
-- [ ] **SEC-01**: Backend enforces least-privilege IAM policies for runtime roles and deployment roles.
+- [x] **SEC-01**: Backend enforces least-privilege IAM policies for runtime roles and deployment roles.
 - [ ] **SEC-02**: Backend enforces production-safe secret and auth configuration (strict JWT claim validation, secret management, metadata redaction defaults).
 
 ### Realtime Reliability
@@ -65,7 +65,7 @@ Deferred to follow-up releases after live launch stabilization.
 |-------------|-------|--------|
 | DEP-01 | Phase 6 | Pending |
 | DEP-02 | Phase 6 | Complete |
-| SEC-01 | Phase 7 | Pending |
+| SEC-01 | Phase 7 | Complete |
 | SEC-02 | Phase 7 | Pending |
 | REL-01 | Phase 8 | Pending |
 | REL-02 | Phase 8 | Pending |
