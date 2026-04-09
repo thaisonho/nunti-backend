@@ -93,3 +93,18 @@ export ARTIFACT_BUCKET=nunti-artifacts-thaisonho-nunti-backend
 ```
 
 Ensure `deploy/params.staging.json` exists and is configured with the real parameter override values required for your environment before running scripts successfully.
+
+---
+
+## 4. Production Network Architecture
+
+Production uses a dedicated VPC (10.1.0.0/16) isolated from staging with least-privilege security groups.
+
+For the full production networking documentation, see: [Production Network Architecture](./production-network-architecture.md)
+
+Key highlights:
+- **VPC Isolation:** Separate CIDR block (10.1.0.0/16) with 2 private subnets + 1 public subnet
+- **NAT Gateway:** Lambda egress control without direct internet exposure
+- **Security Groups:** Lambda → DynamoDB restricted to HTTPS on DynamoDB subnet CIDR only
+- **Multi-AZ:** Private subnets span 2 availability zones for resilience
+
