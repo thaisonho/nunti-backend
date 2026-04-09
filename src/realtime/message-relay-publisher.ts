@@ -8,6 +8,7 @@
 
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import * as ConnectionRegistry from './connection-registry.js';
+import { buildRedactedMeta } from './log-redact.js';
 import type { DirectMessageEvent, DeliveryState, DeliveryStatusEvent, ReplayCompleteEvent } from '../messages/message-model.js';
 
 function getManagementEndpoint(): string | null {
@@ -58,12 +59,13 @@ export async function relayDirectMessage(
         return;
       }
 
-      console.warn('direct-message relay failed', {
-        recipientUserId,
-        recipientDeviceId,
+      console.warn('direct-message relay failed', buildRedactedMeta({
+        userId: recipientUserId,
+        deviceId: recipientDeviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'direct-message',
+      }));
     }
   }));
 
@@ -115,12 +117,13 @@ export async function publishDeliveryStatus(
         return;
       }
 
-      console.warn('delivery-status publish failed', {
-        senderUserId,
-        senderDeviceId,
+      console.warn('delivery-status publish failed', buildRedactedMeta({
+        userId: senderUserId,
+        deviceId: senderDeviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'delivery-status',
+      }));
     }
   }));
 }
@@ -169,12 +172,13 @@ export async function publishReplayComplete(
         return;
       }
 
-      console.warn('replay-complete publish failed', {
+      console.warn('replay-complete publish failed', buildRedactedMeta({
         userId,
         deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'replay-complete',
+      }));
     }
   }));
 }

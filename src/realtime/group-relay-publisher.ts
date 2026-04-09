@@ -1,5 +1,6 @@
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import * as ConnectionRegistry from './connection-registry.js';
+import { buildRedactedMeta } from './log-redact.js';
 import type { DeliveryState } from '../messages/message-model.js';
 import type {
   GroupMembershipEvent,
@@ -45,12 +46,13 @@ export async function publishMembershipEvent(
         return;
       }
 
-      console.warn('group-membership relay failed', {
+      console.warn('group-membership relay failed', buildRedactedMeta({
         userId,
         deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'group-membership-event',
+      }));
     }
   }));
 
@@ -93,12 +95,13 @@ export async function publishMembershipReplayComplete(
         return;
       }
 
-      console.warn('group replay-complete publish failed', {
+      console.warn('group replay-complete publish failed', buildRedactedMeta({
         userId,
         deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'group-replay-complete',
+      }));
     }
   }));
 }
@@ -139,12 +142,13 @@ export async function publishGroupMessage(
         return;
       }
 
-      console.warn('group-message relay failed', {
+      console.warn('group-message relay failed', buildRedactedMeta({
         userId,
         deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'group-message',
+      }));
     }
   }));
 
@@ -181,12 +185,13 @@ export async function publishGroupDeviceStatus(
         return;
       }
 
-      console.warn('group-device-status publish failed', {
+      console.warn('group-device-status publish failed', buildRedactedMeta({
         userId,
         deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'group-device-status',
+      }));
     }
   }));
 }
@@ -227,12 +232,13 @@ export async function publishGroupMessageReplayComplete(
         return;
       }
 
-      console.warn('group-message-replay-complete publish failed', {
+      console.warn('group-message-replay-complete publish failed', buildRedactedMeta({
         userId,
         deviceId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'group-message-replay-complete',
+      }));
     }
   }));
 }
