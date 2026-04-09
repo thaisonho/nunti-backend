@@ -49,6 +49,27 @@ Parameters:
     Type: String
     Default: "10.1.1.0/25"
     Description: CIDR for DynamoDB security group ingress
+  # DynamoDB Resilience Parameters
+  DynamoDBBillingMode:
+    Type: String
+    Default: PAY_PER_REQUEST
+    AllowedValues:
+      - PAY_PER_REQUEST
+      - PROVISIONED
+    Description: DynamoDB billing mode (on-demand or provisioned)
+  DynamoDBProvisionedReadCapacity:
+    Type: Number
+    Default: 100
+    Description: Provisioned read capacity (only used if BillingMode=PROVISIONED)
+  DynamoDBProvisionedWriteCapacity:
+    Type: Number
+    Default: 100
+    Description: Provisioned write capacity (only used if BillingMode=PROVISIONED)
+  BackupRetentionDays:
+    Type: Number
+    Default: 7
+    MinValue: 7
+    Description: Backup retention period in days (minimum 7)
 
 Globals:
   Function:
@@ -120,6 +141,79 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: !Sub "nunti-dummy-${Stage}"
+
+  # ==== Production DynamoDB Tables (PITR enabled) ====
+  DevicesTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref DevicesTableName
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceId
+          KeyType: RANGE
+      BillingMode: !Ref DynamoDBBillingMode
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
+
+  MessagesTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref MessagesTableName
+      AttributeDefinitions:
+        - AttributeName: recipientDeviceKey
+          AttributeType: S
+        - AttributeName: sortKey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: recipientDeviceKey
+          KeyType: HASH
+        - AttributeName: sortKey
+          KeyType: RANGE
+      BillingMode: !Ref DynamoDBBillingMode
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
+
+  ConnectionsTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref ConnectionsTableName
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      BillingMode: !Ref DynamoDBBillingMode
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
 
   # ==== Production VPC & Networking ====
   ProductionVpc:
@@ -342,6 +436,7 @@ Resources:
 
 Conditions:
   IsProduction: !Equals [!Ref Stage, "production"]
+  UseProvisioned: !Equals [!Ref DynamoDBBillingMode, "PROVISIONED"]
 
 Outputs:
   ProductionVpcId:
@@ -369,3 +464,18 @@ Outputs:
     Value: !Ref ProductionDynamoDBSecurityGroup
     Export:
       Name: !Sub "nunti-dynamodb-sg-id-${Stage}"
+  DevicesTableArn:
+    Condition: IsProduction
+    Value: !GetAtt DevicesTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-devices-table-arn-${Stage}"
+  MessagesTableArn:
+    Condition: IsProduction
+    Value: !GetAtt MessagesTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-messages-table-arn-${Stage}"
+  ConnectionsTableArn:
+    Condition: IsProduction
+    Value: !GetAtt ConnectionsTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-connections-table-arn-${Stage}"
