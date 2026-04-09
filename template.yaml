@@ -24,6 +24,31 @@ Parameters:
     AllowedValues:
       - staging
       - production
+  # Production VPC & Networking Parameters
+  ProductionVpcCidr:
+    Type: String
+    Default: "10.1.0.0/16"
+    Description: CIDR block for production VPC
+  ProductionPrivateSubnet1Cidr:
+    Type: String
+    Default: "10.1.1.0/24"
+    Description: CIDR block for production private subnet 1
+  ProductionPrivateSubnet2Cidr:
+    Type: String
+    Default: "10.1.2.0/24"
+    Description: CIDR block for production private subnet 2
+  ProductionPublicSubnetCidr:
+    Type: String
+    Default: "10.1.0.0/24"
+    Description: CIDR block for production public subnet
+  LambdaSecurityGroupIngressCIDR:
+    Type: String
+    Default: "10.1.0.0/16"
+    Description: CIDR for Lambda security group ingress
+  DynamoDBSecurityGroupIngressCIDR:
+    Type: String
+    Default: "10.1.1.0/25"
+    Description: CIDR for DynamoDB security group ingress
 
 Globals:
   Function:
@@ -95,3 +120,252 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: !Sub "nunti-dummy-${Stage}"
+
+  # ==== Production VPC & Networking ====
+  ProductionVpc:
+    Type: AWS::EC2::VPC
+    Condition: IsProduction
+    Properties:
+      CidrBlock: !Ref ProductionVpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: nunti-production-vpc
+        - Key: Environment
+          Value: production
+
+  ProductionPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      CidrBlock: !Ref ProductionPrivateSubnet1Cidr
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: nunti-production-private-1
+        - Key: Environment
+          Value: production
+
+  ProductionPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      CidrBlock: !Ref ProductionPrivateSubnet2Cidr
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: nunti-production-private-2
+        - Key: Environment
+          Value: production
+
+  ProductionPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      CidrBlock: !Ref ProductionPublicSubnetCidr
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: nunti-production-public
+        - Key: Environment
+          Value: production
+
+  ProductionInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Condition: IsProduction
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nunti-production-igw
+        - Key: Environment
+          Value: production
+
+  AttachProductionIgw:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Condition: IsProduction
+    Properties:
+      InternetGatewayId: !Ref ProductionInternetGateway
+      VpcId: !Ref ProductionVpc
+
+  ProductionNatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Condition: IsProduction
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: nunti-production-nat-eip
+        - Key: Environment
+          Value: production
+
+  ProductionNatGateway:
+    Type: AWS::EC2::NatGateway
+    Condition: IsProduction
+    Properties:
+      AllocationId: !GetAtt ProductionNatGatewayEIP.AllocationId
+      SubnetId: !Ref ProductionPublicSubnet
+      Tags:
+        - Key: Name
+          Value: nunti-production-nat
+        - Key: Environment
+          Value: production
+
+  ProductionPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      Tags:
+        - Key: Name
+          Value: nunti-production-public-rt
+        - Key: Environment
+          Value: production
+
+  ProductionPublicRoute:
+    Type: AWS::EC2::Route
+    Condition: IsProduction
+    DependsOn: AttachProductionIgw
+    Properties:
+      RouteTableId: !Ref ProductionPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ProductionInternetGateway
+
+  ProductionPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      Tags:
+        - Key: Name
+          Value: nunti-production-private-rt
+        - Key: Environment
+          Value: production
+
+  ProductionPrivateRoute:
+    Type: AWS::EC2::Route
+    Condition: IsProduction
+    Properties:
+      RouteTableId: !Ref ProductionPrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref ProductionNatGateway
+
+  SubnetRouteTableAssociationPublic:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref ProductionPublicSubnet
+      RouteTableId: !Ref ProductionPublicRouteTable
+
+  SubnetRouteTableAssociationPrivate1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref ProductionPrivateSubnet1
+      RouteTableId: !Ref ProductionPrivateRouteTable
+
+  SubnetRouteTableAssociationPrivate2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref ProductionPrivateSubnet2
+      RouteTableId: !Ref ProductionPrivateRouteTable
+
+  # ==== Production Security Groups (Least-Privilege) ====
+  ProductionLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsProduction
+    Properties:
+      GroupDescription: Production Lambda least-privilege security group
+      VpcId: !Ref ProductionVpc
+      SecurityGroupEgress:
+        - Description: HTTPS to DynamoDB subnet
+          CidrIp: !Ref DynamoDBSecurityGroupIngressCIDR
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+        - Description: HTTPS to external APIs (Cognito, etc.)
+          CidrIp: 0.0.0.0/0
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+        - Description: DNS resolution
+          CidrIp: 0.0.0.0/0
+          FromPort: 53
+          ToPort: 53
+          IpProtocol: udp
+      Tags:
+        - Key: Name
+          Value: nunti-production-lambda-sg
+        - Key: Environment
+          Value: production
+
+  ProductionDynamoDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsProduction
+    Properties:
+      GroupDescription: Production DynamoDB least-privilege security group
+      VpcId: !Ref ProductionVpc
+      SecurityGroupIngress:
+        - Description: HTTPS from Lambda security group
+          SourceSecurityGroupId: !Ref ProductionLambdaSecurityGroup
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+      Tags:
+        - Key: Name
+          Value: nunti-production-dynamodb-sg
+        - Key: Environment
+          Value: production
+
+  ProductionApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsProduction
+    Properties:
+      GroupDescription: Production API Gateway security group
+      VpcId: !Ref ProductionVpc
+      SecurityGroupIngress:
+        - Description: HTTPS from public (CloudFront edge)
+          CidrIp: 0.0.0.0/0
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+      Tags:
+        - Key: Name
+          Value: nunti-production-api-sg
+        - Key: Environment
+          Value: production
+
+Conditions:
+  IsProduction: !Equals [!Ref Stage, "production"]
+
+Outputs:
+  ProductionVpcId:
+    Condition: IsProduction
+    Value: !Ref ProductionVpc
+    Export:
+      Name: !Sub "nunti-vpc-id-${Stage}"
+  ProductionSubnet1Id:
+    Condition: IsProduction
+    Value: !Ref ProductionPrivateSubnet1
+    Export:
+      Name: !Sub "nunti-subnet1-id-${Stage}"
+  ProductionSubnet2Id:
+    Condition: IsProduction
+    Value: !Ref ProductionPrivateSubnet2
+    Export:
+      Name: !Sub "nunti-subnet2-id-${Stage}"
+  ProductionLambdaSecurityGroupId:
+    Condition: IsProduction
+    Value: !Ref ProductionLambdaSecurityGroup
+    Export:
+      Name: !Sub "nunti-lambda-sg-id-${Stage}"
+  ProductionDynamoDBSecurityGroupId:
+    Condition: IsProduction
+    Value: !Ref ProductionDynamoDBSecurityGroup
+    Export:
+      Name: !Sub "nunti-dynamodb-sg-id-${Stage}"
