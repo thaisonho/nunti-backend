@@ -54,6 +54,19 @@ Plans:
 - [ ] 07-01-PLAN.md - Least-privilege deployment and runtime IAM boundaries with environment-specific OIDC roles.
 - [ ] 07-02-PLAN.md - Production-safe auth, secret resolution, and realtime log redaction.
 
+### Phase 07.1: Production Infrastructure Enablement (INSERTED)
+
+**Goal:** Production AWS infrastructure setup focuses on establishing production-level networking, compute environment, database replication, and infrastructure components that go beyond the basic deployment foundation established in Phase 6.
+**Requirements**: None (urgent work for v1.1 launch readiness)
+**Depends on:** Phase 7
+**Plans:** 4 plans
+
+Plans:
+- [ ] 07.1-01-PLAN.md — Production VPC, subnets, NAT gateways, and security groups with least-privilege access
+- [ ] 07.1-02-PLAN.md — DynamoDB resilience with point-in-time recovery, daily backups, and backup scripts
+- [ ] 07.1-03-PLAN.md — Production Cognito User Pool with strict password policies and separate identity namespace
+- [ ] 07.1-04-PLAN.md — Route53 health checks, CloudFront CDN with WAF, and DNS configuration
+
 ### Phase 8: Realtime Reliability Controls
 **Goal**: Realtime delivery remains stable under stale connections and burst traffic without retry amplification.
 **Depends on**: Phase 7
