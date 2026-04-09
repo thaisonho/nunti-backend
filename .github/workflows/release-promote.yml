@@ -32,7 +32,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN_PROD }}
           aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
 
       - name: Download Staging Artifacts
