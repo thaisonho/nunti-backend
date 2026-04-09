@@ -1,9 +1,11 @@
 {
   "permission": {
     "read": {
+      "./.opencode/get-shit-done/*": "allow",
       "./.opencode/get-shit-done/*": "allow"
     },
     "external_directory": {
+      "./.opencode/get-shit-done/*": "allow",
       "./.opencode/get-shit-done/*": "allow"
     }
   }

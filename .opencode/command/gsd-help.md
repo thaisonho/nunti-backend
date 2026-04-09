@@ -1,5 +1,7 @@
 ---
 description: Show available GSD commands and usage guide
+tools:
+  read: true
 ---
 <objective>
 Display the complete GSD command reference.

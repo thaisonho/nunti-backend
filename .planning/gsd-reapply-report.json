@@ -1,0 +1,3993 @@
+{
+  "generatedAt": "2026-04-09T07:53:41.591Z",
+  "root": "/home/json/hcmus/applied_crypto/nunti-backend",
+  "runtimes": [
+    {
+      "runtime": ".claude",
+      "patchesDir": ".claude/gsd-local-patches",
+      "fromVersion": "1.30.0",
+      "currentVersion": "1.34.2",
+      "filesCount": 123,
+      "mergeStrategy": "mixed: three-way (git) with two-way fallback",
+      "results": [
+        {
+          "file": ".claude/get-shit-done/references/decimal-phase-calculation.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/references/git-integration.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/references/git-planning-commit.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/references/model-profile-resolution.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/references/phase-argument-parsing.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/references/planning-config.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/references/verification-patterns.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/templates/codebase/structure.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/templates/phase-prompt.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/add-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/add-tests.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/add-todo.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/audit-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/audit-uat.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/autonomous.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/check-todos.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/cleanup.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/complete-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/diagnose-issues.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/discovery-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/discuss-phase-assumptions.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/discuss-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/do.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/execute-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/execute-plan.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/health.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/help.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/insert-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/list-workspaces.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/manager.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/map-codebase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/new-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/new-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/new-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/next.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/note.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/pause-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/plan-milestone-gaps.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/plan-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/plant-seed.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/profile-user.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/progress.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/quick.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/remove-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/remove-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/research-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/resume-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/settings.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/ship.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/stats.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/transition.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/ui-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/ui-review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/update.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/validate-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/verify-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/get-shit-done/workflows/verify-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/add-backlog.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/add-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/add-tests.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/add-todo.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/audit-milestone.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/audit-uat.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/autonomous.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/check-todos.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/cleanup.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/complete-milestone.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/debug.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/discuss-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/do.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/execute-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/fast.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/forensics.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/health.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/help.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/insert-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/list-phase-assumptions.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/list-workspaces.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/manager.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/map-codebase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/milestone-summary.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/new-milestone.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/new-project.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/new-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/next.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/note.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/pause-work.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/plan-milestone-gaps.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/plan-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/plant-seed.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/pr-branch.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/profile-user.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/progress.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/quick.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/reapply-patches.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/remove-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/remove-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/research-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/resume-work.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/review-backlog.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/session-report.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/set-profile.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/settings.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/ship.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/stats.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/thread.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/ui-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/ui-review.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/update.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/validate-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/commands/gsd/verify-work.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-debugger.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-executor.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-phase-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-plan-checker.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-planner.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-project-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-research-synthesizer.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-roadmapper.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-ui-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".claude/agents/gsd-verifier.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        }
+      ]
+    },
+    {
+      "runtime": ".opencode",
+      "patchesDir": ".opencode/gsd-local-patches",
+      "fromVersion": "1.30.0",
+      "currentVersion": "1.34.2",
+      "filesCount": 123,
+      "mergeStrategy": "mixed: three-way (git) with two-way fallback",
+      "results": [
+        {
+          "file": ".opencode/get-shit-done/references/decimal-phase-calculation.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/references/git-integration.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/references/git-planning-commit.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/references/model-profile-resolution.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/references/phase-argument-parsing.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/references/planning-config.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/references/verification-patterns.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/templates/codebase/structure.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/templates/phase-prompt.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/add-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/add-tests.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/add-todo.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/audit-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/audit-uat.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/autonomous.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/check-todos.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/cleanup.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/complete-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/diagnose-issues.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/discovery-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/discuss-phase-assumptions.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/discuss-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/do.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/execute-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/execute-plan.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/health.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/help.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/insert-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/list-workspaces.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/manager.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/map-codebase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/new-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/new-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/new-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/next.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/note.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/pause-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/plan-milestone-gaps.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/plan-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/plant-seed.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/profile-user.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/progress.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/quick.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/remove-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/remove-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/research-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/resume-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/settings.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/ship.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/stats.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/transition.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/ui-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/ui-review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/update.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/validate-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/verify-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/get-shit-done/workflows/verify-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-add-backlog.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-add-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-add-tests.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-add-todo.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-audit-milestone.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-audit-uat.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-autonomous.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-check-todos.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-cleanup.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-complete-milestone.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-debug.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-discuss-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-do.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-execute-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-fast.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-forensics.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-health.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-help.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-insert-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-list-phase-assumptions.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-list-workspaces.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-manager.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-map-codebase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-milestone-summary.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-new-milestone.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-new-project.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-new-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-next.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-note.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-pause-work.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-plan-milestone-gaps.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-plan-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-plant-seed.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-pr-branch.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-profile-user.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-progress.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-quick.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-reapply-patches.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-remove-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-remove-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-research-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-resume-work.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-review-backlog.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-session-report.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-set-profile.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-settings.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-ship.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-stats.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-thread.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-ui-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-ui-review.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-update.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-validate-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/command/gsd-verify-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-debugger.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-executor.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-phase-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-plan-checker.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-planner.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-project-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-research-synthesizer.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-roadmapper.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-ui-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".opencode/agents/gsd-verifier.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        }
+      ]
+    },
+    {
+      "runtime": ".gemini",
+      "patchesDir": ".gemini/gsd-local-patches",
+      "fromVersion": "1.30.0",
+      "currentVersion": "1.34.2",
+      "filesCount": 123,
+      "mergeStrategy": "mixed: three-way (git) with two-way fallback",
+      "results": [
+        {
+          "file": ".gemini/get-shit-done/references/decimal-phase-calculation.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/references/git-integration.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/references/git-planning-commit.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/references/model-profile-resolution.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/references/phase-argument-parsing.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/references/planning-config.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/references/verification-patterns.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/templates/codebase/structure.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/templates/phase-prompt.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/add-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/add-tests.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/add-todo.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/audit-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/audit-uat.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/autonomous.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/check-todos.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/cleanup.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/complete-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/diagnose-issues.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/discovery-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/discuss-phase-assumptions.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/discuss-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/do.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/execute-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/execute-plan.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/health.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/help.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/insert-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/list-workspaces.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/manager.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/map-codebase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/new-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/new-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/new-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/next.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/note.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/pause-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/plan-milestone-gaps.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/plan-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/plant-seed.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/profile-user.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/progress.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/quick.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/remove-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/remove-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/research-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/resume-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/settings.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/ship.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/stats.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/transition.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/ui-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/ui-review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/update.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/validate-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/verify-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/get-shit-done/workflows/verify-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/add-backlog.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/add-phase.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/add-tests.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/add-todo.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/audit-milestone.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/audit-uat.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/autonomous.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/check-todos.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/cleanup.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/complete-milestone.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/debug.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/discuss-phase.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/do.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/execute-phase.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/fast.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/forensics.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/health.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/help.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/insert-phase.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/list-phase-assumptions.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/list-workspaces.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/manager.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/map-codebase.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/milestone-summary.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/new-milestone.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/new-project.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/new-workspace.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/next.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/note.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/pause-work.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/plan-milestone-gaps.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/plan-phase.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/plant-seed.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/pr-branch.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/profile-user.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/progress.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/quick.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/reapply-patches.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/remove-phase.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/remove-workspace.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/research-phase.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/resume-work.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/review-backlog.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/review.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/session-report.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/set-profile.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/settings.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/ship.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/stats.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/thread.toml",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/ui-phase.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/ui-review.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/update.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/validate-phase.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/commands/gsd/verify-work.toml",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-debugger.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-executor.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-phase-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-plan-checker.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-planner.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-project-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-research-synthesizer.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-roadmapper.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-ui-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".gemini/agents/gsd-verifier.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        }
+      ]
+    },
+    {
+      "runtime": ".codex",
+      "patchesDir": ".codex/gsd-local-patches",
+      "fromVersion": "1.30.0",
+      "currentVersion": "1.34.2",
+      "filesCount": 123,
+      "mergeStrategy": "mixed: three-way (git) with two-way fallback",
+      "results": [
+        {
+          "file": ".codex/get-shit-done/references/decimal-phase-calculation.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/references/git-integration.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/references/git-planning-commit.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/references/model-profile-resolution.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/references/phase-argument-parsing.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/references/planning-config.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/references/verification-patterns.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/templates/codebase/structure.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/templates/phase-prompt.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/add-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/add-tests.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/add-todo.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/audit-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/audit-uat.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/autonomous.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/check-todos.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/cleanup.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/complete-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/diagnose-issues.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/discovery-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/discuss-phase-assumptions.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/discuss-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/do.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/execute-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/execute-plan.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/health.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/help.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/insert-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/list-workspaces.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/manager.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/map-codebase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/new-milestone.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/new-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/new-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/next.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/note.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/pause-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/plan-milestone-gaps.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/plan-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/plant-seed.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/profile-user.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/progress.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/quick.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/remove-phase.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/remove-workspace.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/research-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/resume-project.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/settings.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/ship.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/stats.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/transition.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/ui-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/ui-review.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/update.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/validate-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/verify-phase.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/get-shit-done/workflows/verify-work.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-add-backlog/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-add-phase/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-add-tests/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-add-todo/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-audit-milestone/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-audit-uat/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-autonomous/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-check-todos/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-cleanup/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-complete-milestone/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-debug/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-discuss-phase/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-do/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-execute-phase/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-fast/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-forensics/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-health/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-help/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-insert-phase/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-list-phase-assumptions/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-list-workspaces/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-manager/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-map-codebase/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-milestone-summary/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-new-milestone/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-new-project/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-new-workspace/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-next/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-note/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-pause-work/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-plan-milestone-gaps/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-plan-phase/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-plant-seed/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-pr-branch/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-profile-user/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-progress/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-quick/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-reapply-patches/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-remove-phase/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-remove-workspace/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-research-phase/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-resume-work/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-review/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-review-backlog/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-session-report/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-set-profile/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-settings/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-ship/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-stats/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-thread/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 11a52d38d1",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-ui-phase/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-ui-review/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-update/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-validate-phase/SKILL.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Incorporated",
+          "preserved": "Backup content already present in current file",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/skills/gsd-verify-work/SKILL.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-debugger.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-executor.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-phase-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-plan-checker.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-planner.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-project-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-research-synthesizer.md",
+          "strategy": "three-way (git hash match)",
+          "result": "Merged",
+          "preserved": "Applied user deltas over upstream using 5ad7035ef3",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-roadmapper.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-ui-researcher.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        },
+        {
+          "file": ".codex/agents/gsd-verifier.md",
+          "strategy": "three-way (git add commit)",
+          "result": "Conflict resolved",
+          "preserved": "Three-way conflict against 5ad7035ef3; Resolved by user policy: prefer backup version",
+          "warnings": [],
+          "verification": "Merged (verified)"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "files": 492,
+    "merged": 321,
+    "conflict": 0,
+    "incorporated": 171,
+    "warnings": 0,
+    "baselineGit": 492,
+    "baselineNone": 0
+  },
+  "resolutionPolicy": "prefer backup version for all conflicts",
+  "resolvedAt": "2026-04-09T07:57:21.058Z"
+}

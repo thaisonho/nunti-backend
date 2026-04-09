@@ -19,6 +19,11 @@ Research how to implement a phase. Spawns gsd-phase-researcher agent with phase 
 **Why subagent:** Research burns context fast (WebSearch, Context7 queries, source verification). Fresh 200k context for investigation. Main context stays lean for user interaction.
 </objective>
 
+<available_agent_types>
+Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gsd-phase-researcher — Researches technical approaches for a phase
+</available_agent_types>
+
 <context>
 Phase number: $ARGUMENTS (required)
 
@@ -86,7 +91,7 @@ For this phase, discover:
 - What's the established architecture pattern?
 - What libraries form the standard stack?
 - What problems do people commonly hit?
-- What's SOTA vs what Claude's training thinks is SOTA?
+- What's SOTA vs what the agent's training thinks is SOTA?
 - What should NOT be hand-rolled?
 </key_insight>
 

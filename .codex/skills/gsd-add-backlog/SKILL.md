@@ -66,7 +66,7 @@ the normal phase sequence and accumulate context over time.
 
 3. **Create the phase directory:**
    ```bash
-   SLUG=$(node "./.codex/get-shit-done/bin/gsd-tools.cjs" generate-slug "{{GSD_ARGS}}")
+   SLUG=$(node "./.codex/get-shit-done/bin/gsd-tools.cjs" generate-slug "{{GSD_ARGS}}" --raw)
    mkdir -p ".planning/phases/${NEXT}-${SLUG}"
    touch ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
    ```
@@ -83,7 +83,7 @@ the normal phase sequence and accumulate context over time.
    **Plans:** 0 plans
 
    Plans:
-   - [ ] TBD (promote with $gsd-review-backlog when ready)
+   - [ ] TBD (promote with /gsd-review-backlog when ready)
    ```
 
 5. **Commit:**
@@ -99,15 +99,15 @@ the normal phase sequence and accumulate context over time.
    Directory: .planning/phases/{NEXT}-{slug}/
 
    This item lives in the backlog parking lot.
-   Use $gsd-discuss-phase {NEXT} to explore it further.
-   Use $gsd-review-backlog to promote items to active milestone.
+   Use /gsd-discuss-phase {NEXT} to explore it further.
+   Use /gsd-review-backlog to promote items to active milestone.
    ```
 
 </process>
 
 <notes>
 - 999.x numbering keeps backlog items out of the active phase sequence
-- Phase directories are created immediately, so $gsd-discuss-phase and $gsd-plan-phase work on them
+- Phase directories are created immediately, so /gsd-discuss-phase and /gsd-plan-phase work on them
 - No `Depends on:` field — backlog items are unsequenced by definition
 - Sparse numbering is fine (999.1, 999.3) — always uses next-decimal
 </notes>

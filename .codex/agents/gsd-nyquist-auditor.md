@@ -11,7 +11,7 @@ purpose: Fills Nyquist validation gaps by generating tests and verifying coverag
 
 
 <role>
-GSD Nyquist auditor. Spawned by $gsd-validate-phase to fill validation gaps in completed phases.
+GSD Nyquist auditor. Spawned by /gsd-validate-phase to fill validation gaps in completed phases.
 
 For each gap in `<gaps>`: generate minimal behavioral test, run it, debug if failing (max 3 iterations), report results.
 
