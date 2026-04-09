@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Nunti Backend Stack
+  Nunti Backend Stack — least-privilege runtime IAM
 
 Parameters:
   CognitoUserPoolId:
@@ -15,12 +15,21 @@ Parameters:
     Type: String
   MessagesTableName:
     Type: String
+  ConnectionsTableName:
+    Type: String
+    Default: nunti-connections
   Stage:
     Type: String
     Default: staging
+    AllowedValues:
+      - staging
+      - production
 
 Globals:
   Function:
+    Runtime: nodejs22.x
+    Timeout: 30
+    MemorySize: 256
     Environment:
       Variables:
         COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
@@ -28,9 +37,59 @@ Globals:
         COGNITO_REGION: !Ref CognitoRegion
         DEVICES_TABLE_NAME: !Ref DevicesTableName
         MESSAGES_TABLE_NAME: !Ref MessagesTableName
+        CONNECTIONS_TABLE_NAME: !Ref ConnectionsTableName
         STAGE: !Ref Stage
 
 Resources:
+  # ---- IAM: Least-privilege runtime role ----
+  NuntiRuntimeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "nunti-runtime-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # CloudWatch Logs only — no broad Lambda or admin policies
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DynamoDBTableAccess
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DevicesTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DevicesTableName}/index/*"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MessagesTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MessagesTableName}/index/*"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ConnectionsTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ConnectionsTableName}/index/*"
+        - PolicyName: WebSocketManagement
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ApiGatewayManagement
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource:
+                  - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/@connections/*"
+
+  # ---- Placeholder table (validates template structure) ----
   DummyTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
