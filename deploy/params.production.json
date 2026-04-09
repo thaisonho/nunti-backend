@@ -1,11 +1,18 @@
 {
   "Parameters": {
-    "CognitoUserPoolId": "production-pool-id",
-    "CognitoAppClientId": "production-client-id",
+    "CognitoUserPoolId": "prod-cognito-user-pool-id",
+    "CognitoAppClientId": "prod-cognito-app-client-id",
     "CognitoRegion": "ap-southeast-1",
     "DevicesTableName": "nunti-devices-production",
     "MessagesTableName": "nunti-messages-production",
-    "Stage": "production"
+    "ConnectionsTableName": "nunti-connections-production",
+    "Stage": "production",
+    "ProductionVpcCidr": "10.1.0.0/16",
+    "ProductionPrivateSubnet1Cidr": "10.1.1.0/24",
+    "ProductionPrivateSubnet2Cidr": "10.1.2.0/24",
+    "ProductionPublicSubnetCidr": "10.1.0.0/24",
+    "LambdaSecurityGroupIngressCIDR": "10.1.0.0/16",
+    "DynamoDBSecurityGroupIngressCIDR": "10.1.1.0/25"
   },
   "StackName": "nunti-backend-production"
 }
