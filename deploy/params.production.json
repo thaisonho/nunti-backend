@@ -1,20 +1,9 @@
 {
   "Parameters": {
-    "// Production Cognito Configuration": "",
-    "// - CognitoPasswordMinLength: 12 characters minimum (enforced by User Pool policy)": "",
-    "// - RequireCognitoMFA: true = MFA required for all users in production": "",
-    "// - CognitoUserPoolId and CognitoAppClientId are populated from CloudFormation Outputs": "",
-    "//   after first deployment. See docs/deployment/cognito-production-setup.md": "",
     "CognitoPasswordMinLength": "12",
     "RequireCognitoMFA": "true",
     "CognitoUserPoolId": "{output-from-first-deployment}",
     "CognitoAppClientId": "{output-from-first-deployment}",
-    "// DNS and CDN Configuration": "",
-    "// - Route53HostedZoneId: ID of your Route53 hosted zone (e.g., Z123ABCDEFGHIJ)": "",
-    "// - ProductionDomainName: Production domain name (e.g., api.example.com)": "",
-    "// - HealthCheckInterval: 30 seconds between Route53 health checks (10 or 30 only)": "",
-    "// - HealthCheckFailureThreshold: 3 consecutive failures to mark unhealthy": "",
-    "// - CloudFront cache TTLs: Disabled for dynamic API (0-300s recommended)": "",
     "Route53HostedZoneId": "Z123ABCDEFGHIJ",
     "ProductionDomainName": "api.example.com",
     "HealthCheckInterval": "30",
@@ -32,11 +21,12 @@
     "ProductionPrivateSubnet2Cidr": "10.1.2.0/24",
     "ProductionPublicSubnetCidr": "10.1.0.0/24",
     "LambdaSecurityGroupIngressCIDR": "10.1.0.0/16",
-    "DynamoDBSecurityGroupIngressCIDR": "10.1.1.0/25",
     "DynamoDBBillingMode": "PAY_PER_REQUEST",
     "DynamoDBProvisionedReadCapacity": "100",
     "DynamoDBProvisionedWriteCapacity": "100",
-    "BackupRetentionDays": "7"
+    "BackupRetentionDays": "7",
+    "ApiGatewayDomainName": "xxxxxxxx.execute-api.ap-southeast-1.amazonaws.com",
+    "ProductionWafWebAclArn": "arn:aws:wafv2:us-east-1:123456789012:global/webacl/xxxx"
   },
   "StackName": "nunti-backend-production"
 }

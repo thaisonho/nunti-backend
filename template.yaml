@@ -45,10 +45,6 @@ Parameters:
     Type: String
     Default: "10.1.0.0/16"
     Description: CIDR for Lambda security group ingress
-  DynamoDBSecurityGroupIngressCIDR:
-    Type: String
-    Default: "10.1.1.0/25"
-    Description: CIDR for DynamoDB security group ingress
   # DynamoDB Resilience Parameters
   DynamoDBBillingMode:
     Type: String
@@ -116,6 +112,14 @@ Parameters:
     Type: Number
     Default: 0
     Description: Minimum cache duration
+  ProductionWafWebAclArn:
+    Type: String
+    Default: ""
+    Description: ARN of a global WAF WebACL created in us-east-1 (for CloudFront)
+  ApiGatewayDomainName:
+    Type: String
+    Default: ""
+    Description: API Gateway Domain Name (e.g. xxxx.execute-api.region.amazonaws.com)
 
 Globals:
   Function:
@@ -204,6 +208,11 @@ Resources:
         - AttributeName: deviceId
           KeyType: RANGE
       BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       StreamSpecification:
@@ -230,6 +239,11 @@ Resources:
         - AttributeName: sortKey
           KeyType: RANGE
       BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       StreamSpecification:
@@ -252,6 +266,11 @@ Resources:
         - AttributeName: connectionId
           KeyType: HASH
       BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       Tags:
@@ -422,11 +441,6 @@ Resources:
       GroupDescription: Production Lambda least-privilege security group
       VpcId: !Ref ProductionVpc
       SecurityGroupEgress:
-        - Description: HTTPS to DynamoDB subnet
-          CidrIp: !Ref DynamoDBSecurityGroupIngressCIDR
-          FromPort: 443
-          ToPort: 443
-          IpProtocol: tcp
         - Description: HTTPS to external APIs (Cognito, etc.)
           CidrIp: 0.0.0.0/0
           FromPort: 443
@@ -443,23 +457,15 @@ Resources:
         - Key: Environment
           Value: production
 
-  ProductionDynamoDBSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+  ProductionDynamoDBVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
     Condition: IsProduction
     Properties:
-      GroupDescription: Production DynamoDB least-privilege security group
       VpcId: !Ref ProductionVpc
-      SecurityGroupIngress:
-        - Description: HTTPS from Lambda security group
-          SourceSecurityGroupId: !Ref ProductionLambdaSecurityGroup
-          FromPort: 443
-          ToPort: 443
-          IpProtocol: tcp
-      Tags:
-        - Key: Name
-          Value: nunti-production-dynamodb-sg
-        - Key: Environment
-          Value: production
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref ProductionPrivateRouteTable
 
   ProductionApiSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -504,16 +510,10 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
           TemporaryPasswordValidityDays: 1
-      MFAConfiguration: !If [RequireMFA, OPTIONAL, OFF]
+      MFAConfiguration: !If [RequireMFA, ON, OFF]
       EnabledMfas:
         - SOFTWARE_TOKEN_MFA
         - SMS_MFA
-      AuthPolicies:
-        ComplexityConfiguration:
-          RequireNumbers: true
-          RequireSymbols: true
-          RequireUppercase: true
-          RequireLowercase: true
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
@@ -538,14 +538,13 @@ Resources:
     Condition: IsProduction
     Properties:
       Type: HTTPS
-      IPAddress: !Sub "{{API_GATEWAY_ENDPOINT}}" # Will be resolved from CloudFormation reference
       Port: 443
       ResourcePath: /health  # API Gateway endpoint paths depend on Lambda configuration
       RequestInterval: !Ref HealthCheckInterval
       FailureThreshold: !Ref HealthCheckFailureThreshold
       MeasureLatency: true
       EnableSNI: true
-      FullyQualifiedDomainName: !Sub "{{API_GATEWAY_DOMAIN}}"
+      FullyQualifiedDomainName: !Ref ApiGatewayDomainName
       Tags:
         - Key: Name
           Value: nunti-production-api-health
@@ -584,10 +583,6 @@ Resources:
       HealthCheckId: !Ref ProductionApiHealthCheck
       SetIdentifier: primary
       Failover: PRIMARY
-      Comment: Production DNS routing via CloudFront with health monitoring
-      Tags:
-        - Key: Environment
-          Value: production
 
   ProductionCloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
@@ -601,7 +596,7 @@ Resources:
         # Origin configuration pointing to API Gateway
         Origins:
           - Id: ApiGatewayOrigin
-            DomainName: !Sub "{{API_GATEWAY_DOMAIN}}"  # Placeholder for API Gateway endpoint
+            DomainName: !Ref ApiGatewayDomainName
             CustomOriginConfig:
               HTTPPort: 80
               HTTPSPort: 443
@@ -632,8 +627,8 @@ Resources:
           OriginRequestPolicyId: "216adef6-5c7f-47e4-b340-823c8e510848" # Managed-AllViewerExceptHostHeader
           Compress: true
           FunctionAssociations:
-            - EventType: viewer-request
-              FunctionARN: !GetAtt CloudFrontSecurityHeadersFunction.FunctionMetadata.FunctionArn
+            - EventType: viewer-response
+              FunctionARN: !GetAtt CloudFrontSecurityHeadersFunction.FunctionMetadata.FunctionARN
 
         # WebSocket cache behavior (if Phase 8+ needs WebSocket specifically)
         CacheBehaviors:
@@ -664,7 +659,7 @@ Resources:
         PriceClass: PriceClass_100
 
         # AWS Shield Standard (included free with CloudFront)
-        WebACLId: !GetAtt ProductionWAF.Arn
+        WebACLId: !If [HasWaf, !Ref ProductionWafWebAclArn, !Ref "AWS::NoValue"]
 
         # Security headers and restrictions
         CustomErrorResponses:
@@ -682,11 +677,11 @@ Resources:
             ErrorCachingMinTTL: 30
 
         Comment: Production CloudFront distribution for API Gateway with caching and DDoS protection
-        Tags:
-          - Key: Environment
-            Value: production
-          - Key: CDN
-            Value: CloudFront
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: CDN
+          Value: CloudFront
 
   CloudFrontSecurityHeadersFunction:
     Type: AWS::CloudFront::Function
@@ -698,7 +693,7 @@ Resources:
             var response = event.response;
             var headers = response.headers;
 
-            headers['strict-transport-security'] = {value: 'max-age=31536000; includeSubdomains; preload'};
+            headers['strict-transport-security'] = {value: 'max-age=31536000; includeSubDomains; preload'};
             headers['x-content-type-options'] = {value: 'nosniff'};
             headers['x-frame-options'] = {value: 'DENY'};
             headers['x-xss-protection'] = {value: '1; mode=block'};
@@ -711,51 +706,6 @@ Resources:
         Comment: Add security headers to CloudFront responses
         Runtime: cloudfront-js-1.0
       Name: nunti-cloudfront-security-headers
-
-  ProductionWAF:
-    Type: AWS::WAFv2::WebACL
-    Condition: IsProduction
-    Properties:
-      Name: nunti-production-waf
-      Scope: CLOUDFRONT
-      DefaultAction:
-        Allow: {}
-      Rules:
-        # Rate limiting (100 requests per 5 minutes from single IP)
-        - Name: RateLimitRule
-          Priority: 0
-          Action:
-            Block: {}
-          Statement:
-            RateBasedStatement:
-              Limit: 100
-              AggregateKeyType: IP
-          VisibilityConfig:
-            SampledRequestsEnabled: true
-            CloudWatchMetricsEnabled: true
-            MetricName: RateLimitRule
-        
-        # AWS Managed Rules - Core Rule Set
-        - Name: AWSManagedRulesCommonRuleSet
-          Priority: 1
-          OverrideAction:
-            None: {}
-          Statement:
-            ManagedRuleGroupStatement:
-              VendorName: AWS
-              Name: AWSManagedRulesCommonRuleSet
-          VisibilityConfig:
-            SampledRequestsEnabled: true
-            CloudWatchMetricsEnabled: true
-            MetricName: AWSManagedRulesCommonRuleSetMetric
-
-      VisibilityConfig:
-        SampledRequestsEnabled: true
-        CloudWatchMetricsEnabled: true
-        MetricName: nunti-production-waf-metrics
-      Tags:
-        - Key: Environment
-          Value: production
 
   CloudFrontLogsBucket:
     Type: AWS::S3::Bucket
@@ -827,14 +777,13 @@ Resources:
         IdToken: hours
       SupportedIdentityProviders:
         - COGNITO
-      AllowUserPasswordAuthFlow: true
       EnableTokenRevocation: true
-      EnablePropagateAttributes: true
 
 Conditions:
   IsProduction: !Equals [!Ref Stage, "production"]
   UseProvisioned: !Equals [!Ref DynamoDBBillingMode, "PROVISIONED"]
   RequireMFA: !Equals [!Ref RequireCognitoMFA, "true"]
+  HasWaf: !Not [!Equals [!Ref ProductionWafWebAclArn, ""]]
 
 Outputs:
   ProductionVpcId:
@@ -857,11 +806,6 @@ Outputs:
     Value: !Ref ProductionLambdaSecurityGroup
     Export:
       Name: !Sub "nunti-lambda-sg-id-${Stage}"
-  ProductionDynamoDBSecurityGroupId:
-    Condition: IsProduction
-    Value: !Ref ProductionDynamoDBSecurityGroup
-    Export:
-      Name: !Sub "nunti-dynamodb-sg-id-${Stage}"
   DevicesTableArn:
     Condition: IsProduction
     Value: !GetAtt DevicesTableProduction.Arn

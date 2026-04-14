@@ -118,7 +118,7 @@ else
       --table-name "${TABLE}" \
       --region "${AWS_REGION}" \
       --time-range-upper-bound "$(date -u -d "${RETENTION_DAYS} days ago" --iso-8601=seconds 2>/dev/null || date -u -v-${RETENTION_DAYS}d +%Y-%m-%dT%H:%M:%SZ)" \
-      --query "BackupSummaries[?starts_with(BackupName, 'scheduled-')].BackupArn" \
+      --query "BackupSummaries[?starts_with(BackupName, '${TABLE}-scheduled-')].BackupArn" \
       --output text 2>/dev/null || echo "")
 
     if [[ -z "${OLD_BACKUPS}" ]]; then
