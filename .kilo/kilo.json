@@ -1,0 +1,10 @@
+{
+  "permission": {
+    "read": {
+      "./.kilo/get-shit-done/*": "allow"
+    },
+    "external_directory": {
+      "./.kilo/get-shit-done/*": "allow"
+    }
+  }
+}

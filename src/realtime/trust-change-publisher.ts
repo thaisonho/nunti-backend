@@ -1,5 +1,6 @@
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import * as ConnectionRegistry from './connection-registry.js';
+import { buildRedactedMeta } from './log-redact.js';
 
 export interface TrustChangeEvent {
   changeType: 'device-registered' | 'device-revoked' | 'keys-updated';
@@ -42,11 +43,12 @@ export async function publishTrustChange(userId: string, event: TrustChangeEvent
         return;
       }
 
-      console.warn('trust-change delivery failed', {
+      console.warn('trust-change delivery failed', buildRedactedMeta({
         userId,
         connectionId: connection.connectionId,
         errorName: (error as { name?: string }).name ?? 'UnknownError',
-      });
+        eventType: 'trust-change',
+      }));
     }
   }));
 }

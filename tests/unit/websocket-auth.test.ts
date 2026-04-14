@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/auth/auth-guard.js');
 vi.mock('../../src/devices/device-service.js');
@@ -9,11 +9,23 @@ import { extractWebSocketContext } from '../../src/auth/websocket-auth.js';
 import { DeviceStatus } from '../../src/devices/device-model.js';
 
 describe('websocket-auth', () => {
+  let originalStage: string | undefined;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    originalStage = process.env.STAGE;
+    process.env.STAGE = 'staging';
   });
 
-  it('extracts user and device context from connection event with query string token', async () => {
+  afterEach(() => {
+    if (originalStage === undefined) {
+      delete process.env.STAGE;
+    } else {
+      process.env.STAGE = originalStage;
+    }
+  });
+
+  it('extracts user and device context from connection event with query string token (non-prod)', async () => {
     vi.mocked(requireAuth).mockResolvedValue({
       sub: 'user-123',
       tokenUse: 'access',
@@ -102,6 +114,59 @@ describe('websocket-auth', () => {
     await extractWebSocketContext(event as any);
 
     expect(requireAuth).toHaveBeenCalledWith('Bearer header-token');
+  });
+
+  it('rejects query-token fallback in production with AUTH_TOKEN_MISSING_OR_MALFORMED', async () => {
+    process.env.STAGE = 'production';
+
+    const event = {
+      requestContext: { connectionId: 'conn-prod' },
+      queryStringParameters: {
+        token: 'valid-jwt-token',
+        deviceId: 'device-456',
+      },
+      headers: null,
+    };
+
+    await expect(extractWebSocketContext(event as any)).rejects.toMatchObject({
+      code: 'AUTH_TOKEN_MISSING_OR_MALFORMED',
+      statusCode: 401,
+    });
+
+    // requireAuth should NOT be called — rejected before verification
+    expect(requireAuth).not.toHaveBeenCalled();
+  });
+
+  it('accepts Authorization header in production', async () => {
+    process.env.STAGE = 'production';
+
+    vi.mocked(requireAuth).mockResolvedValue({
+      sub: 'user-prod',
+      tokenUse: 'access',
+    });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      {
+        userId: 'user-prod',
+        deviceId: 'dev-prod',
+        status: DeviceStatus.TRUSTED,
+        registeredAt: '2026-04-01T00:00:00.000Z',
+        lastSeenAt: '2026-04-01T00:00:00.000Z',
+      },
+    ] as any);
+
+    const event = {
+      requestContext: { connectionId: 'conn-prod' },
+      headers: { Authorization: 'Bearer prod-header-token' },
+      queryStringParameters: { deviceId: 'dev-prod' },
+    };
+
+    const ctx = await extractWebSocketContext(event as any);
+
+    expect(ctx).toEqual({
+      userId: 'user-prod',
+      deviceId: 'dev-prod',
+      connectionId: 'conn-prod',
+    });
   });
 
   it('throws when deviceId is missing from query parameters', async () => {

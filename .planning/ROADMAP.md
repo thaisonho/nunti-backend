@@ -48,7 +48,24 @@ Plans:
 	1. Runtime and deployment roles operate with least-privilege permissions and deny overbroad access paths.
 	2. JWT validation rejects tokens that violate issuer, audience, claim, or context rules required by each protected route.
 	3. Secrets and sensitive metadata are managed through approved secret stores, and logs default to redacted metadata output.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md - Least-privilege deployment and runtime IAM boundaries with environment-specific OIDC roles.
+- [ ] 07-02-PLAN.md - Production-safe auth, secret resolution, and realtime log redaction.
+
+### Phase 07.1: Production Infrastructure Enablement (INSERTED)
+
+**Goal:** Production AWS infrastructure setup focuses on establishing production-level networking, compute environment, database replication, and infrastructure components that go beyond the basic deployment foundation established in Phase 6.
+**Requirements**: None (urgent work for v1.1 launch readiness)
+**Depends on:** Phase 7
+**Plans:** 4/4 plans complete
+
+Plans:
+- [x] 07.1-01-PLAN.md — Production VPC, subnets, NAT gateways, and security groups with least-privilege access
+- [x] 07.1-02-PLAN.md — DynamoDB resilience with point-in-time recovery, daily backups, and backup scripts
+- [x] 07.1-03-PLAN.md — Production Cognito User Pool with strict password policies and separate identity namespace
+- [x] 07.1-04-PLAN.md — Route53 health checks, CloudFront CDN with WAF, and DNS configuration
 
 ### Phase 8: Realtime Reliability Controls
 **Goal**: Realtime delivery remains stable under stale connections and burst traffic without retry amplification.
@@ -98,7 +115,7 @@ Phases execute in numeric order: 6 -> 6.1 -> 6.2 -> 7 -> 7.1 -> 8 -> ...
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 6. Deployment Foundation and Promotion Path | 0/0 | Not started | - |
-| 7. Security Hardening for Live Runtime | 0/0 | Not started | - |
+| 7. Security Hardening for Live Runtime | 0/2 | Not started | - |
 | 8. Realtime Reliability Controls | 0/0 | Not started | - |
 | 9. Data Correctness Under Retry Semantics | 0/0 | Not started | - |
 | 10. Live AWS Runtime Validation Gates | 0/0 | Not started | - |

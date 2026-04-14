@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Nunti Backend Stack
+  Nunti Backend Stack — least-privilege runtime IAM
 
 Parameters:
   CognitoUserPoolId:
@@ -15,12 +15,117 @@ Parameters:
     Type: String
   MessagesTableName:
     Type: String
+  ConnectionsTableName:
+    Type: String
+    Default: nunti-connections
   Stage:
     Type: String
     Default: staging
+    AllowedValues:
+      - staging
+      - production
+  # Production VPC & Networking Parameters
+  ProductionVpcCidr:
+    Type: String
+    Default: "10.1.0.0/16"
+    Description: CIDR block for production VPC
+  ProductionPrivateSubnet1Cidr:
+    Type: String
+    Default: "10.1.1.0/24"
+    Description: CIDR block for production private subnet 1
+  ProductionPrivateSubnet2Cidr:
+    Type: String
+    Default: "10.1.2.0/24"
+    Description: CIDR block for production private subnet 2
+  ProductionPublicSubnetCidr:
+    Type: String
+    Default: "10.1.0.0/24"
+    Description: CIDR block for production public subnet
+  LambdaSecurityGroupIngressCIDR:
+    Type: String
+    Default: "10.1.0.0/16"
+    Description: CIDR for Lambda security group ingress
+  # DynamoDB Resilience Parameters
+  DynamoDBBillingMode:
+    Type: String
+    Default: PAY_PER_REQUEST
+    AllowedValues:
+      - PAY_PER_REQUEST
+      - PROVISIONED
+    Description: DynamoDB billing mode (on-demand or provisioned)
+  DynamoDBProvisionedReadCapacity:
+    Type: Number
+    Default: 100
+    Description: Provisioned read capacity (only used if BillingMode=PROVISIONED)
+  DynamoDBProvisionedWriteCapacity:
+    Type: Number
+    Default: 100
+    Description: Provisioned write capacity (only used if BillingMode=PROVISIONED)
+  BackupRetentionDays:
+    Type: Number
+    Default: 7
+    MinValue: 7
+    Description: Backup retention period in days (minimum 7)
+  # Cognito Resilience/Prod Parameters
+  ProductionCognitoEmailAttribute:
+    Type: String
+    Default: email
+    Description: Attribute required for Cognito user pool
+  CognitoPasswordMinLength:
+    Type: Number
+    Default: 12
+    Description: Minimum length for Cognito password
+  RequireCognitoMFA:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Require MFA for Cognito users (optional vs on)
+  # DNS and CDN Parameters
+  Route53HostedZoneId:
+    Type: String
+    Default: "Z123ABCDEFGHIJ"
+    Description: Route53 hosted zone for production domain
+  ProductionDomainName:
+    Type: String
+    Default: "api.example.com"
+    Description: Production domain (e.g., api.example.com)
+  HealthCheckInterval:
+    Type: Number
+    Default: 30
+    AllowedValues: [10, 30]
+    Description: Seconds between checks
+  HealthCheckFailureThreshold:
+    Type: Number
+    Default: 3
+    Description: Minimum failures to mark unhealthy
+  CloudFrontDefaultTTL:
+    Type: Number
+    Default: 0
+    Description: Seconds to cache responses (default 0 for dynamic)
+  CloudFrontMaxTTL:
+    Type: Number
+    Default: 3600
+    Description: Maximum cache duration
+  CloudFrontMinTTL:
+    Type: Number
+    Default: 0
+    Description: Minimum cache duration
+  ProductionWafWebAclArn:
+    Type: String
+    Default: ""
+    Description: ARN of a global WAF WebACL created in us-east-1 (for CloudFront)
+  ApiGatewayDomainName:
+    Type: String
+    Default: ""
+    Description: API Gateway Domain Name (e.g. xxxx.execute-api.region.amazonaws.com)
 
 Globals:
   Function:
+    Runtime: nodejs22.x
+    Timeout: 30
+    MemorySize: 256
     Environment:
       Variables:
         COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
@@ -28,10 +133,716 @@ Globals:
         COGNITO_REGION: !Ref CognitoRegion
         DEVICES_TABLE_NAME: !Ref DevicesTableName
         MESSAGES_TABLE_NAME: !Ref MessagesTableName
+        CONNECTIONS_TABLE_NAME: !Ref ConnectionsTableName
         STAGE: !Ref Stage
 
 Resources:
+  # ---- IAM: Least-privilege runtime role ----
+  NuntiRuntimeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "nunti-runtime-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # CloudWatch Logs only — no broad Lambda or admin policies
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DynamoDBTableAccess
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DevicesTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DevicesTableName}/index/*"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MessagesTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MessagesTableName}/index/*"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ConnectionsTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ConnectionsTableName}/index/*"
+        - PolicyName: WebSocketManagement
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ApiGatewayManagement
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource:
+                  - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/@connections/*"
+
+  # ---- Placeholder table (validates template structure) ----
   DummyTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: !Sub "nunti-dummy-${Stage}"
+
+  # ==== Production DynamoDB Tables (PITR enabled) ====
+  DevicesTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref DevicesTableName
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceId
+          KeyType: RANGE
+      BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
+
+  MessagesTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref MessagesTableName
+      AttributeDefinitions:
+        - AttributeName: recipientDeviceKey
+          AttributeType: S
+        - AttributeName: sortKey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: recipientDeviceKey
+          KeyType: HASH
+        - AttributeName: sortKey
+          KeyType: RANGE
+      BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
+
+  ConnectionsTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref ConnectionsTableName
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
+
+  # ==== Production VPC & Networking ====
+  ProductionVpc:
+    Type: AWS::EC2::VPC
+    Condition: IsProduction
+    Properties:
+      CidrBlock: !Ref ProductionVpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: nunti-production-vpc
+        - Key: Environment
+          Value: production
+
+  ProductionPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      CidrBlock: !Ref ProductionPrivateSubnet1Cidr
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: nunti-production-private-1
+        - Key: Environment
+          Value: production
+
+  ProductionPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      CidrBlock: !Ref ProductionPrivateSubnet2Cidr
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: nunti-production-private-2
+        - Key: Environment
+          Value: production
+
+  ProductionPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      CidrBlock: !Ref ProductionPublicSubnetCidr
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: nunti-production-public
+        - Key: Environment
+          Value: production
+
+  ProductionInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Condition: IsProduction
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nunti-production-igw
+        - Key: Environment
+          Value: production
+
+  AttachProductionIgw:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Condition: IsProduction
+    Properties:
+      InternetGatewayId: !Ref ProductionInternetGateway
+      VpcId: !Ref ProductionVpc
+
+  ProductionNatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Condition: IsProduction
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: nunti-production-nat-eip
+        - Key: Environment
+          Value: production
+
+  ProductionNatGateway:
+    Type: AWS::EC2::NatGateway
+    Condition: IsProduction
+    Properties:
+      AllocationId: !GetAtt ProductionNatGatewayEIP.AllocationId
+      SubnetId: !Ref ProductionPublicSubnet
+      Tags:
+        - Key: Name
+          Value: nunti-production-nat
+        - Key: Environment
+          Value: production
+
+  ProductionPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      Tags:
+        - Key: Name
+          Value: nunti-production-public-rt
+        - Key: Environment
+          Value: production
+
+  ProductionPublicRoute:
+    Type: AWS::EC2::Route
+    Condition: IsProduction
+    DependsOn: AttachProductionIgw
+    Properties:
+      RouteTableId: !Ref ProductionPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ProductionInternetGateway
+
+  ProductionPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      Tags:
+        - Key: Name
+          Value: nunti-production-private-rt
+        - Key: Environment
+          Value: production
+
+  ProductionPrivateRoute:
+    Type: AWS::EC2::Route
+    Condition: IsProduction
+    Properties:
+      RouteTableId: !Ref ProductionPrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref ProductionNatGateway
+
+  SubnetRouteTableAssociationPublic:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref ProductionPublicSubnet
+      RouteTableId: !Ref ProductionPublicRouteTable
+
+  SubnetRouteTableAssociationPrivate1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref ProductionPrivateSubnet1
+      RouteTableId: !Ref ProductionPrivateRouteTable
+
+  SubnetRouteTableAssociationPrivate2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref ProductionPrivateSubnet2
+      RouteTableId: !Ref ProductionPrivateRouteTable
+
+  # ==== Production Security Groups (Least-Privilege) ====
+  ProductionLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsProduction
+    Properties:
+      GroupDescription: Production Lambda least-privilege security group
+      VpcId: !Ref ProductionVpc
+      SecurityGroupEgress:
+        - Description: HTTPS to external APIs (Cognito, etc.)
+          CidrIp: 0.0.0.0/0
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+        - Description: DNS resolution
+          CidrIp: 0.0.0.0/0
+          FromPort: 53
+          ToPort: 53
+          IpProtocol: udp
+      Tags:
+        - Key: Name
+          Value: nunti-production-lambda-sg
+        - Key: Environment
+          Value: production
+
+  ProductionDynamoDBVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref ProductionVpc
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref ProductionPrivateRouteTable
+
+  ProductionApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsProduction
+    Properties:
+      GroupDescription: Production API Gateway security group
+      VpcId: !Ref ProductionVpc
+      SecurityGroupIngress:
+        - Description: HTTPS from public (CloudFront edge)
+          CidrIp: 0.0.0.0/0
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+      Tags:
+        - Key: Name
+          Value: nunti-production-api-sg
+        - Key: Environment
+          Value: production
+
+  # ==== Production Cognito User Pool ====
+  ProductionCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Condition: IsProduction
+    Properties:
+      UserPoolName: nunti-production-user-pool
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: false
+        - Name: phone_number
+          AttributeDataType: String
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: !Ref CognitoPasswordMinLength
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 1
+      MFAConfiguration: !If [RequireMFA, ON, OFF]
+      EnabledMfas:
+        - SOFTWARE_TOKEN_MFA
+        - SMS_MFA
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate:
+          - email
+          - phone_number
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: false
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: SecurityLevel
+          Value: strict
+
+  ProductionApiHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Condition: IsProduction
+    Properties:
+      Type: HTTPS
+      Port: 443
+      ResourcePath: /health  # API Gateway endpoint paths depend on Lambda configuration
+      RequestInterval: !Ref HealthCheckInterval
+      FailureThreshold: !Ref HealthCheckFailureThreshold
+      MeasureLatency: true
+      EnableSNI: true
+      FullyQualifiedDomainName: !Ref ApiGatewayDomainName
+      Tags:
+        - Key: Name
+          Value: nunti-production-api-health
+        - Key: Environment
+          Value: production
+
+  ProductionRoute53HealthCheckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProduction
+    Properties:
+      AlarmName: nunti-production-api-health-down
+      AlarmDescription: Alert when production API Gateway health check fails
+      MetricName: HealthCheckStatus
+      Namespace: AWS/Route53
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+        - Name: HealthCheckId
+          Value: !Ref ProductionApiHealthCheck
+      TreatMissingData: breaching
+
+  ProductionRoute53DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: IsProduction
+    Properties:
+      HostedZoneId: !Ref Route53HostedZoneId
+      Name: !Ref ProductionDomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ProductionCloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront's hosted zone ID (constant)
+        EvaluateTargetHealth: false
+      HealthCheckId: !Ref ProductionApiHealthCheck
+      SetIdentifier: primary
+      Failover: PRIMARY
+
+  ProductionCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: IsProduction
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: /
+        HttpVersion: http2and3
+        
+        # Origin configuration pointing to API Gateway
+        Origins:
+          - Id: ApiGatewayOrigin
+            DomainName: !Ref ApiGatewayDomainName
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            OriginShield:
+              Enabled: true
+              OriginShieldRegion: !Ref AWS::Region
+
+        # Default cache behavior for all requests
+        DefaultCacheBehavior:
+          TargetOriginId: ApiGatewayOrigin
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+          CacheMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # Managed-CachingDisabled for dynamic API endpoints
+          OriginRequestPolicyId: "216adef6-5c7f-47e4-b340-823c8e510848" # Managed-AllViewerExceptHostHeader
+          Compress: true
+          FunctionAssociations:
+            - EventType: viewer-response
+              FunctionARN: !GetAtt CloudFrontSecurityHeadersFunction.FunctionARN
+
+        # WebSocket cache behavior (if Phase 8+ needs WebSocket specifically)
+        CacheBehaviors:
+          - PathPattern: "/ws/*"
+            TargetOriginId: ApiGatewayOrigin
+            AllowedMethods:
+              - GET
+              - HEAD
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CacheMethods:
+              - GET
+              - HEAD
+            ViewerProtocolPolicy: https-only
+            CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+            OriginRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewer
+            Compress: false  # WebSocket doesn't benefit from compression
+
+        # Logging
+        Logging:
+          Bucket: !GetAtt CloudFrontLogsBucket.DomainName
+          IncludeCookies: false
+          Prefix: cloudfront-logs/
+
+        # Price class (cost optimization: North America + Europe only)
+        PriceClass: PriceClass_100
+
+        # AWS Shield Standard (included free with CloudFront)
+        WebACLId: !If [HasWaf, !Ref ProductionWafWebAclArn, !Ref "AWS::NoValue"]
+
+        # Security headers and restrictions
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: /error/403.html
+            ErrorCachingMinTTL: 60
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /error/404.html
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 500
+            ResponseCode: 500
+            ResponsePagePath: /error/500.html
+            ErrorCachingMinTTL: 30
+
+        Comment: Production CloudFront distribution for API Gateway with caching and DDoS protection
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: CDN
+          Value: CloudFront
+
+  CloudFrontSecurityHeadersFunction:
+    Type: AWS::CloudFront::Function
+    Condition: IsProduction
+    Properties:
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+            var response = event.response;
+            var headers = response.headers;
+
+            headers['strict-transport-security'] = {value: 'max-age=31536000; includeSubDomains; preload'};
+            headers['x-content-type-options'] = {value: 'nosniff'};
+            headers['x-frame-options'] = {value: 'DENY'};
+            headers['x-xss-protection'] = {value: '1; mode=block'};
+            headers['referrer-policy'] = {value: 'strict-origin-when-cross-origin'};
+            headers['content-security-policy'] = {value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"};
+
+            return response;
+        }
+      FunctionConfig:
+        Comment: Add security headers to CloudFront responses
+        Runtime: cloudfront-js-1.0
+      Name: nunti-cloudfront-security-headers
+
+  CloudFrontLogsBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsProduction
+    Properties:
+      BucketName: !Sub "nunti-cloudfront-logs-${AWS::AccountId}-production"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldLogs
+            Status: Enabled
+            ExpirationInDays: 90
+            NoncurrentVersionExpirationInDays: 30
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: Purpose
+          Value: CloudFront logging
+
+  CloudFrontLogsS3Policy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProduction
+    Properties:
+      Bucket: !Ref CloudFrontLogsBucket
+      PolicyText:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub "${CloudFrontLogsBucket.Arn}/*"
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt CloudFrontLogsBucket.Arn
+
+  ProductionCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Condition: IsProduction
+    Properties:
+      ClientName: nunti-production-app
+      UserPoolId: !Ref ProductionCognitoUserPool
+      GenerateSecret: true
+      AllowedOAuthFlows:
+        - authorization_code
+      AllowedOAuthScopes:
+        - email
+        - openid
+      AllowedOAuthFlowsUserPoolClient: true
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+      PreventUserExistenceErrors: LEGACY
+      RefreshTokenValidity: 30
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: hours
+        IdToken: hours
+      SupportedIdentityProviders:
+        - COGNITO
+      EnableTokenRevocation: true
+
+Conditions:
+  IsProduction: !Equals [!Ref Stage, "production"]
+  UseProvisioned: !Equals [!Ref DynamoDBBillingMode, "PROVISIONED"]
+  RequireMFA: !Equals [!Ref RequireCognitoMFA, "true"]
+  HasWaf: !Not [!Equals [!Ref ProductionWafWebAclArn, ""]]
+
+Outputs:
+  ProductionVpcId:
+    Condition: IsProduction
+    Value: !Ref ProductionVpc
+    Export:
+      Name: !Sub "nunti-vpc-id-${Stage}"
+  ProductionSubnet1Id:
+    Condition: IsProduction
+    Value: !Ref ProductionPrivateSubnet1
+    Export:
+      Name: !Sub "nunti-subnet1-id-${Stage}"
+  ProductionSubnet2Id:
+    Condition: IsProduction
+    Value: !Ref ProductionPrivateSubnet2
+    Export:
+      Name: !Sub "nunti-subnet2-id-${Stage}"
+  ProductionLambdaSecurityGroupId:
+    Condition: IsProduction
+    Value: !Ref ProductionLambdaSecurityGroup
+    Export:
+      Name: !Sub "nunti-lambda-sg-id-${Stage}"
+  DevicesTableArn:
+    Condition: IsProduction
+    Value: !GetAtt DevicesTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-devices-table-arn-${Stage}"
+  MessagesTableArn:
+    Condition: IsProduction
+    Value: !GetAtt MessagesTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-messages-table-arn-${Stage}"
+  ConnectionsTableArn:
+    Condition: IsProduction
+    Value: !GetAtt ConnectionsTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-connections-table-arn-${Stage}"
+  ProductionCognitoUserPoolId:
+    Condition: IsProduction
+    Value: !Ref ProductionCognitoUserPool
+    Export:
+      Name: !Sub "nunti-cognito-user-pool-id-${Stage}"
+  ProductionCognitoAppClientId:
+    Condition: IsProduction
+    Value: !Ref ProductionCognitoUserPoolClient
+    Export:
+      Name: !Sub "nunti-cognito-app-client-id-${Stage}"
+  ProductionCognitoIssuer:
+    Condition: IsProduction
+    Value: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${ProductionCognitoUserPool}"
+    Export:
+      Name: !Sub "nunti-cognito-issuer-${Stage}"
+  ProductionCloudFrontDomainName:
+    Condition: IsProduction
+    Value: !GetAtt ProductionCloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub "nunti-cloudfront-domain-${Stage}"
+  ProductionCloudFrontDistributionId:
+    Condition: IsProduction
+    Value: !Ref ProductionCloudFrontDistribution
+    Export:
+      Name: !Sub "nunti-cloudfront-distribution-id-${Stage}"

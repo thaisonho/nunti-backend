@@ -1,11 +1,32 @@
 {
   "Parameters": {
-    "CognitoUserPoolId": "production-pool-id",
-    "CognitoAppClientId": "production-client-id",
+    "CognitoPasswordMinLength": "12",
+    "RequireCognitoMFA": "true",
+    "CognitoUserPoolId": "{output-from-first-deployment}",
+    "CognitoAppClientId": "{output-from-first-deployment}",
+    "Route53HostedZoneId": "Z123ABCDEFGHIJ",
+    "ProductionDomainName": "api.example.com",
+    "HealthCheckInterval": "30",
+    "HealthCheckFailureThreshold": "3",
+    "CloudFrontDefaultTTL": "0",
+    "CloudFrontMaxTTL": "3600",
+    "CloudFrontMinTTL": "0",
     "CognitoRegion": "ap-southeast-1",
     "DevicesTableName": "nunti-devices-production",
     "MessagesTableName": "nunti-messages-production",
-    "Stage": "production"
+    "ConnectionsTableName": "nunti-connections-production",
+    "Stage": "production",
+    "ProductionVpcCidr": "10.1.0.0/16",
+    "ProductionPrivateSubnet1Cidr": "10.1.1.0/24",
+    "ProductionPrivateSubnet2Cidr": "10.1.2.0/24",
+    "ProductionPublicSubnetCidr": "10.1.0.0/24",
+    "LambdaSecurityGroupIngressCIDR": "10.1.0.0/16",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBProvisionedReadCapacity": "100",
+    "DynamoDBProvisionedWriteCapacity": "100",
+    "BackupRetentionDays": "7",
+    "ApiGatewayDomainName": "xxxxxxxx.execute-api.ap-southeast-1.amazonaws.com",
+    "ProductionWafWebAclArn": "arn:aws:wafv2:us-east-1:123456789012:global/webacl/xxxx"
   },
   "StackName": "nunti-backend-production"
 }

@@ -7,6 +7,7 @@ tools:
   glob: true
   grep: true
   question: true
+  skill: true
   task: true
 ---
 <objective>

@@ -1,20 +1,15 @@
 ---
-status: testing
+status: complete
 phase: 06-deployment-foundation-and-promotion-path
 source: [.planning/phases/06-deployment-foundation-and-promotion-path/06-01-SUMMARY.md, .planning/phases/06-deployment-foundation-and-promotion-path/06-02-SUMMARY.md]
 started: 2026-04-03T04:13:58Z
-updated: 2026-04-08T00:00:00Z
+updated: 2026-04-09T00:30:00Z
 ---
 
 ## Current Test
 <!-- OVERWRITE each test - shows where we are -->
 
-number: 2
-name: Deploy Staging From Artifact
-expected: |
-  Running scripts/deploy/deploy-stage.sh deploys staging from the packaged artifact and explicit parameter file,
-  without rebuilding templates, and completes with a successful SAM deploy result.
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -24,30 +19,30 @@ result: pass
 
 ### 2. Deploy Staging From Artifact
 expected: Running scripts/deploy/deploy-stage.sh deploys staging from the packaged artifact and explicit parameter file, without rebuilding templates, and completes with a successful SAM deploy result.
-result: [pending]
+result: pass
 
 ### 3. Tag-Triggered Staging Workflow
 expected: Creating a v* tag triggers .github/workflows/release-deploy.yml, and workflow artifacts include both release-manifest.json and packaged.yaml from the same release build.
-result: [pending]
+result: pass
 
 ### 4. Manual Production Promotion Workflow
 expected: Manually dispatching .github/workflows/release-promote.yml for an approved release version validates manifest provenance and promotes that exact packaged artifact to production.
-result: [pending]
+result: pass
 
 ### 5. Manual Rollback Workflow
 expected: Manually dispatching .github/workflows/release-rollback.yml with a prior release version validates the selected manifest and deploys rollback to the target environment successfully.
-result: [pending]
+result: pass
 
 ### 6. Runbook Operational Clarity
 expected: docs/deployment/release-promotion-runbook.md provides complete, executable operator steps for promotion and rollback that match workflow inputs and scripts.
-result: [pending]
+result: pass
 
 ## Summary
 
 total: 6
-passed: 1
+passed: 6
 issues: 0
-pending: 5
+pending: 0
 skipped: 0
 
 ## Gaps
