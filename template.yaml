@@ -628,7 +628,7 @@ Resources:
           Compress: true
           FunctionAssociations:
             - EventType: viewer-response
-              FunctionARN: !GetAtt CloudFrontSecurityHeadersFunction.FunctionMetadata.FunctionARN
+              FunctionARN: !GetAtt CloudFrontSecurityHeadersFunction.FunctionARN
 
         # WebSocket cache behavior (if Phase 8+ needs WebSocket specifically)
         CacheBehaviors:
