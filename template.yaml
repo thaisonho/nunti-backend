@@ -752,7 +752,7 @@ Resources:
       UserPoolId: !Ref ProductionCognitoUserPool
       GenerateSecret: true
       AllowedOAuthFlows:
-        - authorization_code
+        - code
       AllowedOAuthScopes:
         - email
         - openid
