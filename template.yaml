@@ -507,7 +507,7 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
           TemporaryPasswordValidityDays: 1
-      MfaConfiguration: !If [RequireMFA, ON, OFF]
+      MfaConfiguration: !If [RequireMFA, "ON", "OFF"]
       EnabledMfas:
         - SOFTWARE_TOKEN_MFA
       AccountRecoverySetting:
