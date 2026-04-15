@@ -629,12 +629,13 @@ Resources:
           - PathPattern: "/ws/*"
             TargetOriginId: ApiGatewayOrigin
             AllowedMethods:
-              - GET
               - HEAD
-              - PUT
-              - POST
-              - PATCH
               - DELETE
+              - POST
+              - GET
+              - OPTIONS
+              - PUT
+              - PATCH
             CachedMethods:
               - GET
               - HEAD
