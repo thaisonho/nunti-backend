@@ -707,6 +707,9 @@ Resources:
     Condition: IsProduction
     Properties:
       BucketName: !Sub "nunti-cloudfront-logs-${AWS::AccountId}-production"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
