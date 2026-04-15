@@ -4,8 +4,8 @@
     "RequireCognitoMFA": "true",
     "CognitoUserPoolId": "{output-from-first-deployment}",
     "CognitoAppClientId": "{output-from-first-deployment}",
-    "Route53HostedZoneId": "Z123ABCDEFGHIJ",
-    "ProductionDomainName": "api.example.com",
+    "Route53HostedZoneId": "Z09294951TK5I26URLG8T",
+    "ProductionDomainName": "api.nunti.jsonho.com",
     "HealthCheckInterval": "30",
     "HealthCheckFailureThreshold": "3",
     "CloudFrontDefaultTTL": "0",
@@ -26,7 +26,7 @@
     "DynamoDBProvisionedWriteCapacity": "100",
     "BackupRetentionDays": "7",
     "ApiGatewayDomainName": "xxxxxxxx.execute-api.ap-southeast-1.amazonaws.com",
-    "ProductionWafWebAclArn": "arn:aws:wafv2:us-east-1:123456789012:global/webacl/xxxx"
+    "ProductionWafWebAclArn": ""
   },
   "StackName": "nunti-backend-production"
 }
