@@ -56,10 +56,13 @@ if [ "$CALCULATED_SHA" != "$TEMPLATE_SHA" ]; then
     exit 1
 fi
 
-# Extract parameters from json
+# Extract parameters from json (skip empty values to avoid SAM CLI parsing bugs)
 PARAMS=$(node -e "
 const params = require('./$PARAMS_FILE').Parameters;
-const str = Object.keys(params).map(k => k + '=\"' + params[k] + '\"').join(' ');
+const str = Object.keys(params)
+    .filter(k => params[k] !== '')
+    .map(k => k + '=\"' + params[k] + '\"')
+    .join(' ');
 console.log(str);
 ")
 
