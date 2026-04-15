@@ -524,6 +524,9 @@ Resources:
         AttributesRequireVerificationBeforeUpdate:
           - email
           - phone_number
+      AutoVerifiedAttributes:
+        - email
+        - phone_number
       DeviceConfiguration:
         ChallengeRequiredOnNewDevice: true
         DeviceOnlyRememberedOnUserPrompt: false
