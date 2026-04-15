@@ -59,7 +59,7 @@ fi
 # Extract parameters from json
 PARAMS=$(node -e "
 const params = require('./$PARAMS_FILE').Parameters;
-const str = Object.keys(params).map(k => k + '=' + params[k]).join(' ');
+const str = Object.keys(params).map(k => k + '=\"' + params[k] + '\"').join(' ');
 console.log(str);
 ")
 
@@ -67,12 +67,13 @@ STACK_NAME=$(node -e "console.log(require('./$PARAMS_FILE').StackName)")
 
 echo "Promoting release $RELEASE_VERSION to $STACK_NAME using template $TEMPLATE_FILE..."
 
-sam deploy \
-    --template-file "$TEMPLATE_FILE" \
-  --stack-name "$STACK_NAME" \
+# sam deploy needs exact arguments splitting
+eval "sam deploy \
+  --template-file \"$TEMPLATE_FILE\" \
+  --stack-name \"$STACK_NAME\" \
   --parameter-overrides $PARAMS \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --no-confirm-changeset \
-  --no-fail-on-empty-changeset
+  --no-fail-on-empty-changeset"
 
 echo "Promotion complete."
