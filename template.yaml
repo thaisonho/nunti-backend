@@ -581,6 +581,7 @@ Resources:
   ProductionCloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Condition: IsProduction
+    DependsOn: CloudFrontLogsS3Policy
     Properties:
       DistributionConfig:
         Enabled: true
