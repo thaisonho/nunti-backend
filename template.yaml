@@ -510,7 +510,7 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
           TemporaryPasswordValidityDays: 1
-      MFAConfiguration: !If [RequireMFA, ON, OFF]
+      MfaConfiguration: !If [RequireMFA, ON, OFF]
       EnabledMfas:
         - SOFTWARE_TOKEN_MFA
         - SMS_MFA
@@ -527,25 +527,24 @@ Resources:
       DeviceConfiguration:
         ChallengeRequiredOnNewDevice: true
         DeviceOnlyRememberedOnUserPrompt: false
-      Tags:
-        - Key: Environment
-          Value: production
-        - Key: SecurityLevel
-          Value: strict
+      UserPoolTags:
+        Environment: production
+        SecurityLevel: strict
 
   ProductionApiHealthCheck:
     Type: AWS::Route53::HealthCheck
     Condition: IsProduction
     Properties:
-      Type: HTTPS
-      Port: 443
-      ResourcePath: /health  # API Gateway endpoint paths depend on Lambda configuration
-      RequestInterval: !Ref HealthCheckInterval
-      FailureThreshold: !Ref HealthCheckFailureThreshold
-      MeasureLatency: true
-      EnableSNI: true
-      FullyQualifiedDomainName: !Ref ApiGatewayDomainName
-      Tags:
+      HealthCheckConfig:
+        Type: HTTPS
+        Port: 443
+        ResourcePath: /health
+        RequestInterval: !Ref HealthCheckInterval
+        FailureThreshold: !Ref HealthCheckFailureThreshold
+        MeasureLatency: true
+        EnableSNI: true
+        FullyQualifiedDomainName: !Ref ApiGatewayDomainName
+      HealthCheckTags:
         - Key: Name
           Value: nunti-production-api-health
         - Key: Environment
@@ -618,7 +617,7 @@ Resources:
             - POST
             - PATCH
             - DELETE
-          CacheMethods:
+          CachedMethods:
             - GET
             - HEAD
             - OPTIONS
@@ -641,7 +640,7 @@ Resources:
               - POST
               - PATCH
               - DELETE
-            CacheMethods:
+            CachedMethods:
               - GET
               - HEAD
             ViewerProtocolPolicy: https-only
@@ -712,7 +711,6 @@ Resources:
     Condition: IsProduction
     Properties:
       BucketName: !Sub "nunti-cloudfront-logs-${AWS::AccountId}-production"
-      AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -737,7 +735,7 @@ Resources:
     Condition: IsProduction
     Properties:
       Bucket: !Ref CloudFrontLogsBucket
-      PolicyText:
+      PolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
