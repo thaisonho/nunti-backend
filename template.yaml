@@ -760,7 +760,7 @@ Resources:
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
         - USER_PASSWORD_AUTH
-      CallbackUrls:
+      CallbackURLs:
         - !Sub "https://${ProductionDomainName}/callback"
         - "http://localhost:3000/callback"
       PreventUserExistenceErrors: LEGACY
