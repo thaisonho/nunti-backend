@@ -2,8 +2,8 @@
   "Parameters": {
     "CognitoPasswordMinLength": "12",
     "RequireCognitoMFA": "true",
-    "CognitoUserPoolId": "{output-from-first-deployment}",
-    "CognitoAppClientId": "{output-from-first-deployment}",
+    "CognitoUserPoolId": "dummy-user-pool",
+    "CognitoAppClientId": "dummy-client-id",
     "Route53HostedZoneId": "Z09294951TK5I26URLG8T",
     "ProductionDomainName": "api.nunti.jsonho.com",
     "HealthCheckInterval": "30",
