@@ -65,10 +65,10 @@ jobs:
 
       - name: Smoke Test Production Infrastructure
         env:
-          PRODUCTION_HEALTHCHECK_URL: ${{ vars.PRODUCTION_HEALTHCHECK_URL }}
+          PRODUCTION_HEALTHCHECK_URL: ${{ vars.PRODUCTION_HEALTHCHECK_URL || secrets.PRODUCTION_HEALTHCHECK_URL }}
         run: |
           if [ -z "$PRODUCTION_HEALTHCHECK_URL" ]; then
-            echo "Missing repository variable PRODUCTION_HEALTHCHECK_URL"
+            echo "Missing PRODUCTION_HEALTHCHECK_URL (set repository variable or secret)"
             exit 1
           fi
           chmod +x scripts/deploy/smoke-test-live.sh
