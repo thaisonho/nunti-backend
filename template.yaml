@@ -120,6 +120,10 @@ Parameters:
     Type: String
     Default: ""
     Description: API Gateway Domain Name (e.g. xxxx.execute-api.region.amazonaws.com)
+  ProductionCloudFrontCertificateArn:
+    Type: String
+    Default: ""
+    Description: ACM certificate ARN in us-east-1 for ProductionDomainName (CloudFront custom domain)
 
 Globals:
   Function:
@@ -587,6 +591,16 @@ Resources:
         Enabled: true
         DefaultRootObject: /
         HttpVersion: http2and3
+        Aliases: !If
+          - HasCloudFrontCert
+          -
+            - !Ref ProductionDomainName
+          - !Ref AWS::NoValue
+        ViewerCertificate:
+          AcmCertificateArn: !If [HasCloudFrontCert, !Ref ProductionCloudFrontCertificateArn, !Ref AWS::NoValue]
+          SslSupportMethod: !If [HasCloudFrontCert, sni-only, !Ref AWS::NoValue]
+          MinimumProtocolVersion: !If [HasCloudFrontCert, TLSv1.2_2021, !Ref AWS::NoValue]
+          CloudFrontDefaultCertificate: !If [HasCloudFrontCert, !Ref AWS::NoValue, true]
         
         # Origin configuration pointing to API Gateway
         Origins:
@@ -785,6 +799,7 @@ Conditions:
   UseProvisioned: !Equals [!Ref DynamoDBBillingMode, "PROVISIONED"]
   RequireMFA: !Equals [!Ref RequireCognitoMFA, "true"]
   HasWaf: !Not [!Equals [!Ref ProductionWafWebAclArn, ""]]
+  HasCloudFrontCert: !Not [!Equals [!Ref ProductionCloudFrontCertificateArn, ""]]
 
 Outputs:
   ProductionVpcId:

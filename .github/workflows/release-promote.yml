@@ -62,3 +62,14 @@ jobs:
         run: |
           chmod +x scripts/deploy/promote-release.sh
           ./scripts/deploy/promote-release.sh ${{ inputs.releaseVersion }} "$RELEASE_MANIFEST_PATH"
+
+      - name: Smoke Test Production Infrastructure
+        env:
+          PRODUCTION_HEALTHCHECK_URL: ${{ vars.PRODUCTION_HEALTHCHECK_URL }}
+        run: |
+          if [ -z "$PRODUCTION_HEALTHCHECK_URL" ]; then
+            echo "Missing repository variable PRODUCTION_HEALTHCHECK_URL"
+            exit 1
+          fi
+          chmod +x scripts/deploy/smoke-test-live.sh
+          ./scripts/deploy/smoke-test-live.sh "$PRODUCTION_HEALTHCHECK_URL"

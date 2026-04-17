@@ -26,6 +26,7 @@
     "DynamoDBProvisionedWriteCapacity": "100",
     "BackupRetentionDays": "7",
     "ApiGatewayDomainName": "xxxxxxxx.execute-api.ap-southeast-1.amazonaws.com",
+    "ProductionCloudFrontCertificateArn": "arn:aws:acm:us-east-1:710091031015:certificate/150e0cd6-ef27-46ac-be9b-9d9398060944",
     "ProductionWafWebAclArn": ""
   },
   "StackName": "nunti-backend-production"
