@@ -21,6 +21,7 @@ import {
   LimitExceededException,
   TooManyRequestsException,
 } from "@aws-sdk/client-cognito-identity-provider";
+import { createHmac } from "crypto";
 import { getCognitoClient } from "./cognito-client.js";
 import { getConfig } from "../app/config.js";
 import { AppError } from "../app/errors.js";
@@ -56,17 +57,37 @@ export interface ResendVerificationResult {
   destination: string;
 }
 
+function computeSecretHash(
+  username: string,
+  clientId: string,
+  clientSecret?: string,
+): string | undefined {
+  if (!clientSecret || clientSecret.length === 0) {
+    return undefined;
+  }
+
+  return createHmac("sha256", clientSecret)
+    .update(`${username}${clientId}`)
+    .digest("base64");
+}
+
 /**
  * Sign up a new user with email and password.
  */
 export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   const config = getConfig();
   const client = getCognitoClient();
+  const secretHash = computeSecretHash(
+    input.email,
+    config.cognitoAppClientId,
+    config.cognitoAppClientSecret,
+  );
 
   try {
     const result = await client.send(
       new SignUpCommand({
         ClientId: config.cognitoAppClientId,
+        ...(secretHash && { SecretHash: secretHash }),
         Username: input.email,
         Password: input.password,
         UserAttributes: [
@@ -104,16 +125,24 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
 export async function signIn(input: SignInInput): Promise<SignInResult> {
   const config = getConfig();
   const client = getCognitoClient();
+  const secretHash = computeSecretHash(
+    input.email,
+    config.cognitoAppClientId,
+    config.cognitoAppClientSecret,
+  );
 
   try {
+    const authParameters: Record<string, string> = {
+      USERNAME: input.email,
+      PASSWORD: input.password,
+      ...(secretHash && { SECRET_HASH: secretHash }),
+    };
+
     const result = await client.send(
       new InitiateAuthCommand({
         AuthFlow: "USER_PASSWORD_AUTH",
         ClientId: config.cognitoAppClientId,
-        AuthParameters: {
-          USERNAME: input.email,
-          PASSWORD: input.password,
-        },
+        AuthParameters: authParameters,
       }),
     );
 
@@ -170,11 +199,17 @@ export async function resendVerification(
 ): Promise<ResendVerificationResult> {
   const config = getConfig();
   const client = getCognitoClient();
+  const secretHash = computeSecretHash(
+    input.email,
+    config.cognitoAppClientId,
+    config.cognitoAppClientSecret,
+  );
 
   try {
     const result = await client.send(
       new ResendConfirmationCodeCommand({
         ClientId: config.cognitoAppClientId,
+        ...(secretHash && { SecretHash: secretHash }),
         Username: input.email,
       }),
     );

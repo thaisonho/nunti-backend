@@ -6,6 +6,7 @@
 export interface AppConfig {
   readonly cognitoUserPoolId: string;
   readonly cognitoAppClientId: string;
+  readonly cognitoAppClientSecret?: string;
   readonly cognitoRegion: string;
   readonly devicesTableName: string;
   readonly messagesTableName: string;
@@ -28,6 +29,7 @@ export function getConfig(): AppConfig {
   cachedConfig = {
     cognitoUserPoolId: required("COGNITO_USER_POOL_ID"),
     cognitoAppClientId: required("COGNITO_APP_CLIENT_ID"),
+    cognitoAppClientSecret: process.env.COGNITO_APP_CLIENT_SECRET,
     cognitoRegion: process.env.COGNITO_REGION ?? process.env.AWS_REGION ?? "ap-southeast-1",
     devicesTableName: required("DEVICES_TABLE_NAME"),
     messagesTableName: required("MESSAGES_TABLE_NAME"),

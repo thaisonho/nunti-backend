@@ -4,7 +4,8 @@ import { isDeviceTrusted } from '../../devices/device-policy.js';
 import { AuthError } from '../../app/errors.js';
 
 interface WebSocketAuthorizerEvent {
-  methodArn: string;
+  methodArn?: string;
+  routeArn?: string;
   headers?: Record<string, string> | null;
   queryStringParameters?: Record<string, string> | null;
 }
@@ -51,9 +52,15 @@ function policy(
   };
 }
 
+function resolveResourceArn(event: WebSocketAuthorizerEvent): string {
+  return event.methodArn ?? event.routeArn ?? '*';
+}
+
 export const handler = async (
   event: WebSocketAuthorizerEvent,
 ): Promise<WebSocketAuthorizerResult> => {
+  const resourceArn = resolveResourceArn(event);
+
   try {
     const query = event.queryStringParameters ?? {};
     const headers = event.headers ?? {};
@@ -77,20 +84,20 @@ export const handler = async (
 
     const deviceId = query.deviceId;
     if (!deviceId || deviceId.length === 0) {
-      return policy('anonymous', 'Deny', event.methodArn);
+      return policy('anonymous', 'Deny', resourceArn);
     }
 
     const devices = await DeviceService.listDevices(user.sub);
     const activeDevice = devices.find((device) => device.deviceId === deviceId);
     if (!activeDevice || !isDeviceTrusted(activeDevice)) {
-      return policy('anonymous', 'Deny', event.methodArn);
+      return policy('anonymous', 'Deny', resourceArn);
     }
 
-    return policy(user.sub, 'Allow', event.methodArn, {
+    return policy(user.sub, 'Allow', resourceArn, {
       userId: user.sub,
       deviceId,
     });
   } catch {
-    return policy('anonymous', 'Deny', event.methodArn);
+    return policy('anonymous', 'Deny', resourceArn);
   }
 };

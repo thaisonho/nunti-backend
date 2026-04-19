@@ -83,4 +83,27 @@ describe('ws authorizer', () => {
 
     expect(result.policyDocument.Statement[0]?.Effect).toBe('Deny');
   });
+
+  it('uses routeArn when methodArn is missing', async () => {
+    vi.mocked(requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      {
+        userId: 'user-1',
+        deviceId: 'dev-1',
+        status: DeviceStatus.TRUSTED,
+        registeredAt: '2026-04-01T00:00:00.000Z',
+        lastSeenAt: '2026-04-01T00:00:00.000Z',
+      },
+    ] as any);
+
+    const routeArn = 'arn:aws:execute-api:ap-southeast-1:123456789012:api-id/production/$connect';
+    const result = await handler({
+      routeArn,
+      headers: { Authorization: 'Bearer token' },
+      queryStringParameters: { deviceId: 'dev-1' },
+    });
+
+    expect(result.policyDocument.Statement[0]?.Resource).toBe(routeArn);
+    expect(result.policyDocument.Statement[0]?.Effect).toBe('Allow');
+  });
 });

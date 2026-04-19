@@ -16,6 +16,7 @@ describe('config', () => {
   const touchedKeys = [
     'COGNITO_USER_POOL_ID',
     'COGNITO_APP_CLIENT_ID',
+    'COGNITO_APP_CLIENT_SECRET',
     'DEVICES_TABLE_NAME',
     'MESSAGES_TABLE_NAME',
     'COGNITO_REGION',
@@ -50,8 +51,17 @@ describe('config', () => {
 
     expect(config.cognitoUserPoolId).toBe('us-east-1_TestPool');
     expect(config.cognitoAppClientId).toBe('test-client-id');
+    expect(config.cognitoAppClientSecret).toBeUndefined();
     expect(config.devicesTableName).toBe('test-devices');
     expect(config.messagesTableName).toBe('test-messages');
+  });
+
+  it('reads optional COGNITO_APP_CLIENT_SECRET when provided', () => {
+    process.env.COGNITO_APP_CLIENT_SECRET = 'test-secret';
+
+    const config = getConfig();
+
+    expect(config.cognitoAppClientSecret).toBe('test-secret');
   });
 
   it('throws when COGNITO_USER_POOL_ID is missing', () => {
