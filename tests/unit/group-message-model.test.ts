@@ -57,6 +57,19 @@ describe('group-message-model', () => {
     expect(buildMembershipProjectionSk('2026-04-02T10:00:00.000Z', 'mev-group-1-0001'))
       .toBe('2026-04-02T10:00:00.000Z#mev-group-1-0001');
   });
+
+  it('accepts membership command payloads with route selection action field', () => {
+    const parsed = validateGroupMembershipCommandRequest({
+      action: 'group-membership',
+      requestId: 'req-1',
+      groupId: 'group-1',
+      changeType: 'member-joined',
+      targetUserId: 'user-target',
+    });
+
+    expect(parsed.requestId).toBe('req-1');
+    expect(parsed.groupId).toBe('group-1');
+  });
 });
 
 describe('group-send-model', () => {
@@ -94,6 +107,18 @@ describe('group-send-model', () => {
   it('builds group message projection sort key', () => {
     expect(buildGroupMessageProjectionSk('2026-04-02T10:00:00.000Z', 'gmsg-123'))
       .toBe('2026-04-02T10:00:00.000Z#gmsg-123');
+  });
+
+  it('accepts group send payloads with route selection action field', () => {
+    const parsed = validateGroupSendRequest({
+      action: 'groupSend',
+      groupMessageId: 'gmsg-3',
+      groupId: 'group-1',
+      ciphertext: 'encrypted-payload',
+    });
+
+    expect(parsed.groupMessageId).toBe('gmsg-3');
+    expect(parsed.groupId).toBe('group-1');
   });
 });
 

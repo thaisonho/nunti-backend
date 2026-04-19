@@ -177,8 +177,7 @@ const groupMembershipCommandRequestSchema = z
     groupId: z.string().min(1),
     changeType: z.enum(membershipChangeTypes),
     targetUserId: z.string().min(1),
-  })
-  .strict();
+  });
 
 const groupMembershipEventSchema = z
   .object({
@@ -240,8 +239,7 @@ const groupSendRequestSchema = z
       .array(attachmentEnvelopeSchema)
       .max(MAX_ATTACHMENTS_PER_MESSAGE, `Maximum ${MAX_ATTACHMENTS_PER_MESSAGE} attachments allowed`)
       .optional(),
-  })
-  .strict();
+  });
 
 export function validateGroupSendRequest(body: unknown): GroupSendRequest {
   return groupSendRequestSchema.parse(body);
