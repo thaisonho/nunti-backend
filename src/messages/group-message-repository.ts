@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { ddbDocClient } from '../devices/device-repository.js';
 import { getConfig } from '../app/config.js';
 import type {
@@ -6,6 +6,7 @@ import type {
   GroupMembershipProjection,
   GroupMemberRecord,
   GroupMemberRole,
+  GroupRecord,
   GroupMessageRecord,
   GroupMessageProjection,
   GroupMessageProjectionRecord,
@@ -43,6 +44,10 @@ function groupTimelinePk(groupId: string): string {
   return `GROUP#${groupId}`;
 }
 
+function groupMetaSk(): string {
+  return 'META#group';
+}
+
 function groupMemberPk(groupId: string): string {
   return `GROUPMEMBERS#${groupId}`;
 }
@@ -67,6 +72,88 @@ function timelineSk(serverTimestamp: string, eventId: string): string {
   return `${serverTimestamp}#${eventId}`;
 }
 
+export async function createGroup(record: GroupRecord, ownerUserId: string): Promise<void> {
+  await ddbDocClient.send(new TransactWriteCommand({
+    TransactItems: [
+      {
+        Put: {
+          TableName: getTableName(),
+          Item: {
+            pk: groupTimelinePk(record.groupId),
+            sk: groupMetaSk(),
+            ...record,
+          },
+          ConditionExpression: 'attribute_not_exists(pk) AND attribute_not_exists(sk)',
+        },
+      },
+      {
+        Put: {
+          TableName: getTableName(),
+          Item: {
+            pk: groupMemberPk(record.groupId),
+            sk: groupMemberSk(ownerUserId),
+            userId: ownerUserId,
+            role: 'owner',
+            joinedAt: record.createdAt,
+          },
+          ConditionExpression: 'attribute_not_exists(pk) AND attribute_not_exists(sk)',
+        },
+      },
+    ],
+  }));
+}
+
+export async function getGroup(groupId: string): Promise<GroupRecord | null> {
+  const result = await ddbDocClient.send(new GetCommand({
+    TableName: getTableName(),
+    Key: {
+      pk: groupTimelinePk(groupId),
+      sk: groupMetaSk(),
+    },
+    ConsistentRead: true,
+  }));
+
+  if (!result.Item) {
+    return null;
+  }
+
+  const item = result.Item as Record<string, unknown>;
+  const record: GroupRecord = {
+    groupId,
+    createdByUserId: item.createdByUserId as string,
+    createdAt: item.createdAt as string,
+    updatedAt: item.updatedAt as string,
+  };
+
+  if (typeof item.groupName === 'string' && item.groupName.length > 0) {
+    record.groupName = item.groupName;
+  }
+
+  return record;
+}
+
+export async function listGroupMembers(groupId: string): Promise<GroupMemberRecord[]> {
+  const result = await ddbDocClient.send(new QueryCommand({
+    TableName: getTableName(),
+    KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+    ExpressionAttributeValues: {
+      ':pk': groupMemberPk(groupId),
+      ':prefix': 'USER#',
+    },
+    ScanIndexForward: true,
+  }));
+
+  return (result.Items ?? []).map((item) => {
+    const record = item as Record<string, unknown>;
+    return {
+      groupId,
+      userId: record.userId as string,
+      role: parseGroupMemberRole(record.role),
+      joinedAt: typeof record.joinedAt === 'string' ? record.joinedAt : undefined,
+    };
+  });
+}
+
 export async function allocateMembershipEventId(groupId: string): Promise<string> {
   const result = await ddbDocClient.send(new UpdateCommand({
     TableName: getTableName(),
@@ -74,7 +161,10 @@ export async function allocateMembershipEventId(groupId: string): Promise<string
       pk: membershipCounterPk(groupId),
       sk: membershipCounterSk(),
     },
-    UpdateExpression: 'SET updatedAt = :now ADD sequence :inc',
+    UpdateExpression: 'ADD #sequence :inc SET updatedAt = :now',
+    ExpressionAttributeNames: {
+      '#sequence': 'sequence',
+    },
     ExpressionAttributeValues: {
       ':now': new Date().toISOString(),
       ':inc': 1,

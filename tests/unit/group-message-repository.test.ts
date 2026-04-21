@@ -18,8 +18,11 @@ vi.mock('../../src/app/config.js', () => ({
 import { ddbDocClient } from '../../src/devices/device-repository.js';
 import {
   allocateMembershipEventId,
+  createGroup,
   createMembershipEvent,
+  getGroup,
   listQueuedMembershipEvents,
+  listGroupMembers,
   markMembershipProjectionDelivered,
 } from '../../src/messages/group-message-repository.js';
 
@@ -36,6 +39,93 @@ describe('group-message-repository', () => {
     const eventId = await allocateMembershipEventId('group-1');
 
     expect(eventId).toBe('mev-group-1-000000000007');
+    const updateCall = vi.mocked(ddbDocClient.send).mock.calls[0][0];
+    expect((updateCall as any).input.UpdateExpression).toBe('ADD #sequence :inc SET updatedAt = :now');
+    expect((updateCall as any).input.ExpressionAttributeNames).toEqual({
+      '#sequence': 'sequence',
+    });
+  });
+
+  it('creates group metadata and owner membership atomically', async () => {
+    vi.mocked(ddbDocClient.send).mockResolvedValue({} as any);
+
+    await createGroup(
+      {
+        groupId: 'group-1',
+        groupName: 'Core Team',
+        createdByUserId: 'owner-1',
+        createdAt: '2026-04-21T10:00:00.000Z',
+        updatedAt: '2026-04-21T10:00:00.000Z',
+      },
+      'owner-1',
+    );
+
+    const transactCall = vi.mocked(ddbDocClient.send).mock.calls[0][0];
+    expect((transactCall as any).input.TransactItems).toHaveLength(2);
+    expect((transactCall as any).input.TransactItems[0].Put.Item.pk).toBe('GROUP#group-1');
+    expect((transactCall as any).input.TransactItems[0].Put.Item.sk).toBe('META#group');
+    expect((transactCall as any).input.TransactItems[1].Put.Item.pk).toBe('GROUPMEMBERS#group-1');
+    expect((transactCall as any).input.TransactItems[1].Put.Item.role).toBe('owner');
+  });
+
+  it('reads group metadata by groupId', async () => {
+    vi.mocked(ddbDocClient.send).mockResolvedValue({
+      Item: {
+        pk: 'GROUP#group-1',
+        sk: 'META#group',
+        groupId: 'group-1',
+        groupName: 'Core Team',
+        createdByUserId: 'owner-1',
+        createdAt: '2026-04-21T10:00:00.000Z',
+        updatedAt: '2026-04-21T10:00:00.000Z',
+      },
+    } as any);
+
+    const group = await getGroup('group-1');
+
+    expect(group).toEqual({
+      groupId: 'group-1',
+      groupName: 'Core Team',
+      createdByUserId: 'owner-1',
+      createdAt: '2026-04-21T10:00:00.000Z',
+      updatedAt: '2026-04-21T10:00:00.000Z',
+    });
+  });
+
+  it('lists group members with role and joinedAt', async () => {
+    vi.mocked(ddbDocClient.send).mockResolvedValue({
+      Items: [
+        {
+          pk: 'GROUPMEMBERS#group-1',
+          sk: 'USER#owner-1',
+          userId: 'owner-1',
+          role: 'owner',
+          joinedAt: '2026-04-21T10:00:00.000Z',
+        },
+        {
+          pk: 'GROUPMEMBERS#group-1',
+          sk: 'USER#member-1',
+          userId: 'member-1',
+          role: 'member',
+        },
+      ],
+    } as any);
+
+    const members = await listGroupMembers('group-1');
+
+    expect(members).toHaveLength(2);
+    expect(members[0]).toEqual({
+      groupId: 'group-1',
+      userId: 'owner-1',
+      role: 'owner',
+      joinedAt: '2026-04-21T10:00:00.000Z',
+    });
+    expect(members[1]).toEqual({
+      groupId: 'group-1',
+      userId: 'member-1',
+      role: 'member',
+      joinedAt: undefined,
+    });
   });
 
   it('writes canonical event, timeline row, and per-device projections', async () => {

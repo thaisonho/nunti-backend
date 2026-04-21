@@ -20,11 +20,15 @@ describe('group-message-service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(GroupMessageRepository.getGroupMember).mockResolvedValue({
-      groupId: 'group-1',
-      userId: 'actor-user',
-      role: 'admin',
-    });
+    vi.mocked(GroupMessageRepository.getGroupMember).mockImplementation(async (_groupId, userId) => (
+      userId === 'actor-user'
+        ? {
+            groupId: 'group-1',
+            userId: 'actor-user',
+            role: 'admin',
+          }
+        : null
+    ));
     vi.mocked(GroupMessageRepository.allocateMembershipEventId).mockResolvedValue('mev-group-1-000000000001');
     vi.mocked(GroupMessageRepository.createMembershipEvent).mockResolvedValue();
     vi.mocked(GroupMessageRepository.markMembershipProjectionDelivered).mockResolvedValue();

@@ -180,6 +180,10 @@ async function applyMembershipMutation(
   targetUserId: string,
 ): Promise<void> {
   if (changeType === 'member-joined') {
+    const existingMember = await GroupMessageRepository.getGroupMember(groupId, targetUserId);
+    if (existingMember) {
+      return;
+    }
     await GroupMessageRepository.addGroupMember(groupId, targetUserId);
     return;
   }

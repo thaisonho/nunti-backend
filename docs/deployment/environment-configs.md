@@ -108,3 +108,34 @@ Key highlights:
 - **Security Groups:** Lambda → DynamoDB restricted to HTTPS on DynamoDB subnet CIDR only
 - **Multi-AZ:** Private subnets span 2 availability zones for resilience
 
+---
+
+## 5. Group HTTP endpoints deployment checklist
+
+When wiring the group management HTTP endpoints in API Gateway, keep these values aligned:
+
+| Route | Lambda Function |
+| --- | --- |
+| `POST /v1/groups` | `nunti-http-groups-create` |
+| `GET /v1/groups/{groupId}` | `nunti-http-groups-get` |
+| `GET /v1/groups/{groupId}/members` | `nunti-http-groups-members-list` |
+| `POST /v1/groups/{groupId}/members` | `nunti-http-groups-members-add` |
+| `DELETE /v1/groups/{groupId}/members/{userId}` | `nunti-http-groups-members-remove` |
+| `POST /v1/groups/{groupId}/leave` | `nunti-http-groups-leave` |
+
+Required Lambda handler pattern (same as existing HTTP handlers):
+
+```text
+dist/src/handlers/http/<file>.handler
+```
+
+For the routes above, use:
+- `dist/src/handlers/http/groups-create.handler`
+- `dist/src/handlers/http/groups-get.handler`
+- `dist/src/handlers/http/groups-members-list.handler`
+- `dist/src/handlers/http/groups-members-add.handler`
+- `dist/src/handlers/http/groups-members-remove.handler`
+- `dist/src/handlers/http/groups-leave.handler`
+
+HTTP API integration setting:
+- **Payload format version:** `1.0`

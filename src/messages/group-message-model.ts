@@ -41,6 +41,14 @@ export interface GroupMembershipProjection {
 
 export type GroupMemberRole = 'owner' | 'admin' | 'member';
 
+export interface GroupRecord {
+  groupId: string;
+  groupName?: string;
+  createdByUserId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface GroupMemberRecord {
   groupId: string;
   userId: string;
