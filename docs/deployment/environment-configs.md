@@ -139,3 +139,20 @@ For the routes above, use:
 
 HTTP API integration setting:
 - **Payload format version:** `1.0`
+
+---
+
+## 6. Auth HTTP endpoints deployment checklist
+
+When wiring auth endpoints in API Gateway, use these routes and handler entrypoints:
+
+| Route | Lambda Handler |
+| --- | --- |
+| `POST /v1/auth/signup` | `dist/src/handlers/http/auth-signup.handler` |
+| `POST /v1/auth/verify-email` | `dist/src/handlers/http/auth-verify-email.handler` |
+| `POST /v1/auth/signin` | `dist/src/handlers/http/auth-signin.handler` |
+| `POST /v1/auth/resend-verification` | `dist/src/handlers/http/auth-resend-verification.handler` |
+
+HTTP API integration settings:
+- **Integration type:** Lambda proxy
+- **Payload format version:** `1.0`

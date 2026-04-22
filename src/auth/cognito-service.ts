@@ -1,5 +1,5 @@
 /**
- * Cognito service — signup, signin, and resend-verification actions.
+ * Cognito service — signup, signin, verify, and resend-verification actions.
  *
  * Enforces:
  * - Email as canonical login identity
@@ -9,9 +9,12 @@
  */
 
 import {
+  ConfirmSignUpCommand,
   SignUpCommand,
   InitiateAuthCommand,
   ResendConfirmationCodeCommand,
+  CodeMismatchException,
+  ExpiredCodeException,
   UsernameExistsException,
   InvalidPasswordException,
   NotAuthorizedException,
@@ -20,6 +23,7 @@ import {
   CodeDeliveryFailureException,
   LimitExceededException,
   TooManyRequestsException,
+  TooManyFailedAttemptsException,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { createHmac } from "crypto";
 import { getCognitoClient } from "./cognito-client.js";
@@ -55,6 +59,15 @@ export interface ResendVerificationInput {
 export interface ResendVerificationResult {
   deliveryMedium: string;
   destination: string;
+}
+
+export interface VerifyEmailInput {
+  email: string;
+  code: string;
+}
+
+export interface VerifyEmailResult {
+  verified: boolean;
 }
 
 function computeSecretHash(
@@ -186,6 +199,76 @@ export async function signIn(input: SignInInput): Promise<SignInResult> {
     }
 
     throw new AppError("AUTH_SIGNIN_FAILED", "Authentication failed", 401);
+  }
+}
+
+/**
+ * Verify user email using Cognito confirmation code.
+ */
+export async function verifyEmail(
+  input: VerifyEmailInput,
+): Promise<VerifyEmailResult> {
+  const config = getConfig();
+  const client = getCognitoClient();
+  const secretHash = computeSecretHash(
+    input.email,
+    config.cognitoAppClientId,
+    config.cognitoAppClientSecret,
+  );
+
+  try {
+    await client.send(
+      new ConfirmSignUpCommand({
+        ClientId: config.cognitoAppClientId,
+        ...(secretHash && { SecretHash: secretHash }),
+        Username: input.email,
+        ConfirmationCode: input.code,
+      }),
+    );
+
+    return { verified: true };
+  } catch (error) {
+    if (error instanceof CodeMismatchException || error instanceof UserNotFoundException) {
+      throw new AppError(
+        "AUTH_VERIFICATION_CODE_INVALID",
+        "Invalid verification code",
+        400,
+      );
+    }
+
+    if (error instanceof ExpiredCodeException) {
+      throw new AppError(
+        "AUTH_VERIFICATION_CODE_EXPIRED",
+        "Verification code has expired",
+        400,
+      );
+    }
+
+    if (error instanceof NotAuthorizedException) {
+      throw new AppError(
+        "AUTH_USER_ALREADY_CONFIRMED",
+        "Email already verified",
+        409,
+      );
+    }
+
+    if (
+      error instanceof LimitExceededException ||
+      error instanceof TooManyRequestsException ||
+      error instanceof TooManyFailedAttemptsException
+    ) {
+      throw new AppError(
+        "AUTH_LIMIT_EXCEEDED",
+        "Too many requests. Please try again later.",
+        429,
+      );
+    }
+
+    throw new AppError(
+      "AUTH_VERIFY_FAILED",
+      "Failed to verify email",
+      400,
+    );
   }
 }
 

@@ -3,6 +3,7 @@
  *
  * Tests AUTH-01 endpoint behavior:
  * - Signup validates input and delegates to Cognito
+ * - Verify email confirms the Cognito 6-digit code
  * - Signin uses generic error messages for all credential failures
  * - Resend verification is cooldown-aware and doesn't leak account existence
  *
@@ -12,6 +13,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { APIGatewayProxyEvent } from "aws-lambda";
 import { handler as signupHandler } from "../../src/handlers/http/auth-signup.js";
+import { handler as verifyEmailHandler } from "../../src/handlers/http/auth-verify-email.js";
 import { handler as signinHandler } from "../../src/handlers/http/auth-signin.js";
 import { handler as resendHandler } from "../../src/handlers/http/auth-resend-verification.js";
 
@@ -167,6 +169,44 @@ describe("auth signup/signin integration", () => {
       expect(body.error.code).toBe("VALIDATION_ERROR");
       // Generic message — does not reveal which field is wrong
       expect(body.error.message).toBe("Invalid credentials format");
+    });
+  });
+
+  describe("POST /v1/auth/verify-email", () => {
+    it("verifies email with valid confirmation code", async () => {
+      vi.mocked(cognitoService.verifyEmail).mockResolvedValue({
+        verified: true,
+      });
+
+      const event = createEvent({ email: "user@example.com", code: "123456" });
+      const response = await verifyEmailHandler(event);
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.data.verified).toBe(true);
+      expect(body.data.message).toContain("verified successfully");
+    });
+
+    it("returns 400 for invalid verification code format", async () => {
+      const event = createEvent({ email: "user@example.com", code: "12345" });
+      const response = await verifyEmailHandler(event);
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("returns 400 when code is expired", async () => {
+      vi.mocked(cognitoService.verifyEmail).mockRejectedValue(
+        new AppError("AUTH_VERIFICATION_CODE_EXPIRED", "Verification code has expired", 400),
+      );
+
+      const event = createEvent({ email: "user@example.com", code: "123456" });
+      const response = await verifyEmailHandler(event);
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe("AUTH_VERIFICATION_CODE_EXPIRED");
     });
   });
 

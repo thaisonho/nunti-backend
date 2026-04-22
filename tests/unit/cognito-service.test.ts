@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHmac } from "crypto";
 import {
+  ConfirmSignUpCommand,
   InitiateAuthCommand,
   ResendConfirmationCodeCommand,
   SignUpCommand,
@@ -15,6 +16,7 @@ import {
   resendVerification,
   signIn,
   signUp,
+  verifyEmail,
 } from "../../src/auth/cognito-service.js";
 
 describe("cognito-service secret hash", () => {
@@ -94,6 +96,22 @@ describe("cognito-service secret hash", () => {
     expect(command.input.SecretHash).toBe(expected);
   });
 
+  it("adds SecretHash for verifyEmail when client secret exists", async () => {
+    vi.mocked(getConfig).mockReturnValue({
+      ...baseConfig,
+      cognitoAppClientSecret: "client-secret",
+    } as any);
+    send.mockResolvedValueOnce({});
+
+    await verifyEmail({ email: "user@example.com", code: "123456" });
+
+    const command = send.mock.calls[0][0] as ConfirmSignUpCommand;
+    const expected = createHmac("sha256", "client-secret")
+      .update(`user@example.com${baseConfig.cognitoAppClientId}`)
+      .digest("base64");
+    expect(command.input.SecretHash).toBe(expected);
+  });
+
   it("omits secret hash fields when client secret is not configured", async () => {
     send
       .mockResolvedValueOnce({ UserSub: "sub-1", UserConfirmed: false })
@@ -103,18 +121,22 @@ describe("cognito-service secret hash", () => {
           IdToken: "id",
         },
       })
-      .mockResolvedValueOnce({ CodeDeliveryDetails: {} });
+      .mockResolvedValueOnce({ CodeDeliveryDetails: {} })
+      .mockResolvedValueOnce({});
 
     await signUp({ email: "user@example.com", password: "Password123!" });
     await signIn({ email: "user@example.com", password: "Password123!" });
     await resendVerification({ email: "user@example.com" });
+    await verifyEmail({ email: "user@example.com", code: "123456" });
 
     const signUpCommand = send.mock.calls[0][0] as SignUpCommand;
     const signInCommand = send.mock.calls[1][0] as InitiateAuthCommand;
     const resendCommand = send.mock.calls[2][0] as ResendConfirmationCodeCommand;
+    const verifyCommand = send.mock.calls[3][0] as ConfirmSignUpCommand;
 
     expect(signUpCommand.input.SecretHash).toBeUndefined();
     expect(signInCommand.input.AuthParameters?.SECRET_HASH).toBeUndefined();
     expect(resendCommand.input.SecretHash).toBeUndefined();
+    expect(verifyCommand.input.SecretHash).toBeUndefined();
   });
 });
