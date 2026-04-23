@@ -161,6 +161,80 @@ export async function listQueuedMessages(
   );
 }
 
+/**
+ * Check if any messages exist between two users (in either direction).
+ * Queries the inbox of the current user to see if they have any messages from the target user.
+ * Note: This only checks one direction. For a complete check, you'd need to query both directions.
+ */
+export async function checkConversationExists(
+  currentUserId: string,
+  currentDeviceId: string,
+  targetUserId: string,
+): Promise<boolean> {
+  // Query current user's inbox for messages from target user
+  const result = await ddbDocClient.send(new QueryCommand({
+    TableName: getTableName(),
+    KeyConditionExpression: 'pk = :pk',
+    FilterExpression: 'senderUserId = :targetUserId',
+    ExpressionAttributeValues: {
+      ':pk': inboxPk(currentUserId, currentDeviceId),
+      ':targetUserId': targetUserId,
+    },
+    Limit: 1, // We only need to know if at least one exists
+  }));
+
+  return (result.Items?.length ?? 0) > 0;
+}
+
+export interface ConversationSummary {
+  userId: string;
+  lastMessageTimestamp: string;
+  lastMessageId: string;
+  lastMessageCiphertext: string;
+  lastMessageSenderId: string;
+  unreadCount: number;
+}
+
+/**
+ * List all conversations for a user by querying their inbox.
+ * Groups messages by conversation partner and returns the most recent message for each.
+ */
+export async function listConversations(
+  userId: string,
+  deviceId: string,
+): Promise<ConversationSummary[]> {
+  const result = await ddbDocClient.send(new QueryCommand({
+    TableName: getTableName(),
+    KeyConditionExpression: 'pk = :pk',
+    ExpressionAttributeValues: {
+      ':pk': inboxPk(userId, deviceId),
+    },
+    ScanIndexForward: false, // newest first
+  }));
+
+  const items = result.Items ?? [];
+  const conversationMap = new Map<string, ConversationSummary>();
+
+  for (const item of items) {
+    const senderUserId = item.senderUserId as string;
+
+    if (!conversationMap.has(senderUserId)) {
+      conversationMap.set(senderUserId, {
+        userId: senderUserId,
+        lastMessageTimestamp: item.serverTimestamp as string,
+        lastMessageId: item.messageId as string,
+        lastMessageCiphertext: item.ciphertext as string,
+        lastMessageSenderId: senderUserId,
+        unreadCount: 0,
+      });
+    }
+  }
+
+  return Array.from(conversationMap.values()).sort(
+    (a, b) => b.lastMessageTimestamp.localeCompare(a.lastMessageTimestamp)
+  );
+}
+
 function toMessageRecord(item: Record<string, unknown>): MessageRecord {
   const pk = item.pk as string | undefined;
   const sk = item.sk as string | undefined;
