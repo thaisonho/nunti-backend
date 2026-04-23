@@ -38,7 +38,9 @@ export type AppErrorCode =
   | "AUTH_LIMIT_EXCEEDED"
   | "DEVICE_ALREADY_REGISTERED"
   | "DEVICE_NOT_FOUND"
-  | "DEVICE_ALREADY_REVOKED";
+  | "DEVICE_ALREADY_REVOKED"
+  | "USER_SEARCH_FAILED"
+  | "USER_LOOKUP_FAILED";
 
 export class AppError extends Error {
   public readonly code: AppErrorCode;
