@@ -71,10 +71,12 @@ Error:
 | `POST` | `/v1/auth/resend-verification` | No | Resend email verification |
 | `GET` | `/v1/me` | Bearer + `X-Device-Id` | Validate token and trusted device |
 | `POST` | `/v1/devices/register` | Bearer | Register current device |
-| `GET` | `/v1/devices` | Bearer | List user devices |
+| `GET` | `/v1/devices` | Bearer | List own devices |
 | `POST` | `/v1/devices/{deviceId}/revoke` | Bearer | Revoke a device |
 | `PUT` | `/v1/devices/{deviceId}/keys` | Bearer + `X-Device-Id` | Upload E2EE key bundle |
+| `GET` | `/v1/users/{userId}/devices` | Bearer | List another user's devices (for E2EE session setup) |
 | `GET` | `/v1/users/{userId}/devices/{deviceId}/bootstrap` | Bearer + `X-Device-Id` | Fetch target device key bundle |
+| `GET` | `/v1/users/search` | Bearer + `X-Device-Id` | Search users by email |
 | `POST` | `/v1/groups` | Bearer + `X-Device-Id` | Create a group and optionally add initial members |
 | `GET` | `/v1/groups/{groupId}` | Bearer + `X-Device-Id` | Get group metadata and full member list |
 | `GET` | `/v1/groups/{groupId}/members` | Bearer + `X-Device-Id` | List group members |

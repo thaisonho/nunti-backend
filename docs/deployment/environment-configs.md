@@ -156,3 +156,27 @@ When wiring auth endpoints in API Gateway, use these routes and handler entrypoi
 HTTP API integration settings:
 - **Integration type:** Lambda proxy
 - **Payload format version:** `1.0`
+
+---
+
+## 7. Device and User HTTP endpoints deployment checklist
+
+When wiring device and user endpoints in API Gateway, use these routes and handler entrypoints:
+
+| Route | Lambda Handler | Notes |
+| --- | --- | --- |
+| `POST /v1/devices/register` | `dist/src/handlers/http/devices-register.handler` | Register new device |
+| `GET /v1/devices` | `dist/src/handlers/http/devices-list.handler` | List own devices |
+| `POST /v1/devices/{deviceId}/revoke` | `dist/src/handlers/http/devices-revoke.handler` | Revoke device |
+| `PUT /v1/devices/{deviceId}/keys` | `dist/src/handlers/http/devices-keys.handler` | Upload E2EE keys |
+| `GET /v1/users/{userId}/devices` | `dist/src/handlers/http/users-devices-list.handler` | **NEW** - List another user's devices |
+| `GET /v1/users/{userId}/devices/{deviceId}/bootstrap` | `dist/src/handlers/http/devices-bootstrap.handler` | Fetch key bundle for E2EE |
+| `GET /v1/users/search` | `dist/src/handlers/http/users-search.handler` | Search users by email |
+
+HTTP API integration settings:
+- **Integration type:** Lambda proxy
+- **Payload format version:** `1.0`
+
+**Important for Signal Protocol E2EE:**
+- The `GET /v1/users/{userId}/devices` endpoint is required for device discovery
+- The bootstrap endpoint now allows cross-user key fetching (authorization fix applied)
