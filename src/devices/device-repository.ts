@@ -19,6 +19,7 @@ interface UpdateDeviceKeysParams {
   userId: string;
   deviceId: string;
   identityKey: IdentityKeyRecord;
+  dhPublicKey?: IdentityKeyRecord;
   signedPreKey: SignedPreKeyRecord;
 }
 
@@ -84,6 +85,7 @@ function toDeviceRecord(item: Record<string, unknown>): DeviceRecord {
     ...(item.revokedAt !== undefined && { revokedAt: item.revokedAt as string }),
     ...(item.keyStateUpdatedAt !== undefined && { keyStateUpdatedAt: item.keyStateUpdatedAt as string }),
     ...(item.identityKey !== undefined && { identityKey: item.identityKey as IdentityKeyRecord }),
+    ...(item.dhPublicKey !== undefined && { dhPublicKey: item.dhPublicKey as IdentityKeyRecord }),
     ...(item.signedPreKey !== undefined && { signedPreKey: item.signedPreKey as SignedPreKeyRecord }),
   };
 }
@@ -153,9 +155,10 @@ export async function updateDeviceKeys(params: UpdateDeviceKeysParams): Promise<
       sk: deviceSk(params.deviceId)
     },
     ConditionExpression: "attribute_exists(pk) AND attribute_exists(sk)",
-    UpdateExpression: "SET identityKey = :identityKey, signedPreKey = :signedPreKey, keyStateUpdatedAt = :updatedAt, lastSeenAt = :updatedAt",
+    UpdateExpression: "SET identityKey = :identityKey, dhPublicKey = :dhPublicKey, signedPreKey = :signedPreKey, keyStateUpdatedAt = :updatedAt, lastSeenAt = :updatedAt",
     ExpressionAttributeValues: {
       ":identityKey": params.identityKey,
+      ...(params.dhPublicKey ? { ":dhPublicKey": params.dhPublicKey } : { ":dhPublicKey": null }),
       ":signedPreKey": params.signedPreKey,
       ":updatedAt": now,
     },

@@ -6,12 +6,8 @@ import { AppError } from '../../app/errors.js';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
-
-    const actorDeviceId = event.headers['X-Device-Id'] || event.headers['x-device-id'];
-    if (!actorDeviceId) {
-      return rawErrorResponse(400, 'VALIDATION_ERROR', 'Missing X-Device-Id header');
-    }
+    // Only require user authentication, not a trusted device for fetching public keys
+    await requireAuth(event.headers.Authorization || event.headers.authorization);
 
     const userId = event.pathParameters?.userId;
     const deviceId = event.pathParameters?.deviceId;
@@ -20,8 +16,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const bundle = await DeviceService.getBootstrapBundle({
-      actorUserId: user.sub,
-      actorDeviceId,
       targetUserId: userId,
       targetDeviceId: deviceId,
     });

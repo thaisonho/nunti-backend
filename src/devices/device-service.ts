@@ -17,13 +17,12 @@ export interface UploadDeviceKeysPayload {
   actorDeviceId: string;
   targetDeviceId: string;
   identityKey: IdentityKeyRecord;
+  dhPublicKey?: IdentityKeyRecord;
   signedPreKey: SignedPreKeyRecord;
   oneTimePreKeys?: OneTimePreKeyRecord[];
 }
 
 export interface GetBootstrapBundlePayload {
-  actorUserId: string;
-  actorDeviceId: string;
   targetUserId: string;
   targetDeviceId: string;
 }
@@ -32,6 +31,7 @@ export interface BootstrapBundle {
   userId: string;
   deviceId: string;
   identityKey: IdentityKeyRecord;
+  dhPublicKey?: IdentityKeyRecord;
   signedPreKey: SignedPreKeyRecord;
   oneTimePreKey: OneTimePreKeyRecord;
 }
@@ -95,6 +95,7 @@ export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promis
     userId: payload.actorUserId,
     deviceId: payload.targetDeviceId,
     identityKey: payload.identityKey,
+    dhPublicKey: payload.dhPublicKey,
     signedPreKey: payload.signedPreKey,
   });
 
@@ -114,12 +115,6 @@ export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promis
 export async function getBootstrapBundle(payload: GetBootstrapBundlePayload): Promise<BootstrapBundle> {
   // Allow cross-user key bundle fetching (required for E2EE messaging)
   // Public keys are meant to be public - Signal Protocol standard behavior
-  // The actor must still be authenticated with a trusted device
-
-  const actorDevice = await DeviceRepository.getDevice(payload.actorUserId, payload.actorDeviceId);
-  if (!actorDevice || !isDeviceTrusted(actorDevice)) {
-    throw new AppError("AUTH_FORBIDDEN", "Actor device not found or not trusted", 403);
-  }
 
   const targetDevice = await DeviceRepository.getDevice(payload.targetUserId, payload.targetDeviceId);
   if (!targetDevice) {
@@ -139,6 +134,7 @@ export async function getBootstrapBundle(payload: GetBootstrapBundlePayload): Pr
     userId: payload.targetUserId,
     deviceId: payload.targetDeviceId,
     identityKey: targetDevice.identityKey,
+    dhPublicKey: targetDevice.dhPublicKey,
     signedPreKey: targetDevice.signedPreKey,
     oneTimePreKey,
   };

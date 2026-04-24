@@ -103,7 +103,8 @@ describe('ws authorizer', () => {
       queryStringParameters: { deviceId: 'dev-1' },
     });
 
-    expect(result.policyDocument.Statement[0]?.Resource).toBe(routeArn);
+    const expectedArn = 'arn:aws:execute-api:ap-southeast-1:123456789012:api-id/production/*';
+    expect(result.policyDocument.Statement[0]?.Resource).toBe(expectedArn);
     expect(result.policyDocument.Statement[0]?.Effect).toBe('Allow');
   });
 });

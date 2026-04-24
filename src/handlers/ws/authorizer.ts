@@ -53,7 +53,14 @@ function policy(
 }
 
 function resolveResourceArn(event: WebSocketAuthorizerEvent): string {
-  return event.methodArn ?? event.routeArn ?? '*';
+  const arn = event.methodArn ?? event.routeArn;
+  if (!arn) return '*';
+  
+  const parts = arn.split('/');
+  if (parts.length >= 2) {
+    return `${parts[0]}/${parts[1]}/*`;
+  }
+  return arn;
 }
 
 export const handler = async (

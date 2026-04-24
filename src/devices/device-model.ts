@@ -34,5 +34,6 @@ export interface DeviceRecord {
   revokedAt?: string;
   keyStateUpdatedAt?: string;
   identityKey?: IdentityKeyRecord;
+  dhPublicKey?: IdentityKeyRecord;
   signedPreKey?: SignedPreKeyRecord;
 }
