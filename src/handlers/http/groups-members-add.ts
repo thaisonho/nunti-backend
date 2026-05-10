@@ -4,6 +4,7 @@ import { successResponse, errorResponse, rawErrorResponse } from '../../app/http
 import { AppError } from '../../app/errors.js';
 import * as GroupService from '../../groups/group-service.js';
 import { requireTrustedDeviceAuth } from './http-auth-context.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 const addMemberSchema = z.object({
   userId: z.string().min(1),
@@ -39,6 +40,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       auth.deviceId,
       groupId,
       validationResult.data.userId,
+    );
+
+    AuditService.groupMemberAdded(
+      auth.user.sub,
+      groupId,
+      validationResult.data.userId,
+      event.requestContext?.identity?.sourceIp,
     );
 
     return successResponse(result, 200);

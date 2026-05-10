@@ -8,6 +8,7 @@
 
 import type { APIGatewayProxyResult } from 'aws-lambda';
 import { removeConnection } from '../../realtime/connection-registry.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 interface WebSocketDisconnectEvent {
   requestContext: {
@@ -26,6 +27,8 @@ export const handler = async (event: WebSocketDisconnectEvent): Promise<APIGatew
 
     if (userId) {
       await removeConnection(userId, connectionId);
+      const deviceId = event.requestContext.authorizer?.deviceId as string | undefined;
+      AuditService.wsDisconnect(userId, deviceId ?? 'unknown', connectionId);
     } else {
       // Without userId, we cannot directly query the connection.
       // Stale entries are cleaned up via GoneException in publishers.

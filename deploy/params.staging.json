@@ -5,6 +5,7 @@
     "CognitoRegion": "ap-southeast-1",
     "DevicesTableName": "nunti-devices-staging",
     "MessagesTableName": "nunti-messages-staging",
+    "AuditLogsTableName": "nunti-audit-logs-staging",
     "Stage": "staging"
   },
   "StackName": "nunti-backend-staging"

@@ -3,12 +3,19 @@ import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
 
     const devices = await DeviceService.listDevices(user.sub);
+
+    AuditService.devicesListed(
+      user.sub,
+      devices.length,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse(devices, 200);
   } catch (error) {

@@ -4,6 +4,7 @@ import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 const registerSchema = z.object({
   deviceId: z.string().min(1),
@@ -39,6 +40,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       platform: validationResult.data.platform,
       appVersion: validationResult.data.appVersion
     });
+
+    AuditService.deviceRegistered(
+      user.sub,
+      device.deviceId,
+      validationResult.data.platform,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse(device, 201);
   } catch (error) {

@@ -25,7 +25,24 @@ export interface AuthenticatedUser {
   email?: string;
   username?: string;
   tokenUse: string;
+  /** Cognito groups the user belongs to */
+  groups: string[];
+  /** True if user is in the 'admin' Cognito group */
+  isAdmin: boolean;
   [key: string]: unknown;
+}
+
+/**
+ * Extract groups and admin status from a Cognito JWT payload.
+ */
+function extractGroups(payload: Record<string, unknown>): {
+  groups: string[];
+  isAdmin: boolean;
+} {
+  const groups = Array.isArray(payload["cognito:groups"])
+    ? (payload["cognito:groups"] as string[])
+    : [];
+  return { groups, isAdmin: groups.includes("admin") };
 }
 
 /**
@@ -54,6 +71,9 @@ export async function requireAuth(
   try {
     const verifier = getAccessTokenVerifier();
     const payload = await verifier.verify(token);
+    const { groups, isAdmin } = extractGroups(
+      payload as Record<string, unknown>,
+    );
 
     return {
       sub: payload.sub,
@@ -62,6 +82,8 @@ export async function requireAuth(
         "cognito:username"
       ] as string | undefined,
       tokenUse: payload.token_use as string,
+      groups,
+      isAdmin,
     };
   } catch (accessError) {
     // If token is expired, don't try ID verifier — it's expired regardless
@@ -73,6 +95,9 @@ export async function requireAuth(
     try {
       const idVerifier = getIdTokenVerifier();
       const payload = await idVerifier.verify(token);
+      const { groups, isAdmin } = extractGroups(
+        payload as Record<string, unknown>,
+      );
 
       return {
         sub: payload.sub,
@@ -81,6 +106,8 @@ export async function requireAuth(
           "cognito:username"
         ] as string | undefined,
         tokenUse: payload.token_use as string,
+        groups,
+        isAdmin,
       };
     } catch (idError) {
       // If ID token is expired, report that

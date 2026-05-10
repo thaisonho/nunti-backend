@@ -3,6 +3,7 @@ import { requireAuth } from '../../auth/auth-guard.js';
 import * as UserService from '../../users/user-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -23,6 +24,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       email: email.trim(),
       currentUserId: user.sub,
     });
+
+    AuditService.userSearched(
+      user.sub,
+      email.trim(),
+      results.length,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse({
       users: results,

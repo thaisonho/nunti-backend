@@ -27,6 +27,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       email: user.email,
       username: user.username,
       tokenUse: user.tokenUse,
+      isAdmin: user.isAdmin,
       accessAccepted: true
     }, 200);
   } catch (error) {

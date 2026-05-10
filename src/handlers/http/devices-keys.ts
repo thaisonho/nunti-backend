@@ -4,6 +4,7 @@ import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 const keyPayloadSchema = z.object({
   keyId: z.string().min(1),
@@ -61,6 +62,17 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       signedPreKey: validationResult.data.signedPreKey,
       oneTimePreKeys: validationResult.data.oneTimePreKeys,
     });
+
+    const keyTypes = ['identityKey', 'signedPreKey'];
+    if (validationResult.data.oneTimePreKeys) keyTypes.push('oneTimePreKeys');
+    if (validationResult.data.dhPublicKey) keyTypes.push('dhPublicKey');
+
+    AuditService.keyBundleUploaded(
+      user.sub,
+      targetDeviceId,
+      keyTypes,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse(updated, 200);
   } catch (error) {

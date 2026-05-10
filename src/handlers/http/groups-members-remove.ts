@@ -3,6 +3,7 @@ import { successResponse, errorResponse, rawErrorResponse } from '../../app/http
 import { AppError } from '../../app/errors.js';
 import * as GroupService from '../../groups/group-service.js';
 import { requireTrustedDeviceAuth } from './http-auth-context.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -19,6 +20,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       auth.deviceId,
       groupId,
       targetUserId,
+    );
+
+    AuditService.groupMemberRemoved(
+      auth.user.sub,
+      groupId,
+      targetUserId,
+      event.requestContext?.identity?.sourceIp,
     );
 
     return successResponse(result, 200);

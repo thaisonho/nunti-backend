@@ -1,13 +1,19 @@
 import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { isDeviceTrusted } from '../../devices/device-policy.js';
-import { AuthError } from '../../app/errors.js';
+import { AppError, AuthError } from '../../app/errors.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 interface WebSocketAuthorizerEvent {
   methodArn?: string;
   routeArn?: string;
   headers?: Record<string, string> | null;
   queryStringParameters?: Record<string, string> | null;
+  requestContext?: {
+    identity?: {
+      sourceIp?: string;
+    };
+  };
 }
 
 interface WebSocketAuthorizerResult {
@@ -63,10 +69,22 @@ function resolveResourceArn(event: WebSocketAuthorizerEvent): string {
   return arn;
 }
 
+function resolveSourceIp(event: WebSocketAuthorizerEvent): string | undefined {
+  const forwardedFor =
+    event.headers?.["X-Forwarded-For"] ??
+    event.headers?.["x-forwarded-for"];
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim();
+  }
+
+  return event.requestContext?.identity?.sourceIp;
+}
+
 export const handler = async (
   event: WebSocketAuthorizerEvent,
 ): Promise<WebSocketAuthorizerResult> => {
   const resourceArn = resolveResourceArn(event);
+  const sourceIp = resolveSourceIp(event);
 
   try {
     const query = event.queryStringParameters ?? {};
@@ -91,12 +109,14 @@ export const handler = async (
 
     const deviceId = query.deviceId;
     if (!deviceId || deviceId.length === 0) {
+      AuditService.deviceTrustDenied(user.sub, "missing", sourceIp);
       return policy('anonymous', 'Deny', resourceArn);
     }
 
     const devices = await DeviceService.listDevices(user.sub);
     const activeDevice = devices.find((device) => device.deviceId === deviceId);
     if (!activeDevice || !isDeviceTrusted(activeDevice)) {
+      AuditService.deviceTrustDenied(user.sub, deviceId, sourceIp);
       return policy('anonymous', 'Deny', resourceArn);
     }
 
@@ -104,7 +124,10 @@ export const handler = async (
       userId: user.sub,
       deviceId,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof AppError && error.code !== "AUTH_FORBIDDEN") {
+      AuditService.wsAuthFailure(error.code, sourceIp);
+    }
     return policy('anonymous', 'Deny', resourceArn);
   }
 };

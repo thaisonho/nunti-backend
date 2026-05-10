@@ -3,6 +3,7 @@ import { requireAuth, type AuthenticatedUser } from '../../auth/auth-guard.js';
 import { AppError, AuthError } from '../../app/errors.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { isDeviceTrusted } from '../../devices/device-policy.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 export interface TrustedHttpAuthContext {
   user: AuthenticatedUser;
@@ -22,6 +23,11 @@ export async function requireTrustedDeviceAuth(
   const devices = await DeviceService.listDevices(user.sub);
   const activeDevice = devices.find((device) => device.deviceId === deviceId);
   if (!activeDevice || !isDeviceTrusted(activeDevice)) {
+    AuditService.deviceTrustDenied(
+      user.sub,
+      deviceId,
+      event.requestContext?.identity?.sourceIp,
+    );
     throw new AuthError('AUTH_FORBIDDEN', 403);
   }
 

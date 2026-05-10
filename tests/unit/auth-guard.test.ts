@@ -184,6 +184,8 @@ describe("auth-guard", () => {
         email: "user@example.com",
         username: "user@example.com",
         tokenUse: "access",
+        groups: [],
+        isAdmin: false,
       });
     });
 
@@ -219,6 +221,8 @@ describe("auth-guard", () => {
         email: "user@example.com",
         username: "user@example.com",
         tokenUse: "id",
+        groups: [],
+        isAdmin: false,
       });
     });
 

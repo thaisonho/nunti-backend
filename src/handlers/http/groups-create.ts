@@ -4,6 +4,7 @@ import { successResponse, errorResponse, rawErrorResponse } from '../../app/http
 import { AppError } from '../../app/errors.js';
 import * as GroupService from '../../groups/group-service.js';
 import { requireTrustedDeviceAuth } from './http-auth-context.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 const createGroupSchema = z.object({
   groupId: z.string().min(1).optional(),
@@ -36,6 +37,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       groupName: validationResult.data.groupName,
       memberUserIds: validationResult.data.memberUserIds,
     });
+
+    AuditService.groupCreated(
+      auth.user.sub,
+      created.groupId,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse(created, 201);
   } catch (error) {

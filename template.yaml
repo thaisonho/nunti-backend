@@ -15,6 +15,9 @@ Parameters:
     Type: String
   MessagesTableName:
     Type: String
+  AuditLogsTableName:
+    Type: String
+    Default: nunti-audit-logs
   ConnectionsTableName:
     Type: String
     Default: nunti-connections
@@ -137,6 +140,7 @@ Globals:
         COGNITO_REGION: !Ref CognitoRegion
         DEVICES_TABLE_NAME: !Ref DevicesTableName
         MESSAGES_TABLE_NAME: !Ref MessagesTableName
+        AUDIT_LOGS_TABLE_NAME: !Ref AuditLogsTableName
         CONNECTIONS_TABLE_NAME: !Ref ConnectionsTableName
         STAGE: !Ref Stage
 
@@ -176,6 +180,8 @@ Resources:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DevicesTableName}/index/*"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MessagesTableName}"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MessagesTableName}/index/*"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AuditLogsTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AuditLogsTableName}/index/*"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ConnectionsTableName}"
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ConnectionsTableName}/index/*"
         - PolicyName: WebSocketManagement
@@ -252,6 +258,56 @@ Resources:
         PointInTimeRecoveryEnabled: true
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Environment
+          Value: production
+        - Key: BackupEnabled
+          Value: "true"
+
+  AuditLogsTableProduction:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProduction
+    Properties:
+      TableName: !Ref AuditLogsTableName
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: gsi1pk
+          AttributeType: S
+        - AttributeName: gsi1sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      BillingMode: !Ref DynamoDBBillingMode
+      ProvisionedThroughput: !If
+        - UseProvisioned
+        - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+          WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+        - !Ref "AWS::NoValue"
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: gsi1pk
+              KeyType: HASH
+            - AttributeName: gsi1sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput: !If
+            - UseProvisioned
+            - ReadCapacityUnits: !Ref DynamoDBProvisionedReadCapacity
+              WriteCapacityUnits: !Ref DynamoDBProvisionedWriteCapacity
+            - !Ref "AWS::NoValue"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
       Tags:
         - Key: Environment
           Value: production
@@ -530,6 +586,24 @@ Resources:
         Environment: production
         SecurityLevel: strict
 
+  NuntiAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: IsNotProduction
+    Properties:
+      GroupName: admin
+      UserPoolId: !Ref CognitoUserPoolId
+      Description: Administrators with audit log access
+      Precedence: 0
+
+  ProductionAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: IsProduction
+    Properties:
+      GroupName: admin
+      UserPoolId: !Ref ProductionCognitoUserPool
+      Description: Administrators with audit log access
+      Precedence: 0
+
   ProductionApiHealthCheck:
     Type: AWS::Route53::HealthCheck
     Condition: IsProduction
@@ -796,6 +870,7 @@ Resources:
 
 Conditions:
   IsProduction: !Equals [!Ref Stage, "production"]
+  IsNotProduction: !Not [!Equals [!Ref Stage, "production"]]
   UseProvisioned: !Equals [!Ref DynamoDBBillingMode, "PROVISIONED"]
   RequireMFA: !Equals [!Ref RequireCognitoMFA, "true"]
   HasWaf: !Not [!Equals [!Ref ProductionWafWebAclArn, ""]]
@@ -832,6 +907,11 @@ Outputs:
     Value: !GetAtt MessagesTableProduction.Arn
     Export:
       Name: !Sub "nunti-messages-table-arn-${Stage}"
+  AuditLogsTableArn:
+    Condition: IsProduction
+    Value: !GetAtt AuditLogsTableProduction.Arn
+    Export:
+      Name: !Sub "nunti-audit-logs-table-arn-${Stage}"
   ConnectionsTableArn:
     Condition: IsProduction
     Value: !GetAtt ConnectionsTableProduction.Arn

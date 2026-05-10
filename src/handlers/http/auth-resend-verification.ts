@@ -10,6 +10,7 @@ import { z } from "zod/v4";
 import { resendVerification } from "../../auth/cognito-service.js";
 import { successResponse, errorResponse, rawErrorResponse } from "../../app/http-response.js";
 import { AppError } from "../../app/errors.js";
+import * as AuditService from "../../audit/audit-service.js";
 
 const ResendSchema = z.object({
   email: z.email("Invalid email format"),
@@ -32,6 +33,11 @@ export async function handler(
     }
 
     const result = await resendVerification(parsed.data);
+
+    AuditService.verificationResent(
+      parsed.data.email,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse(
       {

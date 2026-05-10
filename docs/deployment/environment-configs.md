@@ -180,3 +180,23 @@ HTTP API integration settings:
 **Important for Signal Protocol E2EE:**
 - The `GET /v1/users/{userId}/devices` endpoint is required for device discovery
 - The bootstrap endpoint now allows cross-user key fetching (authorization fix applied)
+
+---
+
+## 8. Audit Log HTTP endpoints deployment checklist
+
+When wiring audit log endpoints in API Gateway, use these routes and handler entrypoints:
+
+| Route | Lambda Handler | Notes |
+| --- | --- | --- |
+| `GET /v1/audit-logs` | `dist/src/handlers/http/audit-logs-list.handler` | Trusted-device auth, user-scoped audit timeline |
+| `GET /v1/admin/audit-logs` | `dist/src/handlers/http/admin-audit-logs-list.handler` | Cognito `admin` group only, cross-user audit timeline |
+
+HTTP API integration settings:
+- **Integration type:** Lambda proxy
+- **Payload format version:** `1.0`
+
+Operational notes:
+- Both handlers require `AUDIT_LOGS_TABLE_NAME` in the Lambda environment
+- `GET /v1/admin/audit-logs` depends on the Cognito `admin` group created by the stack
+- Admin access to audit logs is itself emitted as `ADMIN_AUDIT_LOG_VIEWED`

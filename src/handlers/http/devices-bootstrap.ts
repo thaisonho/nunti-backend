@@ -3,11 +3,12 @@ import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     // Only require user authentication, not a trusted device for fetching public keys
-    await requireAuth(event.headers.Authorization || event.headers.authorization);
+    const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
 
     const userId = event.pathParameters?.userId;
     const deviceId = event.pathParameters?.deviceId;
@@ -19,6 +20,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       targetUserId: userId,
       targetDeviceId: deviceId,
     });
+
+    AuditService.bootstrapBundleFetched(
+      user.sub,
+      userId,
+      deviceId,
+      event.requestContext?.identity?.sourceIp,
+    );
 
     return successResponse(bundle, 200);
   } catch (error) {

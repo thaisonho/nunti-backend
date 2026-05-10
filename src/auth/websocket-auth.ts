@@ -15,6 +15,7 @@ import { requireAuth } from './auth-guard.js';
 import * as DeviceService from '../devices/device-service.js';
 import { isDeviceTrusted } from '../devices/device-policy.js';
 import { AuthError } from '../app/errors.js';
+import * as AuditService from '../audit/audit-service.js';
 
 /** Authenticated WebSocket connection identity. */
 export interface WebSocketConnectionContext {
@@ -27,6 +28,9 @@ export interface WebSocketConnectionContext {
 interface WebSocketConnectEvent {
   requestContext: {
     connectionId: string;
+    identity?: {
+      sourceIp?: string;
+    };
   };
   queryStringParameters?: Record<string, string> | null;
   headers?: Record<string, string> | null;
@@ -87,6 +91,11 @@ export async function extractWebSocketContext(
   const devices = await DeviceService.listDevices(user.sub);
   const activeDevice = devices.find((device) => device.deviceId === deviceId);
   if (!activeDevice || !isDeviceTrusted(activeDevice)) {
+    AuditService.deviceTrustDenied(
+      user.sub,
+      deviceId,
+      event.requestContext.identity?.sourceIp,
+    );
     throw new AuthError('AUTH_FORBIDDEN', 403);
   }
 

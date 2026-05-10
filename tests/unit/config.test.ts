@@ -19,6 +19,7 @@ describe('config', () => {
     'COGNITO_APP_CLIENT_SECRET',
     'DEVICES_TABLE_NAME',
     'MESSAGES_TABLE_NAME',
+    'AUDIT_LOGS_TABLE_NAME',
     'COGNITO_REGION',
     'AWS_REGION',
     'STAGE',
@@ -31,6 +32,7 @@ describe('config', () => {
     process.env.COGNITO_APP_CLIENT_ID = 'test-client-id';
     process.env.DEVICES_TABLE_NAME = 'test-devices';
     process.env.MESSAGES_TABLE_NAME = 'test-messages';
+    process.env.AUDIT_LOGS_TABLE_NAME = 'test-audit-logs';
   });
 
   afterEach(() => {
@@ -54,6 +56,7 @@ describe('config', () => {
     expect(config.cognitoAppClientSecret).toBeUndefined();
     expect(config.devicesTableName).toBe('test-devices');
     expect(config.messagesTableName).toBe('test-messages');
+    expect(config.auditLogsTableName).toBe('test-audit-logs');
   });
 
   it('reads optional COGNITO_APP_CLIENT_SECRET when provided', () => {
@@ -86,6 +89,12 @@ describe('config', () => {
     delete process.env.MESSAGES_TABLE_NAME;
 
     expect(() => getConfig()).toThrow('Missing required environment variable: MESSAGES_TABLE_NAME');
+  });
+
+  it('throws when AUDIT_LOGS_TABLE_NAME is missing', () => {
+    delete process.env.AUDIT_LOGS_TABLE_NAME;
+
+    expect(() => getConfig()).toThrow('Missing required environment variable: AUDIT_LOGS_TABLE_NAME');
   });
 
   it('uses safe defaults for optional values', () => {

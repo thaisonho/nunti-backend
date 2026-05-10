@@ -10,6 +10,7 @@ import { z } from "zod/v4";
 import { signUp } from "../../auth/cognito-service.js";
 import { successResponse, errorResponse, rawErrorResponse } from "../../app/http-response.js";
 import { AppError } from "../../app/errors.js";
+import * as AuditService from "../../audit/audit-service.js";
 
 const SignUpSchema = z.object({
   email: z.email("Invalid email format"),
@@ -33,6 +34,13 @@ export async function handler(
     }
 
     const result = await signUp(parsed.data);
+
+    AuditService.signupSuccess(
+      result.userSub,
+      parsed.data.email,
+      event.requestContext?.identity?.sourceIp,
+      event.headers?.['User-Agent'] ?? event.headers?.['user-agent'],
+    );
 
     return successResponse(
       {

@@ -10,6 +10,7 @@ import type { APIGatewayProxyResult } from 'aws-lambda';
 import type { WebSocketConnectionContext } from '../../auth/websocket-auth.js';
 import { validateDirectMessageRequest, type WebSocketErrorEvent } from '../../messages/message-model.js';
 import * as MessageService from '../../messages/message-service.js';
+import * as AuditService from '../../audit/audit-service.js';
 
 interface WebSocketMessageEvent {
   requestContext: {
@@ -63,6 +64,13 @@ export const handler = async (event: WebSocketMessageEvent): Promise<APIGatewayP
     }
 
     const result = await MessageService.sendMessage(context, request);
+
+    AuditService.messageSent(
+      context.userId,
+      context.deviceId,
+      request.recipientUserId,
+      result.messageId,
+    );
 
     return {
       statusCode: 200,
