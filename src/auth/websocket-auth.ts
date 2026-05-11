@@ -5,8 +5,8 @@
  * the API Gateway WebSocket $connect event.
  *
  * Token source policy:
- *   - Production: Authorization header ONLY (query-token fallback rejected)
- *   - Non-production: Authorization header preferred, `token` query parameter as fallback
+ *   - Authorization header preferred
+ *   - `token` query parameter as fallback (browser WebSocket clients)
  *
  * Device ID is always required in query parameters.
  */
@@ -37,22 +37,14 @@ interface WebSocketConnectEvent {
 }
 
 /**
- * Returns true if running in production environment.
- * Checks the STAGE environment variable set by SAM template.
- */
-function isProduction(): boolean {
-  return process.env.STAGE === 'production';
-}
-
 /**
  * Extract authenticated user and device context from a WebSocket connection event.
  *
  * Token resolution order:
  *   1. Authorization header (preferred — standard Bearer format)
- *   2. `token` query parameter (non-production only — rejected in production)
+ *   2. `token` query parameter (fallback for browser clients)
  *
  * @throws AuthError if token is missing, invalid, or expired
- * @throws AuthError if query-token fallback is attempted in production
  * @throws Error if deviceId is missing from query parameters
  */
 export async function extractWebSocketContext(
@@ -70,10 +62,6 @@ export async function extractWebSocketContext(
   if (authHeader) {
     bearerValue = authHeader;
   } else if (queryToken) {
-    // Production: reject query-token fallback
-    if (isProduction()) {
-      throw new AuthError('AUTH_TOKEN_MISSING_OR_MALFORMED', 401);
-    }
     bearerValue = `Bearer ${queryToken}`;
   } else {
     bearerValue = '';

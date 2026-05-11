@@ -32,10 +32,6 @@ interface WebSocketAuthorizerResult {
   };
 }
 
-function isProduction(): boolean {
-  return process.env.STAGE === 'production';
-}
-
 function policy(
   principalId: string,
   effect: 'Allow' | 'Deny',
@@ -97,9 +93,6 @@ export const handler = async (
     if (authHeader) {
       bearerValue = authHeader;
     } else if (queryToken) {
-      if (isProduction()) {
-        throw new AuthError('AUTH_TOKEN_MISSING_OR_MALFORMED', 401);
-      }
       bearerValue = `Bearer ${queryToken}`;
     } else {
       throw new AuthError('AUTH_TOKEN_MISSING_OR_MALFORMED', 401);
