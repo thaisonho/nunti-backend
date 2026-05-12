@@ -72,6 +72,7 @@ Error:
 | `GET` | `/v1/me` | Bearer + `X-Device-Id` | Validate token and trusted device |
 | `POST` | `/v1/devices/register` | Bearer | Register current device |
 | `GET` | `/v1/devices` | Bearer | List own devices |
+| `POST` | `/v1/devices/{deviceId}/approve` | Bearer + `X-Device-Id` | Approve a pending browser from the primary browser |
 | `POST` | `/v1/devices/{deviceId}/revoke` | Bearer | Revoke a device |
 | `PUT` | `/v1/devices/{deviceId}/keys` | Bearer + `X-Device-Id` | Upload E2EE key bundle |
 | `GET` | `/v1/users/{userId}/devices` | Bearer | List another user's devices (for E2EE session setup) |

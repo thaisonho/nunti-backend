@@ -1,9 +1,9 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
-import { isDeviceTrusted } from '../../devices/device-policy.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError, AuthError } from '../../app/errors.js';
+import { DeviceStatus } from '../../devices/device-model.js';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -18,7 +18,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const devices = await DeviceService.listDevices(user.sub);
     const activeDevice = devices.find(d => d.deviceId === deviceId);
 
-    if (!activeDevice || !isDeviceTrusted(activeDevice)) {
+    if (!activeDevice || activeDevice.status === DeviceStatus.REVOKED) {
       throw new AuthError('AUTH_FORBIDDEN', 403);
     }
 
@@ -28,7 +28,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       username: user.username,
       tokenUse: user.tokenUse,
       isAdmin: user.isAdmin,
-      accessAccepted: true
+      accessAccepted: activeDevice.status === DeviceStatus.TRUSTED,
     }, 200);
   } catch (error) {
     if (error instanceof AppError) {

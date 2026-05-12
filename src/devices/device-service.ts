@@ -22,6 +22,13 @@ export interface UploadDeviceKeysPayload {
   oneTimePreKeys?: OneTimePreKeyRecord[];
 }
 
+export interface ApproveDevicePayload {
+  actorUserId: string;
+  actorDeviceId: string;
+  targetDeviceId: string;
+  signatureByPrimary: string;
+}
+
 export interface GetBootstrapBundlePayload {
   targetUserId: string;
   targetDeviceId: string;
@@ -30,14 +37,30 @@ export interface GetBootstrapBundlePayload {
 export interface BootstrapBundle {
   userId: string;
   deviceId: string;
+  isPrimary: boolean;
   identityKey: IdentityKeyRecord;
   dhPublicKey?: IdentityKeyRecord;
   signedPreKey: SignedPreKeyRecord;
   oneTimePreKey: OneTimePreKeyRecord;
+  primaryDeviceId?: string;
+  primaryIdentityKey?: string;
+}
+
+function isPrimaryDevice(device: DeviceRecord): boolean {
+  return device.isPrimary !== false;
 }
 
 export async function registerDevice(payload: RegisterDevicePayload): Promise<DeviceRecord> {
-  const device = await DeviceRepository.upsertDevice(payload);
+  const existingDevices = await DeviceRepository.listDevicesByUser(payload.userId);
+  const hasTrustedPrimary = existingDevices.some(
+    (device) => device.status === DeviceStatus.TRUSTED && isPrimaryDevice(device),
+  );
+
+  const device = await DeviceRepository.upsertDevice({
+    ...payload,
+    status: hasTrustedPrimary ? DeviceStatus.PENDING : DeviceStatus.TRUSTED,
+    isPrimary: !hasTrustedPrimary,
+  });
   await publishTrustChange(payload.userId, {
     changeType: "device-registered",
     deviceId: payload.deviceId,
@@ -56,6 +79,10 @@ export async function revokeDevice(userId: string, deviceId: string): Promise<De
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
   }
 
+  if (device.isPrimary) {
+    throw new AppError("CONFLICT", "Primary device cannot be revoked while browser-only trust is enabled", 409);
+  }
+
   if (device.status === DeviceStatus.REVOKED) {
     return device;
   }
@@ -71,7 +98,7 @@ export async function revokeDevice(userId: string, deviceId: string): Promise<De
 
 export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promise<DeviceRecord> {
   const actorDevice = await DeviceRepository.getDevice(payload.actorUserId, payload.actorDeviceId);
-  if (!actorDevice || !isDeviceTrusted(actorDevice)) {
+  if (!actorDevice || actorDevice.status === DeviceStatus.REVOKED) {
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
   }
 
@@ -80,8 +107,13 @@ export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promis
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
   }
 
-  if (!isDeviceTrusted(targetDevice)) {
+  if (targetDevice.status === DeviceStatus.REVOKED) {
     throw new AppError("AUTH_FORBIDDEN", "Target device is not trusted", 403);
+  }
+
+  const isSelfUpload = payload.actorDeviceId === payload.targetDeviceId;
+  if (!isSelfUpload && !isDeviceTrusted(actorDevice)) {
+    throw new AppError("AUTH_FORBIDDEN", "Only trusted devices can upload keys for another device", 403);
   }
 
   if (payload.oneTimePreKeys) {
@@ -112,6 +144,41 @@ export async function uploadDeviceKeys(payload: UploadDeviceKeysPayload): Promis
   return updated;
 }
 
+export async function approveDevice(payload: ApproveDevicePayload): Promise<DeviceRecord> {
+  const actorDevice = await DeviceRepository.getDevice(payload.actorUserId, payload.actorDeviceId);
+  if (!actorDevice || !isDeviceTrusted(actorDevice) || !isPrimaryDevice(actorDevice)) {
+    throw new AppError("AUTH_FORBIDDEN", "Only the trusted primary device can approve browsers", 403);
+  }
+
+  const targetDevice = await DeviceRepository.getDevice(payload.actorUserId, payload.targetDeviceId);
+  if (!targetDevice || targetDevice.status === DeviceStatus.REVOKED) {
+    throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
+  }
+
+  if (targetDevice.isPrimary) {
+    throw new AppError("CONFLICT", "Primary device does not require approval", 409);
+  }
+
+  if (!targetDevice.identityKey) {
+    throw new AppError("CONFLICT", "Target device must upload keys before approval", 409);
+  }
+
+  const updated = await DeviceRepository.approveDevice({
+    userId: payload.actorUserId,
+    deviceId: payload.targetDeviceId,
+    signatureByPrimary: payload.signatureByPrimary,
+    approvedByDeviceId: payload.actorDeviceId,
+  });
+
+  await publishTrustChange(payload.actorUserId, {
+    changeType: "keys-updated",
+    deviceId: payload.targetDeviceId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
+}
+
 export async function getBootstrapBundle(payload: GetBootstrapBundlePayload): Promise<BootstrapBundle> {
   // Allow cross-user key bundle fetching (required for E2EE messaging)
   // Public keys are meant to be public - Signal Protocol standard behavior
@@ -129,13 +196,36 @@ export async function getBootstrapBundle(payload: GetBootstrapBundlePayload): Pr
     throw new AppError("CONFLICT", "Device key state is incomplete", 409);
   }
 
+  let primaryDeviceId: string | undefined;
+  let primaryIdentityKey: string | undefined;
+
+  if (!isPrimaryDevice(targetDevice)) {
+    const primaryDevice = (await DeviceRepository.listDevicesByUser(payload.targetUserId)).find(
+      (device) => isPrimaryDevice(device) && device.status === DeviceStatus.TRUSTED,
+    );
+
+    if (!primaryDevice?.identityKey?.publicKey) {
+      throw new AppError("CONFLICT", "Primary device identity is unavailable", 409);
+    }
+
+    if (!targetDevice.identityKey.signatureByPrimary) {
+      throw new AppError("CONFLICT", "Approved secondary device is missing primary signature", 409);
+    }
+
+    primaryDeviceId = primaryDevice.deviceId;
+    primaryIdentityKey = primaryDevice.identityKey.publicKey;
+  }
+
   const oneTimePreKey = await DeviceRepository.consumeOneTimePreKey(payload.targetUserId, payload.targetDeviceId);
   return {
     userId: payload.targetUserId,
     deviceId: payload.targetDeviceId,
+    isPrimary: isPrimaryDevice(targetDevice),
     identityKey: targetDevice.identityKey,
     dhPublicKey: targetDevice.dhPublicKey,
     signedPreKey: targetDevice.signedPreKey,
     oneTimePreKey,
+    ...(primaryDeviceId ? { primaryDeviceId } : {}),
+    ...(primaryIdentityKey ? { primaryIdentityKey } : {}),
   };
 }

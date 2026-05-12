@@ -47,6 +47,7 @@ describe('PUT /v1/devices/{deviceId}/keys', () => {
         keyId: 'ik-1',
         algorithm: 'X25519',
         publicKey: 'base64-public-identity',
+        signatureByPrimary: 'base64-primary-signature',
       },
       signedPreKey: {
         keyId: 'spk-1',
@@ -62,6 +63,7 @@ describe('PUT /v1/devices/{deviceId}/keys', () => {
           keyId: 'ik-1',
           algorithm: 'X25519',
           publicKey: 'base64-public-identity',
+          signatureByPrimary: 'base64-primary-signature',
         },
         signedPreKey: {
           keyId: 'spk-1',
@@ -77,6 +79,13 @@ describe('PUT /v1/devices/{deviceId}/keys', () => {
     expect(parsed.data.deviceId).toBe('dev-target');
     expect(parsed.data.identityKey.keyId).toBe('ik-1');
     expect(parsed.data.signedPreKey.keyId).toBe('spk-1');
+    expect(vi.mocked(DeviceService.uploadDeviceKeys)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        identityKey: expect.objectContaining({
+          signatureByPrimary: 'base64-primary-signature',
+        }),
+      }),
+    );
   });
 
   it('returns 400 when request body is missing', async () => {

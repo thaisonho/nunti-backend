@@ -43,6 +43,21 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body.data.sub).toBe('user-1');
+    expect(body.data.accessAccepted).toBe(true);
+  });
+
+  it('accepts pending device and reports accessAccepted false', async () => {
+    vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+    vi.mocked(DeviceService.listDevices).mockResolvedValue([
+      { userId: 'user-1', deviceId: 'dev-1', status: DeviceStatus.PENDING, registeredAt: '', lastSeenAt: '' }
+    ]);
+
+    const event = createEvent({ Authorization: 'Bearer valid-token', 'X-Device-Id': 'dev-1' });
+    const response = await meHandler(event);
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body.data.accessAccepted).toBe(false);
   });
 
   it('returns 401 AUTH_TOKEN_MISSING_OR_MALFORMED for missing header', async () => {

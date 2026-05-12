@@ -17,6 +17,7 @@ describe('Device Service', () => {
     userId: 'user-1',
     deviceId: 'dev-1',
     status: DeviceStatus.TRUSTED,
+    isPrimary: true,
     registeredAt: now,
     lastSeenAt: now,
     deviceLabel: 'iPhone 13',
@@ -24,7 +25,8 @@ describe('Device Service', () => {
     appVersion: '1.0.0'
   };
 
-  it('registerDevice should write a trusted device record', async () => {
+  it('registerDevice should write the first browser as trusted primary', async () => {
+    vi.mocked(DeviceRepository.listDevicesByUser).mockResolvedValue([]);
     vi.mocked(DeviceRepository.upsertDevice).mockResolvedValue(mockDevice);
     
     const result = await DeviceService.registerDevice({
@@ -38,11 +40,44 @@ describe('Device Service', () => {
     expect(DeviceRepository.upsertDevice).toHaveBeenCalledWith({
       userId: 'user-1',
       deviceId: 'dev-1',
+      status: DeviceStatus.TRUSTED,
+      isPrimary: true,
       deviceLabel: 'iPhone 13',
       platform: 'iOS',
       appVersion: '1.0.0'
     });
     expect(result.status).toBe(DeviceStatus.TRUSTED);
+    expect(result.isPrimary).toBe(true);
+  });
+
+  it('registerDevice should write later browsers as pending secondary devices', async () => {
+    vi.mocked(DeviceRepository.listDevicesByUser).mockResolvedValue([mockDevice]);
+    vi.mocked(DeviceRepository.upsertDevice).mockResolvedValue({
+      ...mockDevice,
+      deviceId: 'dev-2',
+      status: DeviceStatus.PENDING,
+      isPrimary: false,
+    });
+
+    const result = await DeviceService.registerDevice({
+      userId: 'user-1',
+      deviceId: 'dev-2',
+      deviceLabel: 'Chrome',
+      platform: 'web',
+      appVersion: '1.0.0'
+    });
+
+    expect(DeviceRepository.upsertDevice).toHaveBeenCalledWith({
+      userId: 'user-1',
+      deviceId: 'dev-2',
+      status: DeviceStatus.PENDING,
+      isPrimary: false,
+      deviceLabel: 'Chrome',
+      platform: 'web',
+      appVersion: '1.0.0'
+    });
+    expect(result.status).toBe(DeviceStatus.PENDING);
+    expect(result.isPrimary).toBe(false);
   });
 
   it('listDevices should return devices for a user', async () => {
@@ -56,10 +91,14 @@ describe('Device Service', () => {
   });
 
   it('revokeDevice should mark device as revoked and set revokedAt', async () => {
-    vi.mocked(DeviceRepository.getDevice).mockResolvedValue(mockDevice);
+    vi.mocked(DeviceRepository.getDevice).mockResolvedValue({
+      ...mockDevice,
+      isPrimary: false,
+    });
     vi.mocked(DeviceRepository.updateDeviceStatus).mockResolvedValue({
       ...mockDevice,
       status: DeviceStatus.REVOKED,
+      isPrimary: false,
       revokedAt: now
     });
 
@@ -82,6 +121,17 @@ describe('Device Service', () => {
       .toThrow(AppError);
   });
 
+  it('revokeDevice should reject primary device revocation', async () => {
+    vi.mocked(DeviceRepository.getDevice).mockResolvedValue(mockDevice);
+
+    await expect(DeviceService.revokeDevice('user-1', 'dev-1'))
+      .rejects
+      .toMatchObject<AppError>({
+        code: 'CONFLICT',
+        statusCode: 409,
+      });
+  });
+
   it('isDeviceTrusted policy should deny revoked devices', () => {
     expect(isDeviceTrusted(mockDevice)).toBe(true);
     
@@ -89,6 +139,11 @@ describe('Device Service', () => {
       ...mockDevice,
       status: DeviceStatus.REVOKED,
       revokedAt: now
+    })).toBe(false);
+
+    expect(isDeviceTrusted({
+      ...mockDevice,
+      status: DeviceStatus.PENDING,
     })).toBe(false);
   });
 });

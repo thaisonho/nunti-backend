@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler as registerHandler } from '../../src/handlers/http/devices-register.js';
 import { handler as listHandler } from '../../src/handlers/http/devices-list.js';
+import { handler as approveHandler } from '../../src/handlers/http/devices-approve.js';
 import { handler as revokeHandler } from '../../src/handlers/http/devices-revoke.js';
 import * as AuthGuard from '../../src/auth/auth-guard.js';
 import * as DeviceService from '../../src/devices/device-service.js';
@@ -43,6 +44,7 @@ describe('Device Endpoints Integration', () => {
         platform: 'iOS',
         appVersion: '1.0',
         status: DeviceStatus.TRUSTED,
+        isPrimary: true,
         registeredAt: new Date().toISOString(),
         lastSeenAt: new Date().toISOString()
       });
@@ -59,6 +61,31 @@ describe('Device Endpoints Integration', () => {
       const parsed = JSON.parse(response.body);
       expect(parsed.data.deviceId).toBe('dev-1');
       expect(parsed.data.status).toBe('trusted');
+    });
+
+    it('registers later device as pending when service returns pending state', async () => {
+      vi.mocked(DeviceService.registerDevice).mockResolvedValue({
+        userId: 'user-1',
+        deviceId: 'dev-2',
+        deviceLabel: 'Chrome',
+        platform: 'web',
+        status: DeviceStatus.PENDING,
+        isPrimary: false,
+        registeredAt: new Date().toISOString(),
+        lastSeenAt: new Date().toISOString(),
+      });
+
+      const event = createEvent('POST', '/v1/devices/register', { Authorization: 'Bearer token' }, {
+        deviceId: 'dev-2',
+        deviceLabel: 'Chrome',
+        platform: 'web',
+      });
+
+      const response = await registerHandler(event);
+      expect(response.statusCode).toBe(201);
+      const parsed = JSON.parse(response.body);
+      expect(parsed.data.status).toBe('pending');
+      expect(parsed.data.isPrimary).toBe(false);
     });
 
     it('returns 400 for missing deviceId', async () => {
@@ -88,7 +115,36 @@ describe('Device Endpoints Integration', () => {
       const response = await listHandler(event);
       expect(response.statusCode).toBe(200);
       const parsed = JSON.parse(response.body);
-      expect(parsed.data).toHaveLength(1);
+      expect(parsed.data.devices).toHaveLength(1);
+      expect(parsed.data.devices[0].deviceId).toBe('dev-1');
+    });
+  });
+
+  describe('POST /v1/devices/{deviceId}/approve', () => {
+    it('approves pending device and returns 200', async () => {
+      vi.mocked(DeviceService.approveDevice).mockResolvedValue({
+        userId: 'user-1',
+        deviceId: 'dev-pending',
+        status: DeviceStatus.TRUSTED,
+        isPrimary: false,
+        registeredAt: new Date().toISOString(),
+        lastSeenAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+      });
+
+      const event = createEvent(
+        'POST',
+        '/v1/devices/dev-pending/approve',
+        { Authorization: 'Bearer token', 'X-Device-Id': 'dev-primary' },
+        { signatureByPrimary: 'base64-signature' },
+        { deviceId: 'dev-pending' },
+      );
+
+      const response = await approveHandler(event);
+      expect(response.statusCode).toBe(200);
+      const parsed = JSON.parse(response.body);
+      expect(parsed.data.deviceId).toBe('dev-pending');
+      expect(parsed.data.status).toBe('trusted');
     });
   });
 
