@@ -27,6 +27,7 @@ export interface DirectMessageRequest {
   recipientUserId: string;
   recipientDeviceId: string;
   ciphertext: string;
+  senderCiphertext?: string;
 }
 
 /** Server-pushed encrypted message event to recipient device. */
@@ -109,10 +110,17 @@ export function validateDirectMessageRequest(body: unknown): DirectMessageReques
     throw new Error('Invalid message payload: ciphertext required');
   }
 
+  if (obj.senderCiphertext !== undefined) {
+    if (typeof obj.senderCiphertext !== 'string' || obj.senderCiphertext.length === 0) {
+      throw new Error('Invalid message payload: senderCiphertext must be a non-empty string');
+    }
+  }
+
   return {
     messageId: obj.messageId,
     recipientUserId: obj.recipientUserId,
     recipientDeviceId: obj.recipientDeviceId,
     ciphertext: obj.ciphertext,
+    senderCiphertext: obj.senderCiphertext as string | undefined,
   };
 }

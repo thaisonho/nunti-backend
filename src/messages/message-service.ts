@@ -43,6 +43,7 @@ export async function sendMessage(
   request: DirectMessageRequest,
 ): Promise<SendMessageResult> {
   const serverTimestamp = new Date().toISOString();
+  const senderCiphertext = request.senderCiphertext ?? request.ciphertext;
 
   // Build the message record
   const record: MessageRecord = {
@@ -58,7 +59,7 @@ export async function sendMessage(
   };
 
   // Persist the message (idempotent — returns existing record on duplicate)
-  const existingRecord = await MessageRepository.createMessage(record);
+  const existingRecord = await MessageRepository.createMessage(record, senderCiphertext);
 
   if (existingRecord) {
     // Duplicate send — return the stored outcome without side effects
