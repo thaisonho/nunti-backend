@@ -47,7 +47,7 @@ export interface BootstrapBundle {
 }
 
 function isPrimaryDevice(device: DeviceRecord): boolean {
-  return device.isPrimary !== false;
+  return device.isPrimary === true;
 }
 
 export async function registerDevice(payload: RegisterDevicePayload): Promise<DeviceRecord> {
