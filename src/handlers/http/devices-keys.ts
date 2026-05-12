@@ -6,22 +6,25 @@ import { successResponse, errorResponse, rawErrorResponse } from '../../app/http
 import { AppError } from '../../app/errors.js';
 import * as AuditService from '../../audit/audit-service.js';
 
-const keyPayloadSchema = z.object({
+const publicKeyPayloadSchema = z.object({
   keyId: z.string().min(1),
   algorithm: z.string().min(1),
   publicKey: z.string().min(1),
+});
+
+const identityKeyPayloadSchema = publicKeyPayloadSchema.extend({
   signatureByPrimary: z.string().min(1).optional(),
 });
 
-const signedPreKeySchema = keyPayloadSchema.extend({
+const signedPreKeySchema = publicKeyPayloadSchema.extend({
   signature: z.string().min(1),
 });
 
 const uploadSchema = z.object({
-  identityKey: keyPayloadSchema,
-  dhPublicKey: keyPayloadSchema.optional(),
+  identityKey: identityKeyPayloadSchema,
+  dhPublicKey: publicKeyPayloadSchema.optional(),
   signedPreKey: signedPreKeySchema,
-  oneTimePreKeys: z.array(keyPayloadSchema).optional(),
+  oneTimePreKeys: z.array(publicKeyPayloadSchema).optional(),
 });
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {

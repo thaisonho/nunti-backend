@@ -88,6 +88,91 @@ describe('PUT /v1/devices/{deviceId}/keys', () => {
     );
   });
 
+  it('strips signatureByPrimary from non-identity key payloads', async () => {
+    vi.mocked(DeviceService.uploadDeviceKeys).mockResolvedValue({
+      userId: 'user-1',
+      deviceId: 'dev-target',
+      status: DeviceStatus.TRUSTED,
+      registeredAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
+      keyStateUpdatedAt: new Date().toISOString(),
+      identityKey: {
+        keyId: 'ik-1',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-public-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+      signedPreKey: {
+        keyId: 'spk-1',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-public-signed-prekey',
+        signature: 'base64-signature',
+      },
+    });
+
+    await uploadKeysHandler(
+      createEvent({
+        identityKey: {
+          keyId: 'ik-1',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-public-identity',
+          signatureByPrimary: 'base64-primary-signature',
+        },
+        dhPublicKey: {
+          keyId: 'dh-1',
+          algorithm: 'X25519',
+          publicKey: 'base64-dh',
+          signatureByPrimary: 'should-be-stripped',
+        },
+        signedPreKey: {
+          keyId: 'spk-1',
+          algorithm: 'Curve25519',
+          publicKey: 'base64-public-signed-prekey',
+          signature: 'base64-signature',
+          signatureByPrimary: 'should-be-stripped',
+        },
+        oneTimePreKeys: [
+          {
+            keyId: 'opk-1',
+            algorithm: 'Curve25519',
+            publicKey: 'base64-opk',
+            signatureByPrimary: 'should-be-stripped',
+          },
+        ],
+      }),
+    );
+
+    expect(vi.mocked(DeviceService.uploadDeviceKeys)).toHaveBeenCalledWith({
+      actorUserId: 'user-1',
+      actorDeviceId: 'dev-actor',
+      targetDeviceId: 'dev-target',
+      identityKey: {
+        keyId: 'ik-1',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-public-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+      dhPublicKey: {
+        keyId: 'dh-1',
+        algorithm: 'X25519',
+        publicKey: 'base64-dh',
+      },
+      signedPreKey: {
+        keyId: 'spk-1',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-public-signed-prekey',
+        signature: 'base64-signature',
+      },
+      oneTimePreKeys: [
+        {
+          keyId: 'opk-1',
+          algorithm: 'Curve25519',
+          publicKey: 'base64-opk',
+        },
+      ],
+    });
+  });
+
   it('returns 400 when request body is missing', async () => {
     const response = await uploadKeysHandler(createEvent(null));
 

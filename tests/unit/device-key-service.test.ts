@@ -310,4 +310,76 @@ describe('device key upload service', () => {
     });
     expect(result.status).toBe(DeviceStatus.TRUSTED);
   });
+
+  it('returns bootstrap bundle signed by the approving primary browser', async () => {
+    const approvedSecondary: DeviceRecord = {
+      ...trustedTarget,
+      identityKey: {
+        keyId: 'ik-secondary',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-secondary-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+      signedPreKey: {
+        keyId: 'spk-secondary',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-secondary-spk',
+        signature: 'base64-secondary-spk-signature',
+      },
+      approvedByDeviceId: 'dev-actor',
+    };
+
+    vi.mocked(DeviceRepository.getDevice)
+      .mockResolvedValueOnce(approvedSecondary)
+      .mockResolvedValueOnce({
+        ...trustedActor,
+        identityKey: {
+          keyId: 'ik-primary',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-primary-identity',
+        },
+      });
+    vi.mocked(DeviceRepository.consumeOneTimePreKey).mockResolvedValue({
+      keyId: 'opk-1',
+      algorithm: 'Curve25519',
+      publicKey: 'base64-opk',
+    });
+
+    const result = await DeviceService.getBootstrapBundle({
+      targetUserId: 'user-1',
+      targetDeviceId: 'dev-target',
+    });
+
+    expect(DeviceRepository.getDevice).toHaveBeenNthCalledWith(2, 'user-1', 'dev-actor');
+    expect(result.primaryDeviceId).toBe('dev-actor');
+    expect(result.primaryIdentityKey).toBe('base64-primary-identity');
+  });
+
+  it('rejects approved secondary bootstrap when approving primary reference is missing', async () => {
+    vi.mocked(DeviceRepository.getDevice).mockResolvedValueOnce({
+      ...trustedTarget,
+      identityKey: {
+        keyId: 'ik-secondary',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-secondary-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+      signedPreKey: {
+        keyId: 'spk-secondary',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-secondary-spk',
+        signature: 'base64-secondary-spk-signature',
+      },
+    });
+
+    await expect(
+      DeviceService.getBootstrapBundle({
+        targetUserId: 'user-1',
+        targetDeviceId: 'dev-target',
+      }),
+    ).rejects.toMatchObject<AppError>({
+      code: 'CONFLICT',
+      statusCode: 409,
+    });
+  });
 });

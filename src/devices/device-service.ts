@@ -200,16 +200,26 @@ export async function getBootstrapBundle(payload: GetBootstrapBundlePayload): Pr
   let primaryIdentityKey: string | undefined;
 
   if (!isPrimaryDevice(targetDevice)) {
-    const primaryDevice = (await DeviceRepository.listDevicesByUser(payload.targetUserId)).find(
-      (device) => isPrimaryDevice(device) && device.status === DeviceStatus.TRUSTED,
-    );
-
-    if (!primaryDevice?.identityKey?.publicKey) {
-      throw new AppError("CONFLICT", "Primary device identity is unavailable", 409);
-    }
-
     if (!targetDevice.identityKey.signatureByPrimary) {
       throw new AppError("CONFLICT", "Approved secondary device is missing primary signature", 409);
+    }
+
+    if (!targetDevice.approvedByDeviceId) {
+      throw new AppError("CONFLICT", "Approved secondary device is missing approving primary reference", 409);
+    }
+
+    const primaryDevice = await DeviceRepository.getDevice(
+      payload.targetUserId,
+      targetDevice.approvedByDeviceId,
+    );
+
+    if (
+      !primaryDevice
+      || primaryDevice.status !== DeviceStatus.TRUSTED
+      || !isPrimaryDevice(primaryDevice)
+      || !primaryDevice.identityKey?.publicKey
+    ) {
+      throw new AppError("CONFLICT", "Primary device identity is unavailable", 409);
     }
 
     primaryDeviceId = primaryDevice.deviceId;
