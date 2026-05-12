@@ -17,6 +17,7 @@ describe('device key upload service', () => {
     userId: 'user-1',
     deviceId: 'dev-actor',
     status: DeviceStatus.TRUSTED,
+    isPrimary: true,
     registeredAt: now,
     lastSeenAt: now,
   };
@@ -25,6 +26,16 @@ describe('device key upload service', () => {
     userId: 'user-1',
     deviceId: 'dev-target',
     status: DeviceStatus.TRUSTED,
+    isPrimary: false,
+    registeredAt: now,
+    lastSeenAt: now,
+  };
+
+  const pendingSelfDevice: DeviceRecord = {
+    userId: 'user-1',
+    deviceId: 'dev-pending',
+    status: DeviceStatus.PENDING,
+    isPrimary: false,
     registeredAt: now,
     lastSeenAt: now,
   };
@@ -218,6 +229,157 @@ describe('device key upload service', () => {
     ).rejects.toMatchObject<AppError>({
       code: 'VALIDATION_ERROR',
       statusCode: 400,
+    });
+  });
+
+  it('allows pending browser to upload its own keys before approval', async () => {
+    vi.mocked(DeviceRepository.getDevice)
+      .mockResolvedValueOnce(pendingSelfDevice)
+      .mockResolvedValueOnce(pendingSelfDevice);
+    vi.mocked(DeviceRepository.updateDeviceKeys).mockResolvedValue({
+      ...pendingSelfDevice,
+      identityKey: {
+        keyId: 'ik-2',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-pending-identity',
+      },
+      signedPreKey: {
+        keyId: 'spk-2',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-pending-spk',
+        signature: 'base64-signature',
+      },
+    });
+
+    await expect(
+      DeviceService.uploadDeviceKeys({
+        actorUserId: 'user-1',
+        actorDeviceId: 'dev-pending',
+        targetDeviceId: 'dev-pending',
+        identityKey: {
+          keyId: 'ik-2',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-pending-identity',
+        },
+        signedPreKey: {
+          keyId: 'spk-2',
+          algorithm: 'Curve25519',
+          publicKey: 'base64-pending-spk',
+          signature: 'base64-signature',
+        },
+      }),
+    ).resolves.toBeTruthy();
+  });
+
+  it('allows trusted primary browser to approve a pending browser', async () => {
+    vi.mocked(DeviceRepository.getDevice)
+      .mockResolvedValueOnce(trustedActor)
+      .mockResolvedValueOnce({
+        ...pendingSelfDevice,
+        identityKey: {
+          keyId: 'ik-pending',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-pending-identity',
+        },
+      });
+    vi.mocked(DeviceRepository.approveDevice).mockResolvedValue({
+      ...pendingSelfDevice,
+      status: DeviceStatus.TRUSTED,
+      approvedAt: now,
+      approvedByDeviceId: 'dev-actor',
+      identityKey: {
+        keyId: 'ik-pending',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-pending-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+    });
+
+    const result = await DeviceService.approveDevice({
+      actorUserId: 'user-1',
+      actorDeviceId: 'dev-actor',
+      targetDeviceId: 'dev-pending',
+      signatureByPrimary: 'base64-primary-signature',
+    });
+
+    expect(DeviceRepository.approveDevice).toHaveBeenCalledWith({
+      userId: 'user-1',
+      deviceId: 'dev-pending',
+      signatureByPrimary: 'base64-primary-signature',
+      approvedByDeviceId: 'dev-actor',
+    });
+    expect(result.status).toBe(DeviceStatus.TRUSTED);
+  });
+
+  it('returns bootstrap bundle signed by the approving primary browser', async () => {
+    const approvedSecondary: DeviceRecord = {
+      ...trustedTarget,
+      identityKey: {
+        keyId: 'ik-secondary',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-secondary-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+      signedPreKey: {
+        keyId: 'spk-secondary',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-secondary-spk',
+        signature: 'base64-secondary-spk-signature',
+      },
+      approvedByDeviceId: 'dev-actor',
+    };
+
+    vi.mocked(DeviceRepository.getDevice)
+      .mockResolvedValueOnce(approvedSecondary)
+      .mockResolvedValueOnce({
+        ...trustedActor,
+        identityKey: {
+          keyId: 'ik-primary',
+          algorithm: 'Ed25519',
+          publicKey: 'base64-primary-identity',
+        },
+      });
+    vi.mocked(DeviceRepository.consumeOneTimePreKey).mockResolvedValue({
+      keyId: 'opk-1',
+      algorithm: 'Curve25519',
+      publicKey: 'base64-opk',
+    });
+
+    const result = await DeviceService.getBootstrapBundle({
+      targetUserId: 'user-1',
+      targetDeviceId: 'dev-target',
+    });
+
+    expect(DeviceRepository.getDevice).toHaveBeenNthCalledWith(2, 'user-1', 'dev-actor');
+    expect(result.primaryDeviceId).toBe('dev-actor');
+    expect(result.primaryIdentityKey).toBe('base64-primary-identity');
+  });
+
+  it('rejects approved secondary bootstrap when approving primary reference is missing', async () => {
+    vi.mocked(DeviceRepository.getDevice).mockResolvedValueOnce({
+      ...trustedTarget,
+      identityKey: {
+        keyId: 'ik-secondary',
+        algorithm: 'Ed25519',
+        publicKey: 'base64-secondary-identity',
+        signatureByPrimary: 'base64-primary-signature',
+      },
+      signedPreKey: {
+        keyId: 'spk-secondary',
+        algorithm: 'Curve25519',
+        publicKey: 'base64-secondary-spk',
+        signature: 'base64-secondary-spk-signature',
+      },
+    });
+
+    await expect(
+      DeviceService.getBootstrapBundle({
+        targetUserId: 'user-1',
+        targetDeviceId: 'dev-target',
+      }),
+    ).rejects.toMatchObject<AppError>({
+      code: 'CONFLICT',
+      statusCode: 409,
     });
   });
 });

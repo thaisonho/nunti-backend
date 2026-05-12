@@ -27,6 +27,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         deviceId: d.deviceId,
         platform: d.platform,
         status: d.status,
+        isPrimary: !!d.isPrimary,
         lastSeenAt: d.lastSeenAt,
       }));
 

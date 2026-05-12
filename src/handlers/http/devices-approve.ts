@@ -4,27 +4,9 @@ import { requireAuth } from '../../auth/auth-guard.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
-import * as AuditService from '../../audit/audit-service.js';
 
-const publicKeyPayloadSchema = z.object({
-  keyId: z.string().min(1),
-  algorithm: z.string().min(1),
-  publicKey: z.string().min(1),
-});
-
-const identityKeyPayloadSchema = publicKeyPayloadSchema.extend({
-  signatureByPrimary: z.string().min(1).optional(),
-});
-
-const signedPreKeySchema = publicKeyPayloadSchema.extend({
-  signature: z.string().min(1),
-});
-
-const uploadSchema = z.object({
-  identityKey: identityKeyPayloadSchema,
-  dhPublicKey: publicKeyPayloadSchema.optional(),
-  signedPreKey: signedPreKeySchema,
-  oneTimePreKeys: z.array(publicKeyPayloadSchema).optional(),
+const approveSchema = z.object({
+  signatureByPrimary: z.string().min(1),
 });
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -52,38 +34,24 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return rawErrorResponse(400, 'VALIDATION_ERROR', 'Invalid JSON body');
     }
 
-    const validationResult = uploadSchema.safeParse(parsedBody);
+    const validationResult = approveSchema.safeParse(parsedBody);
     if (!validationResult.success) {
       return rawErrorResponse(400, 'VALIDATION_ERROR', 'Invalid input parameters');
     }
 
-    const updated = await DeviceService.uploadDeviceKeys({
+    const updated = await DeviceService.approveDevice({
       actorUserId: user.sub,
       actorDeviceId,
       targetDeviceId,
-      identityKey: validationResult.data.identityKey,
-      dhPublicKey: validationResult.data.dhPublicKey,
-      signedPreKey: validationResult.data.signedPreKey,
-      oneTimePreKeys: validationResult.data.oneTimePreKeys,
+      signatureByPrimary: validationResult.data.signatureByPrimary,
     });
-
-    const keyTypes = ['identityKey', 'signedPreKey'];
-    if (validationResult.data.oneTimePreKeys) keyTypes.push('oneTimePreKeys');
-    if (validationResult.data.dhPublicKey) keyTypes.push('dhPublicKey');
-
-    AuditService.keyBundleUploaded(
-      user.sub,
-      targetDeviceId,
-      keyTypes,
-      event.requestContext?.identity?.sourceIp,
-    );
 
     return successResponse(updated, 200);
   } catch (error) {
     if (error instanceof AppError) {
       return errorResponse(error);
     }
-    console.error('Unhandled error in devices-keys:', error);
+    console.error('Unhandled error in devices-approve:', error);
     return rawErrorResponse(500, 'INTERNAL_ERROR', 'Internal server error');
   }
 };

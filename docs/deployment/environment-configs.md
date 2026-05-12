@@ -167,6 +167,7 @@ When wiring device and user endpoints in API Gateway, use these routes and handl
 | --- | --- | --- |
 | `POST /v1/devices/register` | `dist/src/handlers/http/devices-register.handler` | Register new device |
 | `GET /v1/devices` | `dist/src/handlers/http/devices-list.handler` | List own devices |
+| `POST /v1/devices/{deviceId}/approve` | `dist/src/handlers/http/devices-approve.handler` | Approve pending browser from the trusted primary browser |
 | `POST /v1/devices/{deviceId}/revoke` | `dist/src/handlers/http/devices-revoke.handler` | Revoke device |
 | `PUT /v1/devices/{deviceId}/keys` | `dist/src/handlers/http/devices-keys.handler` | Upload E2EE keys |
 | `GET /v1/users/{userId}/devices` | `dist/src/handlers/http/users-devices-list.handler` | **NEW** - List another user's devices |

@@ -17,7 +17,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       event.requestContext?.identity?.sourceIp,
     );
 
-    return successResponse(devices, 200);
+    return successResponse({ devices }, 200);
   } catch (error) {
     if (error instanceof AppError) {
       return errorResponse(error);

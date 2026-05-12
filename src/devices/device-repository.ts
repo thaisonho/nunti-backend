@@ -10,6 +10,8 @@ export const ddbDocClient = DynamoDBDocumentClient.from(client);
 interface UpsertParams {
   userId: string;
   deviceId: string;
+  status: DeviceStatus;
+  isPrimary: boolean;
   deviceLabel?: string;
   platform?: string;
   appVersion?: string;
@@ -21,6 +23,13 @@ interface UpdateDeviceKeysParams {
   identityKey: IdentityKeyRecord;
   dhPublicKey?: IdentityKeyRecord;
   signedPreKey: SignedPreKeyRecord;
+}
+
+interface ApproveDeviceParams {
+  userId: string;
+  deviceId: string;
+  signatureByPrimary: string;
+  approvedByDeviceId: string;
 }
 
 function getTableName(): string {
@@ -52,7 +61,8 @@ export async function upsertDevice(params: UpsertParams): Promise<DeviceRecord> 
   const record: DeviceRecord = {
     userId: params.userId,
     deviceId: params.deviceId,
-    status: DeviceStatus.TRUSTED,
+    status: params.status,
+    isPrimary: params.isPrimary,
     registeredAt: now,
     lastSeenAt: now,
     deviceLabel: params.deviceLabel,
@@ -77,12 +87,15 @@ function toDeviceRecord(item: Record<string, unknown>): DeviceRecord {
     userId: item.userId as string,
     deviceId: item.deviceId as string,
     status: item.status as DeviceStatus,
+    ...(item.isPrimary !== undefined && { isPrimary: item.isPrimary as boolean }),
     registeredAt: item.registeredAt as string,
     lastSeenAt: item.lastSeenAt as string,
     ...(item.deviceLabel !== undefined && { deviceLabel: item.deviceLabel as string }),
     ...(item.platform !== undefined && { platform: item.platform as string }),
     ...(item.appVersion !== undefined && { appVersion: item.appVersion as string }),
     ...(item.revokedAt !== undefined && { revokedAt: item.revokedAt as string }),
+    ...(item.approvedAt !== undefined && { approvedAt: item.approvedAt as string }),
+    ...(item.approvedByDeviceId !== undefined && { approvedByDeviceId: item.approvedByDeviceId as string }),
     ...(item.keyStateUpdatedAt !== undefined && { keyStateUpdatedAt: item.keyStateUpdatedAt as string }),
     ...(item.identityKey !== undefined && { identityKey: item.identityKey as IdentityKeyRecord }),
     ...(item.dhPublicKey !== undefined && { dhPublicKey: item.dhPublicKey as IdentityKeyRecord }),
@@ -167,6 +180,45 @@ export async function updateDeviceKeys(params: UpdateDeviceKeysParams): Promise<
 
   if (!result.Attributes) {
     throw new Error(`Device not found after key update: ${params.deviceId}`);
+  }
+
+  return toDeviceRecord(result.Attributes as Record<string, unknown>);
+}
+
+export async function approveDevice(params: ApproveDeviceParams): Promise<DeviceRecord> {
+  const now = new Date().toISOString();
+  const current = await getDevice(params.userId, params.deviceId);
+
+  if (!current?.identityKey) {
+    throw new AppError("CONFLICT", "Device identity key must be uploaded before approval", 409);
+  }
+
+  const result = await ddbDocClient.send(new UpdateCommand({
+    TableName: getTableName(),
+    Key: {
+      pk: devicePk(params.userId),
+      sk: deviceSk(params.deviceId),
+    },
+    ConditionExpression: "attribute_exists(pk) AND attribute_exists(sk)",
+    UpdateExpression: "SET #status = :status, approvedAt = :approvedAt, approvedByDeviceId = :approvedByDeviceId, identityKey = :identityKey, lastSeenAt = :updatedAt",
+    ExpressionAttributeNames: {
+      "#status": "status",
+    },
+    ExpressionAttributeValues: {
+      ":status": DeviceStatus.TRUSTED,
+      ":approvedAt": now,
+      ":approvedByDeviceId": params.approvedByDeviceId,
+      ":identityKey": {
+        ...current.identityKey,
+        signatureByPrimary: params.signatureByPrimary,
+      },
+      ":updatedAt": now,
+    },
+    ReturnValues: "ALL_NEW",
+  }));
+
+  if (!result.Attributes) {
+    throw new Error(`Device not found after approval: ${params.deviceId}`);
   }
 
   return toDeviceRecord(result.Attributes as Record<string, unknown>);
