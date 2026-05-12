@@ -47,7 +47,7 @@ export interface BootstrapBundle {
 }
 
 function isPrimaryDevice(device: DeviceRecord): boolean {
-  return device.isPrimary === true;
+  return device.isPrimary !== false;
 }
 
 export async function registerDevice(payload: RegisterDevicePayload): Promise<DeviceRecord> {
@@ -79,7 +79,7 @@ export async function revokeDevice(userId: string, deviceId: string): Promise<De
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
   }
 
-  if (device.isPrimary) {
+  if (isPrimaryDevice(device)) {
     throw new AppError("CONFLICT", "Primary device cannot be revoked while browser-only trust is enabled", 409);
   }
 
@@ -155,7 +155,7 @@ export async function approveDevice(payload: ApproveDevicePayload): Promise<Devi
     throw new AppError("AUTH_FORBIDDEN", "Device not found or not owned by caller", 403);
   }
 
-  if (targetDevice.isPrimary) {
+  if (isPrimaryDevice(targetDevice)) {
     throw new AppError("CONFLICT", "Primary device does not require approval", 409);
   }
 
