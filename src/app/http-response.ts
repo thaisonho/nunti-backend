@@ -28,6 +28,9 @@ export interface ErrorResponseBody {
 const DEFAULT_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
   "Cache-Control": "no-store",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Authorization, X-Device-Id, Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
 /**

@@ -71,6 +71,18 @@ describe('message-service', () => {
       });
     });
 
+    it('persists senderCiphertext when provided for sent-history restore', async () => {
+      vi.mocked(MessageRelayPublisher.relayDirectMessage).mockResolvedValue('delivered');
+
+      await sendMessage(senderContext, {
+        ...baseRequest,
+        senderCiphertext: 'sender-readable-payload-base64',
+      });
+
+      const record = vi.mocked(MessageRepository.createMessage).mock.calls[0][0];
+      expect(record.senderCiphertext).toBe('sender-readable-payload-base64');
+    });
+
     it('updates state to delivered when relay succeeds', async () => {
       vi.mocked(MessageRelayPublisher.relayDirectMessage).mockResolvedValue('delivered');
 

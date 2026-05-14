@@ -9,6 +9,8 @@ import { listConversations } from '../../messages/message-repository.js';
  * Returns a list of conversations sorted by most recent message.
  */
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const requestId = event.requestContext?.requestId;
+
   try {
     const { user, deviceId } = await requireTrustedDeviceAuth(event);
 
@@ -17,12 +19,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return successResponse({
       conversations,
       count: conversations.length,
-    }, 200);
+    }, 200, requestId);
   } catch (error) {
     if (error instanceof AppError) {
-      return errorResponse(error);
+      return errorResponse(error, requestId);
     }
     console.error('Unhandled error in conversations-list:', error);
-    return rawErrorResponse(500, 'INTERNAL_ERROR', 'Internal server error');
+    return rawErrorResponse(500, 'INTERNAL_ERROR', 'Internal server error', requestId);
   }
 };

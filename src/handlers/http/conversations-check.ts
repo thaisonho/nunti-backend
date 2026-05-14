@@ -6,17 +6,17 @@ import { checkConversationExists } from '../../messages/message-repository.js';
 
 /**
  * Check if a conversation already exists between current user and target user.
- * This is a placeholder - you'll need to implement the actual conversation lookup logic
- * based on your messages/conversations data model.
  */
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const requestId = event.requestContext?.requestId;
+
   try {
     const { user, deviceId } = await requireTrustedDeviceAuth(event);
 
     const targetUserId = event.queryStringParameters?.userId;
 
     if (!targetUserId || targetUserId.trim().length === 0) {
-      return rawErrorResponse(400, 'VALIDATION_ERROR', 'Missing userId query parameter');
+      return rawErrorResponse(400, 'VALIDATION_ERROR', 'Missing userId query parameter', requestId);
     }
 
     // Check if any messages exist between current user and target user
@@ -25,12 +25,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return successResponse({
       exists,
       conversationId: null, // We don't have explicit conversation IDs in this architecture
-    }, 200);
+    }, 200, requestId);
   } catch (error) {
     if (error instanceof AppError) {
-      return errorResponse(error);
+      return errorResponse(error, requestId);
     }
     console.error('Unhandled error in conversations-check:', error);
-    return rawErrorResponse(500, 'INTERNAL_ERROR', 'Internal server error');
+    return rawErrorResponse(500, 'INTERNAL_ERROR', 'Internal server error', requestId);
   }
 };

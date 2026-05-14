@@ -24,6 +24,9 @@ import type {
 } from './message-model.js';
 import * as MessageRepository from './message-repository.js';
 import * as MessageRelayPublisher from '../realtime/message-relay-publisher.js';
+import * as DeviceRepository from '../devices/device-repository.js';
+import { DeviceStatus } from '../devices/device-model.js';
+import { AppError } from '../app/errors.js';
 
 /** Maximum age (in milliseconds) for queued messages before they become terminal failures. */
 const RETENTION_POLICY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -42,6 +45,8 @@ export async function sendMessage(
   context: WebSocketConnectionContext,
   request: DirectMessageRequest,
 ): Promise<SendMessageResult> {
+  await assertRecipientDeviceCanReceive(request.recipientUserId, request.recipientDeviceId);
+
   const serverTimestamp = new Date().toISOString();
 
   // Build the message record
@@ -52,6 +57,7 @@ export async function sendMessage(
     recipientUserId: request.recipientUserId,
     recipientDeviceId: request.recipientDeviceId,
     ciphertext: request.ciphertext,
+    ...(request.senderCiphertext !== undefined && { senderCiphertext: request.senderCiphertext }),
     deliveryState: 'accepted',
     serverTimestamp,
     updatedAt: serverTimestamp,
@@ -61,6 +67,36 @@ export async function sendMessage(
   const existingRecord = await MessageRepository.createMessage(record);
 
   if (existingRecord) {
+    if (
+      existingRecord.senderUserId !== context.userId ||
+      existingRecord.senderDeviceId !== context.deviceId ||
+      existingRecord.recipientUserId !== request.recipientUserId ||
+      existingRecord.recipientDeviceId !== request.recipientDeviceId
+    ) {
+      throw new Error('messageId already exists with different message metadata');
+    }
+
+    if (existingRecord.deliveryState === 'accepted') {
+      const deliveryOutcome = await relayStoredMessage(existingRecord);
+
+      if (deliveryOutcome !== 'accepted') {
+        await MessageRepository.updateDeliveryState(existingRecord, deliveryOutcome);
+      }
+
+      await MessageRelayPublisher.publishDeliveryStatus(
+        context.userId,
+        context.deviceId,
+        existingRecord.messageId,
+        deliveryOutcome,
+      );
+
+      return {
+        messageId: existingRecord.messageId,
+        status: 'accepted',
+        serverTimestamp: existingRecord.serverTimestamp,
+      };
+    }
+
     // Duplicate send — return the stored outcome without side effects
     return {
       messageId: existingRecord.messageId,
@@ -69,24 +105,8 @@ export async function sendMessage(
     };
   }
 
-  // Build the relay event for the recipient
-  const relayEvent: DirectMessageEvent = {
-    eventType: 'direct-message',
-    messageId: request.messageId,
-    senderUserId: context.userId,
-    senderDeviceId: context.deviceId,
-    recipientUserId: request.recipientUserId,
-    recipientDeviceId: request.recipientDeviceId,
-    ciphertext: request.ciphertext,
-    serverTimestamp,
-  };
-
   // Attempt live delivery
-  const deliveryOutcome = await MessageRelayPublisher.relayDirectMessage(
-    request.recipientUserId,
-    request.recipientDeviceId,
-    relayEvent,
-  );
+  const deliveryOutcome = await relayStoredMessage(record);
 
   // Update delivery state if changed from initial 'accepted'
   if (deliveryOutcome !== 'accepted') {
@@ -106,6 +126,57 @@ export async function sendMessage(
     status: 'accepted',
     serverTimestamp,
   };
+}
+
+
+async function assertRecipientDeviceCanReceive(
+  recipientUserId: string,
+  recipientDeviceId: string,
+): Promise<void> {
+  const recipientDevice = await DeviceRepository.getDevice(recipientUserId, recipientDeviceId);
+
+  if (!recipientDevice) {
+    throw new AppError(
+      'DEVICE_NOT_FOUND',
+      'Recipient device does not exist',
+      404,
+    );
+  }
+
+  if (recipientDevice.status !== DeviceStatus.TRUSTED) {
+    throw new AppError(
+      'AUTH_FORBIDDEN',
+      'Recipient device is not trusted',
+      403,
+    );
+  }
+
+  if (!recipientDevice.identityKey || !recipientDevice.signedPreKey) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Recipient device has no usable key bundle',
+      400,
+    );
+  }
+}
+
+async function relayStoredMessage(record: MessageRecord): Promise<SendMessageResult['status']> {
+  const relayEvent: DirectMessageEvent = {
+    eventType: 'direct-message',
+    messageId: record.messageId,
+    senderUserId: record.senderUserId,
+    senderDeviceId: record.senderDeviceId,
+    recipientUserId: record.recipientUserId,
+    recipientDeviceId: record.recipientDeviceId,
+    ciphertext: record.ciphertext,
+    serverTimestamp: record.serverTimestamp,
+  };
+
+  return MessageRelayPublisher.relayDirectMessage(
+    record.recipientUserId,
+    record.recipientDeviceId,
+    relayEvent,
+  );
 }
 
 /**

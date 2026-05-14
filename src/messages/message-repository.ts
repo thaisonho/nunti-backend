@@ -2,16 +2,64 @@
  * Message persistence layer for 1:1 encrypted direct messages.
  *
  * DynamoDB schema (messages table):
- *   Message record:  pk=MSG#{messageId}   sk=MSG#{messageId}
- *   Inbox record:    pk=INBOX#{recipientUserId}#{recipientDeviceId}  sk={serverTimestamp}#{messageId}
+ *   Message record:    pk=MSG#{messageId}                         sk=MSG#{messageId}
+ *   Recipient inbox:   pk=INBOX#{recipientUserId}#{recipientDeviceId} sk={serverTimestamp}#{messageId}
+ *   Sender outbox:     pk=OUTBOX#{senderUserId}#{senderDeviceId}      sk={serverTimestamp}#{messageId}
  *
- * The inbox record enables oldest-first queued-message queries for reconnect replay (Wave 3).
+ * INBOX powers reconnect replay and inbound history. OUTBOX stores a
+ * sender-readable copy so the sending device can restore its own sent history.
  */
 
 import { PutCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { ddbDocClient } from '../devices/device-repository.js';
 import { getConfig } from '../app/config.js';
+import { AppError } from '../app/errors.js';
 import type { MessageRecord, DeliveryState } from './message-model.js';
+
+type ConversationDirection = 'inbound' | 'outbound';
+type ConversationHistoryOrder = 'asc' | 'desc';
+
+interface CursorPayload {
+  sk: string;
+  order: ConversationHistoryOrder;
+}
+
+interface InternalConversationMessage extends ConversationHistoryMessage {
+  sortKey: string;
+}
+
+export interface ConversationSummary {
+  userId: string;
+  lastMessageTimestamp: string;
+  lastMessageId: string;
+  lastMessageCiphertext: string;
+  lastMessageSenderId: string;
+  lastMessageDirection: ConversationDirection;
+  unreadCount: number;
+}
+
+export interface ConversationHistoryMessage {
+  messageId: string;
+  senderUserId: string;
+  senderDeviceId: string;
+  recipientUserId: string;
+  recipientDeviceId: string;
+  ciphertext: string;
+  deliveryState: DeliveryState;
+  serverTimestamp: string;
+  direction: ConversationDirection;
+}
+
+export interface ListConversationMessagesOptions {
+  limit?: number;
+  cursor?: string;
+  order?: ConversationHistoryOrder;
+}
+
+export interface ListConversationMessagesResult {
+  messages: ConversationHistoryMessage[];
+  nextCursor: string | null;
+}
 
 function getTableName(): string {
   return getConfig().messagesTableName;
@@ -25,23 +73,26 @@ function inboxPk(recipientUserId: string, recipientDeviceId: string): string {
   return `INBOX#${recipientUserId}#${recipientDeviceId}`;
 }
 
-function inboxSk(serverTimestamp: string, messageId: string): string {
+function outboxPk(senderUserId: string, senderDeviceId: string): string {
+  return `OUTBOX#${senderUserId}#${senderDeviceId}`;
+}
+
+function messageSk(serverTimestamp: string, messageId: string): string {
   return `${serverTimestamp}#${messageId}`;
 }
 
 /**
- * Create a new message record and its inbox entry (idempotent).
+ * Create a new message record and its history/replay projections.
  *
- * Uses a conditional write on the MSG record so that a retry with
- * the same messageId returns the stored outcome instead of creating
- * duplicates. If the messageId already exists, returns the existing
- * record and skips INBOX creation.
+ * The canonical MSG write is conditional. If a retry reuses the same messageId,
+ * we read the stored record and idempotently ensure its projections exist.
  *
- * @returns null for a new message, or the existing MessageRecord on duplicate
+ * @returns null for a new message, or the existing MessageRecord on duplicate.
  */
 export async function createMessage(record: MessageRecord): Promise<MessageRecord | null> {
+  let existingRecord: MessageRecord | null = null;
+
   try {
-    // Store the canonical message record with conditional write
     await ddbDocClient.send(new PutCommand({
       TableName: getTableName(),
       Item: {
@@ -52,31 +103,58 @@ export async function createMessage(record: MessageRecord): Promise<MessageRecor
       ConditionExpression: 'attribute_not_exists(pk) AND attribute_not_exists(sk)',
     }));
   } catch (error) {
-    if ((error as { name?: string }).name === 'ConditionalCheckFailedException') {
-      // Duplicate messageId — return the existing record
-      return getMessage(record.messageId);
+    if ((error as { name?: string }).name !== 'ConditionalCheckFailedException') {
+      throw error;
     }
-    throw error;
+
+    existingRecord = await getMessage(record.messageId);
+    if (!existingRecord) {
+      throw error;
+    }
   }
 
-  // Store the inbox entry for recipient device queries (only for new messages)
-  await ddbDocClient.send(new PutCommand({
-    TableName: getTableName(),
-    Item: {
-      pk: inboxPk(record.recipientUserId, record.recipientDeviceId),
-      sk: inboxSk(record.serverTimestamp, record.messageId),
-      messageId: record.messageId,
-      senderUserId: record.senderUserId,
-      senderDeviceId: record.senderDeviceId,
-      recipientUserId: record.recipientUserId,
-      recipientDeviceId: record.recipientDeviceId,
-      ciphertext: record.ciphertext,
-      deliveryState: record.deliveryState,
-      serverTimestamp: record.serverTimestamp,
-    },
-  }));
+  await putMessageProjections(existingRecord ?? record);
 
-  return null;
+  return existingRecord;
+}
+
+async function putMessageProjections(record: MessageRecord): Promise<void> {
+  const sk = messageSk(record.serverTimestamp, record.messageId);
+  const common = {
+    messageId: record.messageId,
+    senderUserId: record.senderUserId,
+    senderDeviceId: record.senderDeviceId,
+    recipientUserId: record.recipientUserId,
+    recipientDeviceId: record.recipientDeviceId,
+    deliveryState: record.deliveryState,
+    serverTimestamp: record.serverTimestamp,
+    updatedAt: record.updatedAt,
+  };
+
+  await Promise.all([
+    ddbDocClient.send(new PutCommand({
+      TableName: getTableName(),
+      Item: {
+        pk: inboxPk(record.recipientUserId, record.recipientDeviceId),
+        sk,
+        ...common,
+        ciphertext: record.ciphertext,
+        direction: 'inbound',
+        projectionType: 'inbox',
+      },
+    })),
+    ddbDocClient.send(new PutCommand({
+      TableName: getTableName(),
+      Item: {
+        pk: outboxPk(record.senderUserId, record.senderDeviceId),
+        sk,
+        ...common,
+        ciphertext: record.senderCiphertext ?? record.ciphertext,
+        direction: 'outbound',
+        projectionType: 'outbox',
+      },
+    })),
+  ]);
 }
 
 /**
@@ -100,16 +178,15 @@ export async function getMessage(messageId: string): Promise<MessageRecord | nul
 }
 
 /**
- * Update the delivery state of a message.
- * Updates both the canonical message record and the inbox entry.
+ * Update delivery state on the canonical message and both history projections.
  */
 export async function updateDeliveryState(
   record: MessageRecord,
   newState: DeliveryState,
 ): Promise<void> {
   const now = new Date().toISOString();
+  const sk = messageSk(record.serverTimestamp, record.messageId);
 
-  // Update canonical message record
   await ddbDocClient.send(new UpdateCommand({
     TableName: getTableName(),
     Key: {
@@ -123,23 +200,40 @@ export async function updateDeliveryState(
     },
   }));
 
-  // Update inbox entry
-  await ddbDocClient.send(new UpdateCommand({
-    TableName: getTableName(),
-    Key: {
-      pk: inboxPk(record.recipientUserId, record.recipientDeviceId),
-      sk: inboxSk(record.serverTimestamp, record.messageId),
-    },
-    UpdateExpression: 'SET deliveryState = :state',
-    ExpressionAttributeValues: {
-      ':state': newState,
-    },
-  }));
+  await Promise.all([
+    updateProjectionDeliveryState(inboxPk(record.recipientUserId, record.recipientDeviceId), sk, newState, now),
+    updateProjectionDeliveryState(outboxPk(record.senderUserId, record.senderDeviceId), sk, newState, now),
+  ]);
+}
+
+async function updateProjectionDeliveryState(
+  pk: string,
+  sk: string,
+  newState: DeliveryState,
+  updatedAt: string,
+): Promise<void> {
+  try {
+    await ddbDocClient.send(new UpdateCommand({
+      TableName: getTableName(),
+      Key: { pk, sk },
+      ConditionExpression: 'attribute_exists(pk) AND attribute_exists(sk)',
+      UpdateExpression: 'SET deliveryState = :state, updatedAt = :updatedAt',
+      ExpressionAttributeValues: {
+        ':state': newState,
+        ':updatedAt': updatedAt,
+      },
+    }));
+  } catch (error) {
+    if ((error as { name?: string }).name === 'ConditionalCheckFailedException') {
+      return;
+    }
+    throw error;
+  }
 }
 
 /**
  * Query queued messages for a recipient device in oldest-first order.
- * Used by reconnect replay (Wave 3).
+ * Used by reconnect replay.
  */
 export async function listQueuedMessages(
   recipientUserId: string,
@@ -153,7 +247,7 @@ export async function listQueuedMessages(
       ':pk': inboxPk(recipientUserId, recipientDeviceId),
       ':state': 'accepted-queued',
     },
-    ScanIndexForward: true, // oldest first
+    ScanIndexForward: true,
   }));
 
   return (result.Items ?? []).map((item) =>
@@ -162,77 +256,316 @@ export async function listQueuedMessages(
 }
 
 /**
- * Check if any messages exist between two users (in either direction).
- * Queries the inbox of the current user to see if they have any messages from the target user.
- * Note: This only checks one direction. For a complete check, you'd need to query both directions.
+ * Check for any inbound or outbound message between the current device and a target user.
  */
 export async function checkConversationExists(
   currentUserId: string,
   currentDeviceId: string,
   targetUserId: string,
 ): Promise<boolean> {
-  // Query current user's inbox for messages from target user
-  const result = await ddbDocClient.send(new QueryCommand({
-    TableName: getTableName(),
-    KeyConditionExpression: 'pk = :pk',
-    FilterExpression: 'senderUserId = :targetUserId',
-    ExpressionAttributeValues: {
-      ':pk': inboxPk(currentUserId, currentDeviceId),
-      ':targetUserId': targetUserId,
-    },
-    Limit: 1, // We only need to know if at least one exists
-  }));
+  const [hasInbound, hasOutbound] = await Promise.all([
+    hasPartnerMessage(inboxPk(currentUserId, currentDeviceId), 'senderUserId', targetUserId),
+    hasPartnerMessage(outboxPk(currentUserId, currentDeviceId), 'recipientUserId', targetUserId),
+  ]);
 
-  return (result.Items?.length ?? 0) > 0;
+  return hasInbound || hasOutbound;
 }
 
-export interface ConversationSummary {
-  userId: string;
-  lastMessageTimestamp: string;
-  lastMessageId: string;
-  lastMessageCiphertext: string;
-  lastMessageSenderId: string;
-  unreadCount: number;
+async function hasPartnerMessage(
+  pk: string,
+  partnerAttribute: 'senderUserId' | 'recipientUserId',
+  targetUserId: string,
+): Promise<boolean> {
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+
+  do {
+    const result = await ddbDocClient.send(new QueryCommand({
+      TableName: getTableName(),
+      KeyConditionExpression: 'pk = :pk',
+      FilterExpression: '#partner = :targetUserId',
+      ExpressionAttributeNames: {
+        '#partner': partnerAttribute,
+      },
+      ExpressionAttributeValues: {
+        ':pk': pk,
+        ':targetUserId': targetUserId,
+      },
+      Limit: 50,
+      ExclusiveStartKey: exclusiveStartKey,
+    }));
+
+    if ((result.Items?.length ?? 0) > 0) {
+      return true;
+    }
+
+    exclusiveStartKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (exclusiveStartKey);
+
+  return false;
 }
 
 /**
- * List all conversations for a user by querying their inbox.
- * Groups messages by conversation partner and returns the most recent message for each.
+ * List all conversations for a device by merging inbound inbox and outbound outbox rows.
  */
 export async function listConversations(
   userId: string,
   deviceId: string,
 ): Promise<ConversationSummary[]> {
-  const result = await ddbDocClient.send(new QueryCommand({
-    TableName: getTableName(),
-    KeyConditionExpression: 'pk = :pk',
-    ExpressionAttributeValues: {
-      ':pk': inboxPk(userId, deviceId),
-    },
-    ScanIndexForward: false, // newest first
-  }));
+  const [inboxItems, outboxItems] = await Promise.all([
+    queryAllByPk(inboxPk(userId, deviceId)),
+    queryAllByPk(outboxPk(userId, deviceId)),
+  ]);
 
-  const items = result.Items ?? [];
   const conversationMap = new Map<string, ConversationSummary>();
 
-  for (const item of items) {
-    const senderUserId = item.senderUserId as string;
-
-    if (!conversationMap.has(senderUserId)) {
-      conversationMap.set(senderUserId, {
-        userId: senderUserId,
-        lastMessageTimestamp: item.serverTimestamp as string,
-        lastMessageId: item.messageId as string,
-        lastMessageCiphertext: item.ciphertext as string,
-        lastMessageSenderId: senderUserId,
-        unreadCount: 0,
-      });
+  for (const item of inboxItems) {
+    const senderUserId = item.senderUserId as string | undefined;
+    if (!senderUserId) {
+      continue;
     }
+    upsertConversationSummary(conversationMap, item, senderUserId, 'inbound');
+  }
+
+  for (const item of outboxItems) {
+    const recipientUserId = item.recipientUserId as string | undefined;
+    if (!recipientUserId) {
+      continue;
+    }
+    upsertConversationSummary(conversationMap, item, recipientUserId, 'outbound');
   }
 
   return Array.from(conversationMap.values()).sort(
-    (a, b) => b.lastMessageTimestamp.localeCompare(a.lastMessageTimestamp)
+    (a, b) => b.lastMessageTimestamp.localeCompare(a.lastMessageTimestamp),
   );
+}
+
+function upsertConversationSummary(
+  conversationMap: Map<string, ConversationSummary>,
+  item: Record<string, unknown>,
+  partnerUserId: string,
+  direction: ConversationDirection,
+): void {
+  const serverTimestamp = getServerTimestamp(item);
+  const messageId = item.messageId as string | undefined;
+  const ciphertext = item.ciphertext as string | undefined;
+  const senderUserId = item.senderUserId as string | undefined;
+
+  if (!serverTimestamp || !messageId || !ciphertext || !senderUserId) {
+    return;
+  }
+
+  const existing = conversationMap.get(partnerUserId);
+  if (existing && existing.lastMessageTimestamp >= serverTimestamp) {
+    return;
+  }
+
+  conversationMap.set(partnerUserId, {
+    userId: partnerUserId,
+    lastMessageTimestamp: serverTimestamp,
+    lastMessageId: messageId,
+    lastMessageCiphertext: ciphertext,
+    lastMessageSenderId: senderUserId,
+    lastMessageDirection: direction,
+    unreadCount: 0,
+  });
+}
+
+/**
+ * List paginated message history between the authenticated device and a target user.
+ */
+export async function listConversationMessages(
+  userId: string,
+  deviceId: string,
+  targetUserId: string,
+  options: ListConversationMessagesOptions = {},
+): Promise<ListConversationMessagesResult> {
+  const limit = normalizeLimit(options.limit);
+  const order = options.order ?? 'desc';
+  const cursorSk = decodeCursor(options.cursor, order);
+  const sourceLimit = limit + 1;
+
+  const [inboundMessages, outboundMessages] = await Promise.all([
+    queryConversationSource({
+      pk: inboxPk(userId, deviceId),
+      partnerAttribute: 'senderUserId',
+      targetUserId,
+      direction: 'inbound',
+      order,
+      cursorSk,
+      limit: sourceLimit,
+    }),
+    queryConversationSource({
+      pk: outboxPk(userId, deviceId),
+      partnerAttribute: 'recipientUserId',
+      targetUserId,
+      direction: 'outbound',
+      order,
+      cursorSk,
+      limit: sourceLimit,
+    }),
+  ]);
+
+  const merged = sortAndDedupeMessages([...inboundMessages, ...outboundMessages], order);
+  const page = merged.slice(0, limit);
+  const nextCursor = merged.length > limit && page.length > 0
+    ? encodeCursor(page[page.length - 1].sortKey, order)
+    : null;
+
+  return {
+    messages: page.map(({ sortKey: _sortKey, ...message }) => message),
+    nextCursor,
+  };
+}
+
+async function queryConversationSource(params: {
+  pk: string;
+  partnerAttribute: 'senderUserId' | 'recipientUserId';
+  targetUserId: string;
+  direction: ConversationDirection;
+  order: ConversationHistoryOrder;
+  cursorSk?: string;
+  limit: number;
+}): Promise<InternalConversationMessage[]> {
+  const items: InternalConversationMessage[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+  const expressionAttributeValues: Record<string, unknown> = {
+    ':pk': params.pk,
+    ':targetUserId': params.targetUserId,
+  };
+  const expressionAttributeNames: Record<string, string> = {
+    '#partner': params.partnerAttribute,
+  };
+  let keyConditionExpression = 'pk = :pk';
+
+  if (params.cursorSk) {
+    keyConditionExpression += params.order === 'desc'
+      ? ' AND #sk < :cursorSk'
+      : ' AND #sk > :cursorSk';
+    expressionAttributeValues[':cursorSk'] = params.cursorSk;
+    expressionAttributeNames['#sk'] = 'sk';
+  }
+
+  do {
+    const result = await ddbDocClient.send(new QueryCommand({
+      TableName: getTableName(),
+      KeyConditionExpression: keyConditionExpression,
+      FilterExpression: '#partner = :targetUserId',
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ScanIndexForward: params.order === 'asc',
+      Limit: 100,
+      ExclusiveStartKey: exclusiveStartKey,
+    }));
+
+    for (const item of result.Items ?? []) {
+      items.push(toConversationHistoryMessage(item as Record<string, unknown>, params.direction));
+      if (items.length >= params.limit) {
+        return items;
+      }
+    }
+
+    exclusiveStartKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (exclusiveStartKey);
+
+  return items;
+}
+
+async function queryAllByPk(pk: string): Promise<Record<string, unknown>[]> {
+  const items: Record<string, unknown>[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+
+  do {
+    const result = await ddbDocClient.send(new QueryCommand({
+      TableName: getTableName(),
+      KeyConditionExpression: 'pk = :pk',
+      ExpressionAttributeValues: {
+        ':pk': pk,
+      },
+      ExclusiveStartKey: exclusiveStartKey,
+    }));
+
+    items.push(...((result.Items ?? []) as Record<string, unknown>[]));
+    exclusiveStartKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (exclusiveStartKey);
+
+  return items;
+}
+
+function sortAndDedupeMessages(
+  messages: InternalConversationMessage[],
+  order: ConversationHistoryOrder,
+): InternalConversationMessage[] {
+  const deduped = new Map<string, InternalConversationMessage>();
+
+  for (const message of messages) {
+    deduped.set(`${message.direction}:${message.messageId}`, message);
+  }
+
+  return Array.from(deduped.values()).sort((a, b) => {
+    const bySortKey = a.sortKey.localeCompare(b.sortKey);
+    if (bySortKey !== 0) {
+      return order === 'asc' ? bySortKey : -bySortKey;
+    }
+    return a.direction.localeCompare(b.direction);
+  });
+}
+
+function normalizeLimit(limit?: number): number {
+  const normalized = limit ?? 50;
+
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > 200) {
+    throw new AppError('VALIDATION_ERROR', 'Limit must be between 1 and 200', 400);
+  }
+
+  return normalized;
+}
+
+function decodeCursor(
+  cursor: string | undefined,
+  order: ConversationHistoryOrder,
+): string | undefined {
+  if (!cursor) {
+    return undefined;
+  }
+
+  let parsed: CursorPayload;
+  try {
+    parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as CursorPayload;
+  } catch {
+    throw new AppError('VALIDATION_ERROR', 'Invalid cursor', 400);
+  }
+
+  if (typeof parsed.sk !== 'string' || parsed.sk.length === 0 || parsed.order !== order) {
+    throw new AppError('VALIDATION_ERROR', 'Invalid cursor', 400);
+  }
+
+  return parsed.sk;
+}
+
+function encodeCursor(sk: string, order: ConversationHistoryOrder): string {
+  const payload: CursorPayload = { sk, order };
+  return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+}
+
+function toConversationHistoryMessage(
+  item: Record<string, unknown>,
+  direction: ConversationDirection,
+): InternalConversationMessage {
+  const record = toMessageRecord(item);
+  const sortKey = (item.sk as string | undefined) ?? messageSk(record.serverTimestamp, record.messageId);
+
+  return {
+    messageId: record.messageId,
+    senderUserId: record.senderUserId,
+    senderDeviceId: record.senderDeviceId,
+    recipientUserId: record.recipientUserId,
+    recipientDeviceId: record.recipientDeviceId,
+    ciphertext: record.ciphertext,
+    deliveryState: record.deliveryState,
+    serverTimestamp: record.serverTimestamp,
+    direction,
+    sortKey,
+  };
 }
 
 function toMessageRecord(item: Record<string, unknown>): MessageRecord {
@@ -250,13 +583,7 @@ function toMessageRecord(item: Record<string, unknown>): MessageRecord {
     }
   }
 
-  let serverTimestamp = item.serverTimestamp as string | undefined;
-  if (!serverTimestamp && sk) {
-    const [timestampPart] = sk.split('#');
-    if (timestampPart) {
-      serverTimestamp = timestampPart;
-    }
-  }
+  const serverTimestamp = getServerTimestamp(item) as string;
 
   return {
     messageId: item.messageId as string,
@@ -265,8 +592,24 @@ function toMessageRecord(item: Record<string, unknown>): MessageRecord {
     recipientUserId: recipientUserId as string,
     recipientDeviceId: recipientDeviceId as string,
     ciphertext: item.ciphertext as string,
+    ...(item.senderCiphertext !== undefined && { senderCiphertext: item.senderCiphertext as string }),
     deliveryState: item.deliveryState as DeliveryState,
-    serverTimestamp: serverTimestamp as string,
-    updatedAt: (item.updatedAt as string) ?? (serverTimestamp as string),
+    serverTimestamp,
+    updatedAt: (item.updatedAt as string) ?? serverTimestamp,
   };
+}
+
+function getServerTimestamp(item: Record<string, unknown>): string | undefined {
+  const explicitTimestamp = item.serverTimestamp as string | undefined;
+  if (explicitTimestamp) {
+    return explicitTimestamp;
+  }
+
+  const sk = item.sk as string | undefined;
+  if (!sk) {
+    return undefined;
+  }
+
+  const [timestampPart] = sk.split('#');
+  return timestampPart;
 }
