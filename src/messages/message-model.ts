@@ -35,6 +35,8 @@ export interface DirectMessageEvent {
   eventType: 'direct-message';
   messageId: string;
   senderUserId: string;
+  senderEmail?: string;
+  senderDisplayName?: string;
   senderDeviceId: string;
   recipientUserId: string;
   recipientDeviceId: string;

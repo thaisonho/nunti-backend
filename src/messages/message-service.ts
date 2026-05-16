@@ -25,11 +25,35 @@ import type {
 import * as MessageRepository from './message-repository.js';
 import * as MessageRelayPublisher from '../realtime/message-relay-publisher.js';
 import * as DeviceRepository from '../devices/device-repository.js';
+import { getUserById } from '../users/user-service.js';
 import { DeviceStatus } from '../devices/device-model.js';
 import { AppError } from '../app/errors.js';
 
 /** Maximum age (in milliseconds) for queued messages before they become terminal failures. */
 const RETENTION_POLICY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function displayNameFromEmail(email: string): string {
+  return email.split('@')[0] || email;
+}
+
+async function getSenderProfileMetadata(senderUserId: string): Promise<Pick<DirectMessageEvent, 'senderEmail' | 'senderDisplayName'>> {
+  const profile = await getUserById(senderUserId).catch((error) => {
+    console.warn('Failed to hydrate direct-message sender profile', {
+      userId: senderUserId,
+      error: (error as Error).message,
+    });
+    return null;
+  });
+
+  if (!profile?.email) {
+    return {};
+  }
+
+  return {
+    senderEmail: profile.email,
+    senderDisplayName: displayNameFromEmail(profile.email),
+  };
+}
 
 /**
  * Process a direct-message send request (idempotent).
@@ -161,10 +185,12 @@ async function assertRecipientDeviceCanReceive(
 }
 
 async function relayStoredMessage(record: MessageRecord): Promise<SendMessageResult['status']> {
+  const senderProfileMetadata = await getSenderProfileMetadata(record.senderUserId);
   const relayEvent: DirectMessageEvent = {
     eventType: 'direct-message',
     messageId: record.messageId,
     senderUserId: record.senderUserId,
+    ...senderProfileMetadata,
     senderDeviceId: record.senderDeviceId,
     recipientUserId: record.recipientUserId,
     recipientDeviceId: record.recipientDeviceId,
@@ -233,10 +259,12 @@ export async function replayBacklog(context: WebSocketConnectionContext): Promis
       continue;
     }
 
+    const senderProfileMetadata = await getSenderProfileMetadata(record.senderUserId);
     const relayEvent: DirectMessageEvent = {
       eventType: 'direct-message',
       messageId: record.messageId,
       senderUserId: record.senderUserId,
+      ...senderProfileMetadata,
       senderDeviceId: record.senderDeviceId,
       recipientUserId: record.recipientUserId,
       recipientDeviceId: record.recipientDeviceId,

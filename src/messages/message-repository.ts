@@ -30,6 +30,8 @@ interface InternalConversationMessage extends ConversationHistoryMessage {
 
 export interface ConversationSummary {
   userId: string;
+  userEmail?: string;
+  userDisplayName?: string;
   lastMessageTimestamp: string;
   lastMessageId: string;
   lastMessageCiphertext: string;

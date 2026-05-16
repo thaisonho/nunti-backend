@@ -22,6 +22,22 @@ export interface SearchUsersInput {
   currentUserId: string; // Exclude current user from results
 }
 
+function userAttributesToProfile(
+  attributes: Array<{ Name?: string; Value?: string }> | undefined,
+  fallbackSub = "",
+): UserProfile {
+  const attrs = attributes || [];
+  const sub = attrs.find((attr) => attr.Name === "sub")?.Value || fallbackSub;
+  const email = attrs.find((attr) => attr.Name === "email")?.Value || "";
+  const emailVerified = attrs.find((attr) => attr.Name === "email_verified")?.Value === "true";
+
+  return {
+    sub,
+    email,
+    emailVerified,
+  };
+}
+
 /**
  * Search users by email (exact match only for privacy).
  * Returns empty array if no match found.
@@ -54,16 +70,7 @@ export async function searchUsersByEmail(
         return sub !== input.currentUserId;
       })
       .map((user) => {
-        const attributes = user.Attributes || [];
-        const sub = attributes.find((attr) => attr.Name === "sub")?.Value || "";
-        const email = attributes.find((attr) => attr.Name === "email")?.Value || "";
-        const emailVerified = attributes.find((attr) => attr.Name === "email_verified")?.Value === "true";
-
-        return {
-          sub,
-          email,
-          emailVerified,
-        };
+        return userAttributesToProfile(user.Attributes);
       })
       .filter((profile) => profile.sub && profile.email); // Only return valid profiles
 
@@ -82,6 +89,20 @@ export async function getUserById(userId: string): Promise<UserProfile | null> {
   const client = getCognitoClient();
 
   try {
+    const listResult = await client.send(
+      new ListUsersCommand({
+        UserPoolId: config.cognitoUserPoolId,
+        Filter: `sub = "${userId}"`,
+        Limit: 1,
+      }),
+    );
+
+    const userBySub = listResult.Users?.[0];
+    if (userBySub) {
+      const profile = userAttributesToProfile(userBySub.Attributes, userId);
+      return profile.email ? profile : null;
+    }
+
     const result = await client.send(
       new AdminGetUserCommand({
         UserPoolId: config.cognitoUserPoolId,
@@ -89,16 +110,8 @@ export async function getUserById(userId: string): Promise<UserProfile | null> {
       }),
     );
 
-    const attributes = result.UserAttributes || [];
-    const sub = attributes.find((attr) => attr.Name === "sub")?.Value || userId;
-    const email = attributes.find((attr) => attr.Name === "email")?.Value || "";
-    const emailVerified = attributes.find((attr) => attr.Name === "email_verified")?.Value === "true";
-
-    return {
-      sub,
-      email,
-      emailVerified,
-    };
+    const profile = userAttributesToProfile(result.UserAttributes, userId);
+    return profile.email ? profile : null;
   } catch (error) {
     if (error instanceof UserNotFoundException) {
       return null;
