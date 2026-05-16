@@ -124,6 +124,26 @@ describe('Device Service', () => {
     expect(result[0].deviceId).toBe('dev-1');
   });
 
+  it('listDevices should mark legacy trusted browsers without isPrimary as primary', async () => {
+    vi.mocked(DeviceRepository.listDevicesByUser).mockResolvedValue([
+      {
+        ...mockDevice,
+        isPrimary: undefined,
+      },
+      {
+        ...mockDevice,
+        deviceId: 'dev-pending',
+        status: DeviceStatus.PENDING,
+        isPrimary: false,
+      },
+    ]);
+
+    const result = await DeviceService.listDevices('user-1');
+
+    expect(result[0].isPrimary).toBe(true);
+    expect(result[1].isPrimary).toBe(false);
+  });
+
   it('revokeDevice should mark device as revoked and set revokedAt', async () => {
     vi.mocked(DeviceRepository.getDevice).mockResolvedValue({
       ...mockDevice,

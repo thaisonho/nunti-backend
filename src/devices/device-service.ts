@@ -50,6 +50,13 @@ function isPrimaryDevice(device: DeviceRecord): boolean {
   return device.isPrimary !== false;
 }
 
+function normalizeDeviceTrustFlags(device: DeviceRecord): DeviceRecord {
+  return {
+    ...device,
+    isPrimary: device.status === DeviceStatus.TRUSTED && isPrimaryDevice(device),
+  };
+}
+
 export async function registerDevice(payload: RegisterDevicePayload): Promise<DeviceRecord> {
   const existingDevices = await DeviceRepository.listDevicesByUser(payload.userId);
   const hasTrustedPrimary = existingDevices.some(
@@ -70,7 +77,8 @@ export async function registerDevice(payload: RegisterDevicePayload): Promise<De
 }
 
 export async function listDevices(userId: string): Promise<DeviceRecord[]> {
-  return DeviceRepository.listDevicesByUser(userId);
+  const devices = await DeviceRepository.listDevicesByUser(userId);
+  return devices.map((device) => normalizeDeviceTrustFlags(device));
 }
 
 export async function revokeDevice(userId: string, deviceId: string): Promise<DeviceRecord> {
