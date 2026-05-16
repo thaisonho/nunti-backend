@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { z } from 'zod';
-import { requireAuth } from '../../auth/auth-guard.js';
+import { requireHttpAuthContext } from './http-auth-context.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
@@ -11,7 +11,7 @@ const approveSchema = z.object({
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
+    const user = await requireHttpAuthContext(event);
 
     const actorDeviceId = event.headers['X-Device-Id'] || event.headers['x-device-id'];
     if (!actorDeviceId) {
