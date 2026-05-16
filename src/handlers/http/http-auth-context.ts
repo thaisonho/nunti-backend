@@ -10,10 +10,68 @@ export interface TrustedHttpAuthContext {
   deviceId: string;
 }
 
+type JwtAuthorizerClaims = Record<string, unknown> & {
+  sub?: string;
+  email?: string;
+  token_use?: string;
+  'cognito:username'?: string;
+  'cognito:groups'?: string[] | string;
+};
+
+function getJwtAuthorizerClaims(
+  event: APIGatewayProxyEvent,
+): JwtAuthorizerClaims | null {
+  const authorizer = (event.requestContext as any)?.authorizer;
+  const claims = authorizer?.jwt?.claims ?? authorizer?.claims;
+
+  if (!claims || typeof claims !== 'object' || !claims.sub) {
+    return null;
+  }
+
+  return claims as JwtAuthorizerClaims;
+}
+
+function userFromJwtAuthorizerClaims(
+  claims: JwtAuthorizerClaims,
+): AuthenticatedUser {
+  const groups = Array.isArray(claims['cognito:groups'])
+    ? claims['cognito:groups']
+    : typeof claims['cognito:groups'] === 'string'
+      ? claims['cognito:groups'].split(',').filter(Boolean)
+      : [];
+
+  return {
+    ...claims,
+    sub: claims.sub as string,
+    email: claims.email,
+    username: claims['cognito:username'],
+    tokenUse: claims.token_use ?? 'unknown',
+    groups,
+    isAdmin: groups.includes('admin'),
+  };
+}
+
+async function requireHttpAuth(
+  event: APIGatewayProxyEvent,
+): Promise<AuthenticatedUser> {
+  const authorization = event.headers.Authorization || event.headers.authorization;
+
+  try {
+    return await requireAuth(authorization);
+  } catch (error) {
+    const claims = getJwtAuthorizerClaims(event);
+    if (claims) {
+      return userFromJwtAuthorizerClaims(claims);
+    }
+
+    throw error;
+  }
+}
+
 export async function requireTrustedDeviceAuth(
   event: APIGatewayProxyEvent,
 ): Promise<TrustedHttpAuthContext> {
-  const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
+  const user = await requireHttpAuth(event);
 
   const deviceId = event.headers['X-Device-Id'] || event.headers['x-device-id'];
   if (!deviceId) {
