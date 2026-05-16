@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "admin:unblock-devices": "npm run build && node dist/src/scripts/unblock-pending-devices.js",
     "test": "vitest run",
     "test:auth": "vitest run tests/unit/auth-*.test.ts tests/unit/device-*.test.ts tests/integration/auth-*.test.ts tests/integration/protected-*.test.ts tests/integration/devices-*.test.ts",
     "test:watch": "vitest"
