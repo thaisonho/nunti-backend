@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { handler as meHandler } from '../../src/handlers/http/me.js';
-import * as AuthGuard from '../../src/auth/auth-guard.js';
+import * as HttpAuthContext from '../../src/handlers/http/http-auth-context.js';
 import { AuthError } from '../../src/app/errors.js';
 import { DeviceStatus } from '../../src/devices/device-model.js';
 import * as DeviceService from '../../src/devices/device-service.js';
 
-vi.mock('../../src/auth/auth-guard.js');
+vi.mock('../../src/handlers/http/http-auth-context.js');
 vi.mock('../../src/devices/device-service.js');
 
 function createEvent(headers: Record<string, string>): APIGatewayProxyEvent {
@@ -32,7 +32,7 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
   });
 
   it('accepts valid JWT and trusted device', async () => {
-    vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+    vi.mocked(HttpAuthContext.requireHttpAuthContext).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' } as any);
     vi.mocked(DeviceService.listDevices).mockResolvedValue([
       { userId: 'user-1', deviceId: 'dev-1', status: DeviceStatus.TRUSTED, registeredAt: '', lastSeenAt: '' }
     ]);
@@ -47,7 +47,7 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
   });
 
   it('accepts pending device and reports accessAccepted false', async () => {
-    vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+    vi.mocked(HttpAuthContext.requireHttpAuthContext).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' } as any);
     vi.mocked(DeviceService.listDevices).mockResolvedValue([
       { userId: 'user-1', deviceId: 'dev-1', status: DeviceStatus.PENDING, registeredAt: '', lastSeenAt: '' }
     ]);
@@ -61,7 +61,7 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
   });
 
   it('returns 401 AUTH_TOKEN_MISSING_OR_MALFORMED for missing header', async () => {
-    vi.mocked(AuthGuard.requireAuth).mockRejectedValue(new AuthError('AUTH_TOKEN_MISSING_OR_MALFORMED', 401));
+    vi.mocked(HttpAuthContext.requireHttpAuthContext).mockRejectedValue(new AuthError('AUTH_TOKEN_MISSING_OR_MALFORMED', 401));
 
     const event = createEvent({});
     const response = await meHandler(event);
@@ -72,7 +72,7 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
   });
 
   it('returns 400 VALIDATION_ERROR when X-Device-Id is missing with valid auth', async () => {
-    vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+    vi.mocked(HttpAuthContext.requireHttpAuthContext).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' } as any);
 
     const event = createEvent({ Authorization: 'Bearer valid-token' });
     const response = await meHandler(event);
@@ -83,7 +83,7 @@ describe('Protected Route Auth Probe (/v1/me)', () => {
   });
 
   it('rejects revoked device with 403 AUTH_FORBIDDEN', async () => {
-    vi.mocked(AuthGuard.requireAuth).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' });
+    vi.mocked(HttpAuthContext.requireHttpAuthContext).mockResolvedValue({ sub: 'user-1', tokenUse: 'access' } as any);
     // Simulate revoked device returned by device service or policy helper inside meHandler
     vi.mocked(DeviceService.listDevices).mockResolvedValue([
       { userId: 'user-1', deviceId: 'dev-1', status: DeviceStatus.REVOKED, registeredAt: '', lastSeenAt: '' }

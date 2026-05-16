@@ -68,6 +68,12 @@ async function requireHttpAuth(
   }
 }
 
+export async function requireHttpAuthContext(
+  event: APIGatewayProxyEvent,
+): Promise<AuthenticatedUser> {
+  return requireHttpAuth(event);
+}
+
 export async function requireTrustedDeviceAuth(
   event: APIGatewayProxyEvent,
 ): Promise<TrustedHttpAuthContext> {

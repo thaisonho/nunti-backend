@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { requireAuth } from '../../auth/auth-guard.js';
+import { requireHttpAuthContext } from './http-auth-context.js';
 import * as DeviceService from '../../devices/device-service.js';
 import { successResponse, errorResponse, rawErrorResponse } from '../../app/http-response.js';
 import { AppError } from '../../app/errors.js';
@@ -8,7 +8,7 @@ import * as AuditService from '../../audit/audit-service.js';
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     // Only require user authentication, not a trusted device for fetching public keys
-    const user = await requireAuth(event.headers.Authorization || event.headers.authorization);
+    const user = await requireHttpAuthContext(event);
 
     const userId = event.pathParameters?.userId;
     const deviceId = event.pathParameters?.deviceId;
