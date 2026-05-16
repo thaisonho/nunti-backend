@@ -80,20 +80,22 @@ describe('message-repository', () => {
       expect((getCall as any).input.ConsistentRead).toBe(true);
     });
 
-    it('creates both MSG and INBOX records for a new message', async () => {
+    it('creates MSG, INBOX, and OUTBOX records for a new message', async () => {
       vi.mocked(ddbDocClient.send).mockResolvedValue({} as any);
 
       await createMessage(baseRecord);
 
-      // Should have MSG PutCommand and INBOX PutCommand
-      expect(ddbDocClient.send).toHaveBeenCalledTimes(2);
+      expect(ddbDocClient.send).toHaveBeenCalledTimes(3);
       const inboxCall = vi.mocked(ddbDocClient.send).mock.calls[1][0];
+      const outboxCall = vi.mocked(ddbDocClient.send).mock.calls[2][0];
       expect((inboxCall as any).input.Item.pk).toContain('INBOX#');
       expect((inboxCall as any).input.Item.recipientUserId).toBe('recipient-user');
       expect((inboxCall as any).input.Item.recipientDeviceId).toBe('recipient-device');
+      expect((outboxCall as any).input.Item.pk).toContain('OUTBOX#');
+      expect((outboxCall as any).input.Item.ciphertext).toBe('encrypted-payload');
     });
 
-    it('skips INBOX creation when message is a duplicate', async () => {
+    it('ensures projections when message is a duplicate', async () => {
       const conditionError = Object.assign(new Error('Conditional'), {
         name: 'ConditionalCheckFailedException',
       });
@@ -106,9 +108,7 @@ describe('message-repository', () => {
 
       await createMessage(baseRecord);
 
-      // Only 2 calls: failed PutCommand + GetCommand to read existing
-      // No INBOX PutCommand because duplicate was detected
-      expect(ddbDocClient.send).toHaveBeenCalledTimes(2);
+      expect(ddbDocClient.send).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -134,12 +134,12 @@ describe('message-repository', () => {
   });
 
   describe('updateDeliveryState', () => {
-    it('updates both MSG and INBOX records', async () => {
+    it('updates MSG, INBOX, and OUTBOX records', async () => {
       vi.mocked(ddbDocClient.send).mockResolvedValue({} as any);
 
       await updateDeliveryState(baseRecord, 'delivered');
 
-      expect(ddbDocClient.send).toHaveBeenCalledTimes(2);
+      expect(ddbDocClient.send).toHaveBeenCalledTimes(3);
     });
   });
 

@@ -17,6 +17,7 @@
 
 import type { WebSocketConnectionContext } from '../auth/websocket-auth.js';
 import type {
+  DeviceCiphertext,
   DirectMessageRequest,
   DirectMessageEvent,
   MessageRecord,
@@ -69,7 +70,17 @@ export async function sendMessage(
   context: WebSocketConnectionContext,
   request: DirectMessageRequest,
 ): Promise<SendMessageResult> {
-  await assertRecipientDeviceCanReceive(request.recipientUserId, request.recipientDeviceId);
+  const recipientCiphertexts = getRecipientCiphertexts(request);
+  const senderCiphertexts = getSenderCiphertexts(context, request);
+
+  await assertRecipientDevicesCanReceive(
+    request.recipientUserId,
+    recipientCiphertexts.map((entry) => entry.deviceId),
+  );
+  await assertSenderDevicesCanStore(
+    context.userId,
+    senderCiphertexts.map((entry) => entry.deviceId),
+  );
 
   const serverTimestamp = new Date().toISOString();
 
@@ -82,6 +93,8 @@ export async function sendMessage(
     recipientDeviceId: request.recipientDeviceId,
     ciphertext: request.ciphertext,
     ...(request.senderCiphertext !== undefined && { senderCiphertext: request.senderCiphertext }),
+    recipientCiphertexts,
+    senderCiphertexts,
     deliveryState: 'accepted',
     serverTimestamp,
     updatedAt: serverTimestamp,
@@ -95,7 +108,9 @@ export async function sendMessage(
       existingRecord.senderUserId !== context.userId ||
       existingRecord.senderDeviceId !== context.deviceId ||
       existingRecord.recipientUserId !== request.recipientUserId ||
-      existingRecord.recipientDeviceId !== request.recipientDeviceId
+      existingRecord.recipientDeviceId !== request.recipientDeviceId ||
+      !sameDeviceCiphertexts(getRecipientCiphertextsFromRecord(existingRecord), recipientCiphertexts) ||
+      !sameDeviceCiphertexts(getSenderCiphertextsFromRecord(existingRecord), senderCiphertexts)
     ) {
       throw new Error('messageId already exists with different message metadata');
     }
@@ -153,56 +168,139 @@ export async function sendMessage(
 }
 
 
-async function assertRecipientDeviceCanReceive(
+function getRecipientCiphertexts(request: DirectMessageRequest): DeviceCiphertext[] {
+  return request.recipientCiphertexts?.length
+    ? request.recipientCiphertexts
+    : [{ deviceId: request.recipientDeviceId, ciphertext: request.ciphertext }];
+}
+
+function getSenderCiphertexts(
+  context: WebSocketConnectionContext,
+  request: DirectMessageRequest,
+): DeviceCiphertext[] {
+  if (request.senderCiphertexts?.length) {
+    return request.senderCiphertexts;
+  }
+
+  return [
+    {
+      deviceId: context.deviceId,
+      ciphertext: request.senderCiphertext ?? request.ciphertext,
+    },
+  ];
+}
+
+function getRecipientCiphertextsFromRecord(record: MessageRecord): DeviceCiphertext[] {
+  return record.recipientCiphertexts?.length
+    ? record.recipientCiphertexts
+    : [{ deviceId: record.recipientDeviceId, ciphertext: record.ciphertext }];
+}
+
+function getSenderCiphertextsFromRecord(record: MessageRecord): DeviceCiphertext[] {
+  if (record.senderCiphertexts?.length) {
+    return record.senderCiphertexts;
+  }
+
+  return [
+    {
+      deviceId: record.senderDeviceId,
+      ciphertext: record.senderCiphertext ?? record.ciphertext,
+    },
+  ];
+}
+
+function sameDeviceCiphertexts(left: DeviceCiphertext[], right: DeviceCiphertext[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const rightByDeviceId = new Map(right.map((entry) => [entry.deviceId, entry.ciphertext]));
+  return left.every((entry) => rightByDeviceId.get(entry.deviceId) === entry.ciphertext);
+}
+
+async function assertRecipientDevicesCanReceive(
   recipientUserId: string,
-  recipientDeviceId: string,
+  recipientDeviceIds: string[],
 ): Promise<void> {
-  const recipientDevice = await DeviceRepository.getDevice(recipientUserId, recipientDeviceId);
+  for (const recipientDeviceId of recipientDeviceIds) {
+    const recipientDevice = await DeviceRepository.getDevice(recipientUserId, recipientDeviceId);
 
-  if (!recipientDevice) {
-    throw new AppError(
-      'DEVICE_NOT_FOUND',
-      'Recipient device does not exist',
-      404,
-    );
+    if (!recipientDevice) {
+      throw new AppError(
+        'DEVICE_NOT_FOUND',
+        'Recipient device does not exist',
+        404,
+      );
+    }
+
+    if (recipientDevice.status !== DeviceStatus.TRUSTED) {
+      throw new AppError(
+        'AUTH_FORBIDDEN',
+        'Recipient device is not trusted',
+        403,
+      );
+    }
+
+    if (!recipientDevice.identityKey || !recipientDevice.signedPreKey) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Recipient device has no usable key bundle',
+        400,
+      );
+    }
   }
+}
 
-  if (recipientDevice.status !== DeviceStatus.TRUSTED) {
-    throw new AppError(
-      'AUTH_FORBIDDEN',
-      'Recipient device is not trusted',
-      403,
-    );
-  }
+async function assertSenderDevicesCanStore(
+  senderUserId: string,
+  senderDeviceIds: string[],
+): Promise<void> {
+  for (const senderDeviceId of senderDeviceIds) {
+    const senderDevice = await DeviceRepository.getDevice(senderUserId, senderDeviceId);
 
-  if (!recipientDevice.identityKey || !recipientDevice.signedPreKey) {
-    throw new AppError(
-      'VALIDATION_ERROR',
-      'Recipient device has no usable key bundle',
-      400,
-    );
+    if (!senderDevice || senderDevice.status !== DeviceStatus.TRUSTED) {
+      throw new AppError(
+        'AUTH_FORBIDDEN',
+        'Sender history device is not trusted',
+        403,
+      );
+    }
   }
 }
 
 async function relayStoredMessage(record: MessageRecord): Promise<SendMessageResult['status']> {
   const senderProfileMetadata = await getSenderProfileMetadata(record.senderUserId);
-  const relayEvent: DirectMessageEvent = {
-    eventType: 'direct-message',
-    messageId: record.messageId,
-    senderUserId: record.senderUserId,
-    ...senderProfileMetadata,
-    senderDeviceId: record.senderDeviceId,
-    recipientUserId: record.recipientUserId,
-    recipientDeviceId: record.recipientDeviceId,
-    ciphertext: record.ciphertext,
-    serverTimestamp: record.serverTimestamp,
-  };
+  const outcomes = await Promise.all(
+    getRecipientCiphertextsFromRecord(record).map(async (entry) => {
+      const relayEvent: DirectMessageEvent = {
+        eventType: 'direct-message',
+        messageId: record.messageId,
+        senderUserId: record.senderUserId,
+        ...senderProfileMetadata,
+        senderDeviceId: record.senderDeviceId,
+        recipientUserId: record.recipientUserId,
+        recipientDeviceId: entry.deviceId,
+        ciphertext: entry.ciphertext,
+        serverTimestamp: record.serverTimestamp,
+      };
 
-  return MessageRelayPublisher.relayDirectMessage(
-    record.recipientUserId,
-    record.recipientDeviceId,
-    relayEvent,
+      return MessageRelayPublisher.relayDirectMessage(
+        record.recipientUserId,
+        entry.deviceId,
+        relayEvent,
+      );
+    }),
   );
+
+  if (outcomes.every((outcome) => outcome === 'delivered')) {
+    return 'delivered';
+  }
+
+  if (outcomes.some((outcome) => outcome === 'accepted-queued')) {
+    return 'accepted-queued';
+  }
+
+  return 'accepted';
 }
 
 /**

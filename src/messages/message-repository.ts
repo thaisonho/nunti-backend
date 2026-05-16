@@ -14,7 +14,7 @@ import { PutCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/li
 import { ddbDocClient } from '../devices/device-repository.js';
 import { getConfig } from '../app/config.js';
 import { AppError } from '../app/errors.js';
-import type { MessageRecord, DeliveryState } from './message-model.js';
+import type { DeviceCiphertext, MessageRecord, DeliveryState } from './message-model.js';
 
 type ConversationDirection = 'inbound' | 'outbound';
 type ConversationHistoryOrder = 'asc' | 'desc';
@@ -132,30 +132,37 @@ async function putMessageProjections(record: MessageRecord): Promise<void> {
     serverTimestamp: record.serverTimestamp,
     updatedAt: record.updatedAt,
   };
+  const recipientCiphertexts = getRecipientCiphertexts(record);
+  const senderCiphertexts = getSenderCiphertexts(record);
 
   await Promise.all([
-    ddbDocClient.send(new PutCommand({
-      TableName: getTableName(),
-      Item: {
-        pk: inboxPk(record.recipientUserId, record.recipientDeviceId),
-        sk,
-        ...common,
-        ciphertext: record.ciphertext,
-        direction: 'inbound',
-        projectionType: 'inbox',
-      },
-    })),
-    ddbDocClient.send(new PutCommand({
-      TableName: getTableName(),
-      Item: {
-        pk: outboxPk(record.senderUserId, record.senderDeviceId),
-        sk,
-        ...common,
-        ciphertext: record.senderCiphertext ?? record.ciphertext,
-        direction: 'outbound',
-        projectionType: 'outbox',
-      },
-    })),
+    ...recipientCiphertexts.map((entry) =>
+      ddbDocClient.send(new PutCommand({
+        TableName: getTableName(),
+        Item: {
+          pk: inboxPk(record.recipientUserId, entry.deviceId),
+          sk,
+          ...common,
+          recipientDeviceId: entry.deviceId,
+          ciphertext: entry.ciphertext,
+          direction: 'inbound',
+          projectionType: 'inbox',
+        },
+      })),
+    ),
+    ...senderCiphertexts.map((entry) =>
+      ddbDocClient.send(new PutCommand({
+        TableName: getTableName(),
+        Item: {
+          pk: outboxPk(record.senderUserId, entry.deviceId),
+          sk,
+          ...common,
+          ciphertext: entry.ciphertext,
+          direction: 'outbound',
+          projectionType: 'outbox',
+        },
+      })),
+    ),
   ]);
 }
 
@@ -203,8 +210,12 @@ export async function updateDeliveryState(
   }));
 
   await Promise.all([
-    updateProjectionDeliveryState(inboxPk(record.recipientUserId, record.recipientDeviceId), sk, newState, now),
-    updateProjectionDeliveryState(outboxPk(record.senderUserId, record.senderDeviceId), sk, newState, now),
+    ...getRecipientCiphertexts(record).map((entry) =>
+      updateProjectionDeliveryState(inboxPk(record.recipientUserId, entry.deviceId), sk, newState, now),
+    ),
+    ...getSenderCiphertexts(record).map((entry) =>
+      updateProjectionDeliveryState(outboxPk(record.senderUserId, entry.deviceId), sk, newState, now),
+    ),
   ]);
 }
 
@@ -595,10 +606,31 @@ function toMessageRecord(item: Record<string, unknown>): MessageRecord {
     recipientDeviceId: recipientDeviceId as string,
     ciphertext: item.ciphertext as string,
     ...(item.senderCiphertext !== undefined && { senderCiphertext: item.senderCiphertext as string }),
+    ...(Array.isArray(item.recipientCiphertexts) && { recipientCiphertexts: item.recipientCiphertexts as DeviceCiphertext[] }),
+    ...(Array.isArray(item.senderCiphertexts) && { senderCiphertexts: item.senderCiphertexts as DeviceCiphertext[] }),
     deliveryState: item.deliveryState as DeliveryState,
     serverTimestamp,
     updatedAt: (item.updatedAt as string) ?? serverTimestamp,
   };
+}
+
+function getRecipientCiphertexts(record: MessageRecord): DeviceCiphertext[] {
+  return record.recipientCiphertexts?.length
+    ? record.recipientCiphertexts
+    : [{ deviceId: record.recipientDeviceId, ciphertext: record.ciphertext }];
+}
+
+function getSenderCiphertexts(record: MessageRecord): DeviceCiphertext[] {
+  if (record.senderCiphertexts?.length) {
+    return record.senderCiphertexts;
+  }
+
+  return [
+    {
+      deviceId: record.senderDeviceId,
+      ciphertext: record.senderCiphertext ?? record.ciphertext,
+    },
+  ];
 }
 
 function getServerTimestamp(item: Record<string, unknown>): string | undefined {

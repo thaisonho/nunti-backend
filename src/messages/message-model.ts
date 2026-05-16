@@ -22,12 +22,19 @@ export type DeliveryState =
   | 'failed';
 
 /** Client-sent direct-message relay request. */
+export interface DeviceCiphertext {
+  deviceId: string;
+  ciphertext: string;
+}
+
 export interface DirectMessageRequest {
   messageId: string;
   recipientUserId: string;
   recipientDeviceId: string;
   ciphertext: string;
   senderCiphertext?: string;
+  recipientCiphertexts?: DeviceCiphertext[];
+  senderCiphertexts?: DeviceCiphertext[];
 }
 
 /** Server-pushed encrypted message event to recipient device. */
@@ -77,6 +84,8 @@ export interface MessageRecord {
   recipientDeviceId: string;
   ciphertext: string;
   senderCiphertext?: string;
+  recipientCiphertexts?: DeviceCiphertext[];
+  senderCiphertexts?: DeviceCiphertext[];
   deliveryState: DeliveryState;
   serverTimestamp: string;
   updatedAt: string;
@@ -120,11 +129,52 @@ export function validateDirectMessageRequest(body: unknown): DirectMessageReques
     throw new Error('Invalid message payload: senderCiphertext must be a non-empty string');
   }
 
+  const recipientCiphertexts = parseDeviceCiphertexts(obj.recipientCiphertexts, 'recipientCiphertexts');
+  const senderCiphertexts = parseDeviceCiphertexts(obj.senderCiphertexts, 'senderCiphertexts');
+
   return {
     messageId: obj.messageId,
     recipientUserId: obj.recipientUserId,
     recipientDeviceId: obj.recipientDeviceId,
     ciphertext: obj.ciphertext,
     ...(obj.senderCiphertext !== undefined && { senderCiphertext: obj.senderCiphertext }),
+    ...(recipientCiphertexts && { recipientCiphertexts }),
+    ...(senderCiphertexts && { senderCiphertexts }),
   };
+}
+
+function parseDeviceCiphertexts(value: unknown, fieldName: string): DeviceCiphertext[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error(`Invalid message payload: ${fieldName} must be an array`);
+  }
+
+  const seenDeviceIds = new Set<string>();
+  return value.map((entry, index) => {
+    if (typeof entry !== 'object' || entry === null) {
+      throw new Error(`Invalid message payload: ${fieldName}[${index}] must be an object`);
+    }
+
+    const obj = entry as Record<string, unknown>;
+    if (typeof obj.deviceId !== 'string' || obj.deviceId.length === 0) {
+      throw new Error(`Invalid message payload: ${fieldName}[${index}].deviceId required`);
+    }
+
+    if (typeof obj.ciphertext !== 'string' || obj.ciphertext.length === 0) {
+      throw new Error(`Invalid message payload: ${fieldName}[${index}].ciphertext required`);
+    }
+
+    if (seenDeviceIds.has(obj.deviceId)) {
+      throw new Error(`Invalid message payload: duplicate ${fieldName} deviceId ${obj.deviceId}`);
+    }
+    seenDeviceIds.add(obj.deviceId);
+
+    return {
+      deviceId: obj.deviceId,
+      ciphertext: obj.ciphertext,
+    };
+  });
 }

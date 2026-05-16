@@ -9,6 +9,7 @@ vi.mock('@aws-sdk/client-apigatewaymanagementapi', () => ({
 }));
 vi.mock('../../src/devices/device-repository.js', () => ({
   ddbDocClient: { send: vi.fn() },
+  getDevice: vi.fn(),
 }));
 vi.mock('../../src/app/config.js', () => ({
   getConfig: () => ({
@@ -23,6 +24,7 @@ vi.mock('../../src/app/config.js', () => ({
 
 import * as MessageRepository from '../../src/messages/message-repository.js';
 import * as MessageRelayPublisher from '../../src/realtime/message-relay-publisher.js';
+import * as DeviceRepository from '../../src/devices/device-repository.js';
 import { sendMessage, checkRetentionPolicy } from '../../src/messages/message-service.js';
 import type { WebSocketConnectionContext } from '../../src/auth/websocket-auth.js';
 import type { DirectMessageRequest, DeliveryState, MessageRecord } from '../../src/messages/message-model.js';
@@ -46,6 +48,25 @@ describe('message-service', () => {
     vi.mocked(MessageRepository.createMessage).mockResolvedValue(null);
     vi.mocked(MessageRepository.updateDeliveryState).mockResolvedValue();
     vi.mocked(MessageRelayPublisher.publishDeliveryStatus).mockResolvedValue();
+    vi.mocked(DeviceRepository.getDevice).mockImplementation(async (_userId, deviceId) => ({
+      userId: deviceId === 'recipient-device' ? 'recipient-user' : 'sender-user',
+      deviceId,
+      status: 'trusted',
+      isPrimary: true,
+      registeredAt: '2026-04-01T00:00:00.000Z',
+      lastSeenAt: '2026-04-01T00:00:00.000Z',
+      identityKey: {
+        keyId: '0',
+        algorithm: 'Ed25519',
+        publicKey: 'identity-public-key',
+      },
+      signedPreKey: {
+        keyId: '1',
+        algorithm: 'Curve25519',
+        publicKey: 'signed-pre-key',
+        signature: 'signature',
+      },
+    }));
   });
 
   describe('sendMessage (new message)', () => {
@@ -68,6 +89,12 @@ describe('message-service', () => {
         recipientDeviceId: 'recipient-device',
         ciphertext: 'encrypted-payload-base64',
         deliveryState: 'accepted',
+        recipientCiphertexts: [
+          {
+            deviceId: 'recipient-device',
+            ciphertext: 'encrypted-payload-base64',
+          },
+        ],
       });
     });
 
@@ -81,6 +108,41 @@ describe('message-service', () => {
 
       const record = vi.mocked(MessageRepository.createMessage).mock.calls[0][0];
       expect(record.senderCiphertext).toBe('sender-readable-payload-base64');
+      expect(record.senderCiphertexts).toEqual([
+        {
+          deviceId: 'sender-device',
+          ciphertext: 'sender-readable-payload-base64',
+        },
+      ]);
+    });
+
+    it('persists and relays per-device recipient ciphertexts', async () => {
+      vi.mocked(MessageRelayPublisher.relayDirectMessage).mockResolvedValue('delivered');
+
+      await sendMessage(senderContext, {
+        ...baseRequest,
+        recipientCiphertexts: [
+          { deviceId: 'recipient-device', ciphertext: 'recipient-device-payload' },
+          { deviceId: 'recipient-device-2', ciphertext: 'recipient-device-2-payload' },
+        ],
+        senderCiphertexts: [
+          { deviceId: 'sender-device', ciphertext: 'sender-device-payload' },
+          { deviceId: 'sender-device-2', ciphertext: 'sender-device-2-payload' },
+        ],
+      });
+
+      const record = vi.mocked(MessageRepository.createMessage).mock.calls[0][0];
+      expect(record.recipientCiphertexts).toHaveLength(2);
+      expect(record.senderCiphertexts).toHaveLength(2);
+      expect(MessageRelayPublisher.relayDirectMessage).toHaveBeenCalledTimes(2);
+      expect(MessageRelayPublisher.relayDirectMessage).toHaveBeenCalledWith(
+        'recipient-user',
+        'recipient-device-2',
+        expect.objectContaining({
+          recipientDeviceId: 'recipient-device-2',
+          ciphertext: 'recipient-device-2-payload',
+        }),
+      );
     });
 
     it('updates state to delivered when relay succeeds', async () => {
@@ -162,7 +224,7 @@ describe('message-service', () => {
         senderDeviceId: 'sender-device',
         recipientUserId: 'recipient-user',
         recipientDeviceId: 'recipient-device',
-        ciphertext: 'encrypted-payload',
+        ciphertext: 'encrypted-payload-base64',
         deliveryState: 'accepted-queued',
         serverTimestamp: '2026-04-01T09:00:00.000Z',
         updatedAt: '2026-04-01T09:00:00.000Z',
